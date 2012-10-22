@@ -1,6 +1,6 @@
 GIT
   remote: git@github.com:opscode/chef-pedant-core.git
-  revision: 42f94eab14a232adbdc5ab1cf40b7767d6f9c26c
+  revision: 17a7be1ece015d47c5726c3deed5baac64e53cd2
   specs:
     chef-pedant-core (0.0.1)
       activesupport (~> 3.2.8)
@@ -16,7 +16,7 @@ GIT
 
 GIT
   remote: git@github.com:opscode/chef-pedant-tests.git
-  revision: 8acabb8de9e5a77899bbca99ade15197361dbd33
+  revision: 8ce99ea6dafc4c7a21d42d2bd5114e24f354ccaa
   specs:
     chef-pedant-tests (0.0.1)
 
