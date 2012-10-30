@@ -1,5 +1,5 @@
 GIT
-  remote: git@github.com:opscode/chef-pedant-core.git
+  remote: git://github.com/opscode/chef-pedant-core.git
   revision: cbbe27cc26dbebc8cd27a17c56f8c84c98d8c188
   specs:
     chef-pedant-core (0.0.1)
@@ -15,7 +15,7 @@ GIT
       rspec_junit_formatter (~> 0.1.1)
 
 GIT
-  remote: git@github.com:opscode/chef-pedant-tests.git
+  remote: git://github.com/opscode/chef-pedant-tests.git
   revision: 8c2b668a1f02c496c1ea90ced8615139558a24d9
   specs:
     chef-pedant-tests (0.0.1)
