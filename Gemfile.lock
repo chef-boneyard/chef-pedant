@@ -1,6 +1,6 @@
 GIT
   remote: git://github.com/opscode/chef-pedant-core.git
-  revision: 82d0114549eab9e17c873a7a7e3ed12c6628d8eb
+  revision: 1c9e0d737b6f2531731a39561b427b6d7482bb84
   specs:
     chef-pedant-core (0.0.1)
       activesupport (~> 3.2.8)
@@ -16,7 +16,7 @@ GIT
 
 GIT
   remote: git://github.com/opscode/chef-pedant-tests.git
-  revision: 116d220e6ac2332c4c2a43f7bea01b5daa8e82d6
+  revision: 950ee8ec88a5e1089ead301960e035a5ef721664
   specs:
     chef-pedant-tests (0.0.1)
 
@@ -60,7 +60,7 @@ GEM
     mixlib-log (1.4.1)
     mixlib-shellout (1.1.0)
     moneta (0.6.0)
-    multi_json (1.3.6)
+    multi_json (1.3.7)
     net-http-spy (0.2.1)
     net-ssh (2.2.2)
     net-ssh-gateway (1.1.0)
