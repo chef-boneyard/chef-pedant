@@ -1,6 +1,6 @@
 GIT
   remote: git://github.com/opscode/chef-pedant-core.git
-  revision: 7e018b4a80d5a72e02d8a4c92077c6ba7e31f191
+  revision: 1f1e44a5f153dfe2cac9edda658be8fad37bdba5
   specs:
     chef-pedant-core (0.0.1)
       activesupport (~> 3.2.8)
@@ -16,14 +16,14 @@ GIT
 
 GIT
   remote: git://github.com/opscode/chef-pedant-tests.git
-  revision: 213650b539a6001bdf9a1a5d0fcf70c1234f79e5
+  revision: e6a7378c473a50036fda833993c1f99dc3c79fb2
   specs:
     chef-pedant-tests (0.0.1)
 
 GEM
   remote: http://rubygems.org/
   specs:
-    activesupport (3.2.8)
+    activesupport (3.2.9)
       i18n (~> 0.6)
       multi_json (~> 1.0)
     builder (3.1.4)
