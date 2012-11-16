@@ -66,7 +66,7 @@ include_internal false
 superuser_name 'admin'
 superuser_key  '/etc/chef-server/admin.pem'
 
-webui_key '/etc/chef-server/webui_priv.pem'
+webui_key '/etc/chef-server/chef-webui.pem'
 
 
 requestors({
