@@ -17,30 +17,40 @@
 module Pedant
   class Gem
     class << self
-      # Return an array of names of all gems that contain Pedant test
-      # specs.  Currently, this amounts to all gems whose name fits the
-      # pattern 'opscode-pedant-PLATFORM_TYPE-tests'
+      # Return an array of names of all chef-pedant gems.
       def names
-        @names ||= ::Gem::Specification.map(&:name).grep(/-pedant-tests$/)
+        @names ||= ::Gem::Specification.map(&:name).grep(/chef-pedant/)
       end
 
-      # Returns an array of absolute paths to Pedant test gems
+      # Returns an array of absolute paths to Pedant gems
       def base_directories
         @base_dirs ||= names.map { |name| ::Gem::Specification.find_by_name(name).gem_dir }
       end
 
+      # Return the absolute path to a given +relative_path+ within all
+      # Pedant gems, if such a path exists.
       def absolute_paths_for(relative_path)
-        base_directories.map { |dir| dir + relative_path }
+        base_directories.inject([]) do |acc, dir|
+          f = "#{dir}/#{relative_path}"
+          File.exists?(f) ? acc << f : acc
+        end
       end
 
       # Returns an array of absolute paths to spec directories in Pedant test gems
-      def test_directories
-        @test_dirs ||= absolute_paths_for('/spec')
+      #
+      # +suite+ is a String denoting which spec sub-directories should be accepted.
+      #
+      # e.g, if you wish to run tests from "/spec/api", +suite+ should
+      # be "api".  This is intended to allow multiple Pedant
+      # derivatives to use the same core gem, but not have to deal
+      # with loading of test specs that will never be run.
+      def test_directories(suite)
+        @test_dirs ||= absolute_paths_for("spec/#{suite}")
       end
 
       # Returns an array of absolute paths to fixtures directories in Pedant test gems
       def fixture_directories
-        @fixture_dirs ||= absolute_paths_for('/fixtures')
+        @fixture_dirs ||= absolute_paths_for('fixtures')
       end
     end
   end

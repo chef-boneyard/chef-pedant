@@ -44,9 +44,11 @@ module Pedant
     end
 
     # Generate a list of directories in which Pedant will look for
-    # tests.  Includes tests in any Pedant gems that are available.
+    # tests.  Includes only the tests specified by the value of
+    # +Pedant.config.suite+.
     def self.test_directories
-      Pedant::Gem.test_directories
+      suite = Pedant.config.suite || raise("Test suite unspecified!  Set 'Pedant.config.suite' in the test runner!")
+      Pedant::Gem.test_directories(suite)
     end
 
 
