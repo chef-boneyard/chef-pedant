@@ -3,4 +3,3 @@ Gemfile.local
 Gemfile.orig
 Gemfile.lock.orig
 .bundle/
-bin/
