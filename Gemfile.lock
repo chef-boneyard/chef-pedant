@@ -1,8 +1,7 @@
-GIT
-  remote: git://github.com/opscode/chef-pedant-core.git
-  revision: 67ddab6fb01dce86d5f5dd81ec9b04beff0af2d2
+PATH
+  remote: .
   specs:
-    chef-pedant-core (0.0.1)
+    chef-pedant (0.0.10)
       activesupport (~> 3.2.8)
       chef (~> 10.12.0)
       erubis (~> 2.7.0)
@@ -13,12 +12,6 @@ GIT
       rest-client (~> 1.6.7)
       rspec (~> 2.11.0)
       rspec_junit_formatter (~> 0.1.1)
-
-GIT
-  remote: git://github.com/opscode/chef-pedant-tests.git
-  revision: 88ed823f3c655cb2ec94088c7e7fccf6325e8044
-  specs:
-    chef-pedant-tests (0.0.1)
 
 GEM
   remote: http://rubygems.org/
@@ -100,5 +93,4 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  chef-pedant-core!
-  chef-pedant-tests!
+  chef-pedant!

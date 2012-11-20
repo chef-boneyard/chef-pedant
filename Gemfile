@@ -1,7 +1,6 @@
 source :rubygems
 
-gem 'chef-pedant-core', :git => "git://github.com/opscode/chef-pedant-core.git"
-gem 'chef-pedant-tests', :git => "git://github.com/opscode/chef-pedant-tests.git"
+gemspec
 
 # If you want to load debugging tools into the bundle exec sandbox,
 # # add these additional dependencies into Gemfile.local
