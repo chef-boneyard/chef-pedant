@@ -159,6 +159,8 @@ describe "Testing the Nodes API endpoint", :nodes do
       validates_node_attribute 'automatic'
 
       validates_run_list
+
+      rejects_invalid_keys
     end
 
     context 'without existing node name', :smoke do
@@ -261,6 +263,8 @@ describe "Testing the Nodes API endpoint", :nodes do
       validates_node_attribute 'automatic'
 
       validates_run_list
+
+      rejects_invalid_keys
 
       context 'with a canonical payload' do
         let(:existing_default_attributes){node['default']}
