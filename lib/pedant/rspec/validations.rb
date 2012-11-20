@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright: Copyright (c) 2012 Opscode, Inc.
 # License: Apache License, Version 2.0
 #
@@ -89,6 +90,17 @@ module Pedant
           end
         end
 
+        def rejects_invalid_keys
+          context 'with invalid top-level keys' do
+            rejects_invalid_value_of 'something_random', with: 'something random', error_message: 'Invalid key something_random in request body'
+            rejects_invalid_value_of '漢字ひらがな한문', with: 'something random', error_message: 'Invalid key 漢字ひらがな한문 in request body'
+            1.upto(3) do
+              random_key = SecureRandom.hex(16)
+              rejects_invalid_value_of random_key, with: 'something random', error_message: "Invalid key #{random_key} in request body"
+            end
+          end
+        end
+
       end # SharedMacros
 
       # Update validations will look similar to this, and there may be some way to dry it up
@@ -146,8 +158,8 @@ module Pedant
             end
           end
 
+          # optionally_accepts 'field', with: 'value'
           def optionally_accepts(_attribute, options = {})
-            _attribute = (_attribute.nil? ? validate_attribute : _attribute)
 
             context "with the \"#{_attribute}\" attribute" do
               accepts_with_201 payload: Proc.new { default_resource_attributes.with(_attribute, options[:with]) }
@@ -155,6 +167,20 @@ module Pedant
 
             context "without the \"#{_attribute}\" attribute" do
               accepts_with_201 payload: Proc.new { default_resource_attributes.except(_attribute) } do
+                expects(parsed_response[_attribute]).to eql options[:default]
+              end
+            end
+          end
+
+          def optionally_accepts_value(_value, options = {})
+            _value = _value || options[:with]
+
+            context "with the attribute" do
+              accepts_with_201 payload: Proc.new { default_resource_attributes.with(validate_attribute, _value) }
+            end
+
+            context "without the attribute" do
+              accepts_with_201 payload: Proc.new { default_resource_attributes.except(validate_attribute) } do
                 expects(parsed_response[_attribute]).to eql options[:default]
               end
             end
@@ -217,8 +243,7 @@ module Pedant
           end
 
 
-          def optionally_accepts(_attribute = nil, options = {})
-            _attribute = (_attribute.nil? ? validate_attribute : _attribute)
+          def optionally_accepts(_attribute, options = {})
             context "with the \"#{_attribute}\" attribute" do
               accepts_with_200 payload: Proc.new { default_resource_attributes.with(_attribute, options[:with]) }
             end
@@ -226,6 +251,20 @@ module Pedant
             context "without the \"#{_attribute}\" attribute" do
               accepts_with_200 payload: Proc.new { default_resource_attributes.except(_attribute) } do
                 expects(parsed_response[attribute]).to eql options[:default]
+              end
+            end
+          end
+
+          def optionally_accepts_value(_value, options = {})
+            _value = _value || options[:with]
+
+            context "with the attribute" do
+              accepts_with_200 payload: Proc.new { default_resource_attributes.with(validate_attribute, _value) }
+            end
+
+            context "without the attribute" do
+              accepts_with_200 payload: Proc.new { default_resource_attributes.except(validate_attribute) } do
+                expects(parsed_response[_attribute]).to eql options[:default]
               end
             end
           end
