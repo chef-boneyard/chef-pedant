@@ -3,4 +3,11 @@ Gemfile.local
 Gemfile.orig
 Gemfile.lock.orig
 .bundle/
-bin/
+
+# Ignore generated files in the dot_chef directory of our test
+# repository
+fixtures/test_repository/dot_chef/*.pem
+fixtures/test_repository/dot_chef/*.rb
+fixtures/test_repository/admin_dot_chef/*.pem
+fixtures/test_repository/admin_dot_chef/*.rb
+fixtures/test_repository/data_bags/*.json

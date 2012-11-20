@@ -22,6 +22,7 @@ require 'pedant'
 require 'pedant/opensource'
 
 Pedant.config.platform_class = Pedant::OpenSourcePlatform
+Pedant.config.suite = "api"
 Pedant.setup(ARGV)
 puts Pedant::UI.new.info_banner
 
