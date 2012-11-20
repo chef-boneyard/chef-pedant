@@ -87,6 +87,7 @@ describe "Open Source /users endpoint", :users => true, :platform => :open_sourc
     let(:resource_url) { api_url "/users/#{test_user}" }
     let(:persisted_resource_response) { get(resource_url, superuser) }
     let(:default_resource_attributes) { default_user_attributes }
+    let(:required_attributes) { default_user_attributes.except('admin').except('private_key') }
 
     let(:default_user_name) { test_user }
 
@@ -123,6 +124,27 @@ describe "Open Source /users endpoint", :users => true, :platform => :open_sourc
         rejects_invalid_value_of 'admin', with: []
         rejects_invalid_value_of 'admin', with: {}
         rejects_invalid_value_of 'admin', with: 1
+
+        context 'when updating public_key' do
+          let(:request_payload) { required_attributes.with('public_key', public_key) }
+          let(:updated_resource) { required_attributes.with('public_key', public_key).except('password') }
+          let(:private_key) { OpenSSL::PKey::RSA.new(2048) }
+          let(:public_key) { private_key.public_key.to_s }
+          let(:updated_requestor) { Pedant::User.new(test_user, private_key, platform: platform, preexisting: false) }
+          let(:updated_response) { http_200_response.with(:body, updated_resource) }
+
+
+          should_respond_with 201, 'and update the user' do
+            parsed_response['public_key'].should_not be_nil
+
+            # Now verify that you can retrieve it again
+            persisted_resource_response.should look_like updated_response
+            authenticate_user(default_user_name, default_user_password).should be_true
+
+            # Verify that we can use the new credentials
+            get(resource_url, updated_requestor).should look_like updated_response
+          end
+        end # when setting private_key to true
       end
 
       it 'cannot create a user without an authorized signing key'
@@ -521,7 +543,7 @@ describe "Open Source /users endpoint", :users => true, :platform => :open_sourc
         end
 
         context 'non-admin can delete themselves' do
-          let(:non_admin_user) { parse (create_user default_user_attributes.with('name', non_admin_user_name).with('admin', false), superuser) }
+          let(:non_admin_user) { parse(create_user default_user_attributes.with('name', non_admin_user_name).with('admin', false), superuser) }
           let(:non_admin_user_name){ "pedant_non_admin_user_#{rand(10000)}" }
           let(:success_message) { { 'name' => non_admin_user_name} }
           let(:request_url)       { api_url "/users/#{non_admin_user_name}" }
