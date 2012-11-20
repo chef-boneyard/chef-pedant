@@ -6,11 +6,11 @@ Gem::Specification.new do |s|
   s.authors       = ["Opscode Software Engineering"]
   s.email         = 'dev@opscode.com'
   s.require_paths = ['lib', 'spec']
-  s.files         = Dir['lib/**/*.rb'] + Dir['spec/**/*_spec.rb']
+  s.files         = Dir['lib/**/*'] + Dir['spec/**/*'] + Dir['bin/*'] + Dir['fixtures/**/*']
   s.homepage      = 'http://opscode.com'
 
   s.bindir        = 'bin'
-  s.executables   = ['bin/chef-pedant']
+  s.executables   = ['chef-pedant']
 
   s.add_dependency('rspec', '~> 2.11.0')
   s.add_dependency('activesupport', '~> 3.2.8') # For active_support/concern
