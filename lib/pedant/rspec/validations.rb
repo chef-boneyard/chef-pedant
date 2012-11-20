@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright: Copyright (c) 2012 Opscode, Inc.
 # License: Apache License, Version 2.0
 #
@@ -86,6 +87,17 @@ module Pedant
           context "when passing invalid value \"#{value}\"" do
             rejects_with_400 payload: Proc.new { default_resource_attributes.with(validate_attribute, value) },
               error_message: options[:error_message] || options[:valid_format] || Proc.new { "Field '#{validate_attribute}' invalid" }
+          end
+        end
+
+        def rejects_invalid_keys
+          context 'with invalid top-level keys' do
+            rejects_invalid_value_of 'something_random', with: 'something random', error_message: 'Invalid key something_random in request body'
+            rejects_invalid_value_of '漢字ひらがな한문', with: 'something random', error_message: 'Invalid key 漢字ひらがな한문 in request body'
+            1.upto(3) do
+              random_key = SecureRandom.hex(16)
+              rejects_invalid_value_of random_key, with: 'something random', error_message: "Invalid key #{random_key} in request body"
+            end
           end
         end
 
