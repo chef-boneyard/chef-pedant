@@ -131,7 +131,7 @@ describe "Testing the Nodes API endpoint", :nodes do
 
       context "when validating 'chef_environment' field" do
         let(:validate_attribute) { 'chef_environment' }
-        optionally_accepts with: 'pedant'
+        optionally_accepts 'chef_environment', with: 'pedant'
 
         accepts_valid_value   'PEDANT'
         accepts_valid_value   'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqurstuvwxyz0123456789-_'
@@ -141,14 +141,14 @@ describe "Testing the Nodes API endpoint", :nodes do
 
       context "when validating 'json_class' field" do
         let(:validate_attribute) { 'json_class' }
-        optionally_accepts with: 'Chef::Node', default: 'Chef::Node'
+        optionally_accepts 'json_class', with: 'Chef::Node', default: 'Chef::Node'
 
         rejects_invalid_value 'anything_else'
       end
 
       context "when validating 'chef_type' field" do
         let(:validate_attribute) { 'chef_type' }
-        optionally_accepts with: 'node', default: 'node'
+        optionally_accepts 'chef_type', with: 'node', default: 'node'
 
         rejects_invalid_value 'anything_else'
       end
@@ -223,7 +223,7 @@ describe "Testing the Nodes API endpoint", :nodes do
       # If you pass 'name' in the update, it must match the URL
       context "when updating 'name' field" do
         let(:validate_attribute) { 'name' }
-        optionally_accepts with: 'pedant_node_test', default: 'pedant_node_test'
+        optionally_accepts_value 'pedant_node_test', default: 'pedant_node_test'
 
         rejects_invalid_value 'pedant_node', error_message: "Node name mismatch."
         rejects_invalid_value 'PEDANT_NODE', error_message: "Node name mismatch."
@@ -233,7 +233,7 @@ describe "Testing the Nodes API endpoint", :nodes do
 
       context "when validating 'chef_environment' field" do
         let(:validate_attribute) { 'chef_environment' }
-        optionally_accepts with: 'pedant'
+        optionally_accepts_value 'pedant', default: '_default'
 
         accepts_valid_value   'PEDANT'
         accepts_valid_value   'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqurstuvwxyz0123456789-_'
@@ -243,14 +243,14 @@ describe "Testing the Nodes API endpoint", :nodes do
 
       context "when validating 'json_class' field" do
         let(:validate_attribute) { 'json_class' }
-        optionally_accepts with: 'Chef::Node', default: 'Chef::Node'
+        optionally_accepts_value 'Chef::Node', default: 'Chef::Node'
 
         rejects_invalid_value 'anything_else'
       end
 
       context "when validating 'chef_type' field" do
         let(:validate_attribute) { 'chef_type' }
-        optionally_accepts with: 'node', default: 'node'
+        optionally_accepts_value 'node', default: 'node'
 
         rejects_invalid_value 'anything_else'
       end
