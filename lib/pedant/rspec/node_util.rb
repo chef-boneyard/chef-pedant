@@ -49,7 +49,8 @@ module Pedant
         def validates_node_attribute(attribute)
           context "when validating node attribute '#{attribute}'" do
             let(:validate_attribute) { attribute }
-            optionally_accepts    with: { 'valid_key' => 'valid value' }
+            optionally_accepts_value with: { 'valid_key' => 'valid value' }, default: {}
+
             accepts_valid_value   with: { 'valid_key' => 'valid value' }
             accepts_valid_value   with: { 'valid_key' => '' }
             accepts_valid_value   with: { 'valid_key' => nil }
@@ -68,10 +69,11 @@ module Pedant
           end
 
         end
+
         def validates_run_list
           context "when validating 'run_list'" do
             let(:validate_attribute) { 'run_list' }
-            optionally_accepts with: ['chef'], default: []
+            optionally_accepts_value ['chef'], default: []
 
             # Run list must contain valid unqualified recipe name, qualified recipe name, or qualified role name
             accepts_valid_value  ['base', 'recipe[base]', 'role[base]']
@@ -92,7 +94,7 @@ module Pedant
               accepts_valid_value   ['recipe[1]']
               accepts_valid_value   ['recipe[base@1.0]']
               accepts_valid_value   ['recipe[base@1.0.1]']
-              accepts_valid_value  ['recipe[base]', 'recipe[base@1.0.1]']
+              accepts_valid_value   ['recipe[base]', 'recipe[base@1.0.1]']
 
               rejects_invalid_value ['recipe[gibberish@1]'], error_message: "Field 'run_list' is not a valid run list"
               rejects_invalid_value ['recipe[漢字]'],        error_message: "Field 'run_list' is not a valid run list"
