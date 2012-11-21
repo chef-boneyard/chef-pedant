@@ -150,7 +150,6 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
 
             # Now verify that you can retrieve it again
             persisted_resource_response.should look_like updated_response
-            authenticate_user(default_user_name, default_user_password).should be_true
 
             # Verify that we can use the new credentials
             get(resource_url, updated_requestor).should look_like updated_response
@@ -424,7 +423,6 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
 
             # Now verify that you can retrieve it again
             persisted_resource_response.should look_like updated_response
-            authenticate_user(default_user_name, default_user_password).should be_true
 
             # Verify that we can use the new credentials
             get(resource_url, updated_requestor).should look_like updated_response
