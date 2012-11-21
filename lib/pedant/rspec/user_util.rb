@@ -111,6 +111,7 @@ module Pedant
 
             should_respond_with 200, 'and update the user' do
               parsed_response['public_key'].should_not be_nil
+              parsed_response.member?('private_key').should be_false # Make sure private_key is not returned at all
 
               # Now verify that you can retrieve it again
               persisted_resource_response.should look_like updated_response
