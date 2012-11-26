@@ -329,10 +329,6 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
           include_context 'permission checks' do
             let(:admin_response){ok_response}
             let(:non_admin_response){forbidden_response}
-            # TODO: can validators fetch other validators, or just
-            # themselves?  I suppose the question is academic since
-            # there's only one validator (currently)...
-            let(:validator_response){ok_response}
           end
         end
 
@@ -557,15 +553,6 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
       should_have_proper_deletion_behavior(true)
       should_have_proper_deletion_behavior(false)
 
-      # DON'T DO THIS ON RUBY... IT WILL ACTUALLY SUCCEED
-      context 'deleting the validator', :pending => ruby? do
-        let(:requestor){admin_requestor}
-        let(:client_name){open_source_validator_client_name}
-        it 'is not allowed' do
-          should look_like forbidden_response
-        end
-      end
-
       context 'deleting a non-existent client' do
         let(:requestor) {admin_requestor}
         let(:client_name) {pedant_nonexistent_client_name}
@@ -574,7 +561,15 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
         end
       end
 
-      pending 'cannot delete the last admin client'
+      context 'deleting a validator' do
+        include_context 'with temporary testing client' do
+          let(:client_validator){true}
+        end
+        it 'is allowed' do
+          should look_like delete_client_success_response
+        end
+      end
+
     end
   end # /clients/<client>
 end

@@ -40,10 +40,6 @@ describe 'Node Endpoint Open Source Permission Checks', :platform => :open_sourc
       include_context 'permission checks' do
         let(:admin_response){ok_response}
         let(:non_admin_response){ok_response}
-
-        # Currently validators can do GETs.  We will likely lock this
-        # down in the near future
-        let(:validator_response){ok_response}
       end
     end
     context 'POST' do
@@ -59,10 +55,6 @@ describe 'Node Endpoint Open Source Permission Checks', :platform => :open_sourc
         let(:admin_response){created_response}
         # Non-admins can create a node apparently due to node bootstrapping
         let(:non_admin_response){created_response}
-
-        # Currently validators can create nodes (?!).  We will likely lock
-        # this down in the near future
-        let(:validator_response){created_response}
       end
     end
 
@@ -80,10 +72,6 @@ describe 'Node Endpoint Open Source Permission Checks', :platform => :open_sourc
       include_context 'permission checks' do
         let(:admin_response){ok_response}
         let(:non_admin_response){ok_response}
-
-        # Currently validators can do GETs.  We will likely lock this
-        # down in the near future
-        let(:validator_response){ok_response}
       end
     end
 

@@ -32,10 +32,6 @@ describe 'Role Endpoint Open Source Permission Checks', :platform => :open_sourc
       include_context 'permission checks' do
         let(:admin_response){ok_response}
         let(:non_admin_response){ok_response}
-
-        # Currently validators can do GETs.  We will likely lock this
-        # down in the near future
-        let(:validator_response){ok_response}
       end
     end
     context 'POST' do
@@ -67,10 +63,6 @@ describe 'Role Endpoint Open Source Permission Checks', :platform => :open_sourc
       include_context 'permission checks' do
         let(:admin_response){ok_response}
         let(:non_admin_response){ok_response}
-
-        # Currently validators can do GETs.  We will likely lock this
-        # down in the near future
-        let(:validator_response){ok_response}
       end
     end
 
@@ -110,10 +102,6 @@ describe 'Role Endpoint Open Source Permission Checks', :platform => :open_sourc
       include_context 'permission checks' do
         let(:admin_response){ok_response}
         let(:non_admin_response){ok_response}
-
-        # Currently validators can do GETs.  We will likely lock this
-        # down in the near future
-        let(:validator_response){ok_response}
       end
     end
 
@@ -132,10 +120,6 @@ describe 'Role Endpoint Open Source Permission Checks', :platform => :open_sourc
       include_context 'permission checks' do
         let(:admin_response){ok_response}
         let(:non_admin_response){ok_response}
-
-        # Currently validators can do GETs.  We will likely lock this
-        # down in the near future
-        let(:validator_response){ok_response}
       end
     end
 

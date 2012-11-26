@@ -26,10 +26,12 @@ module Pedant
       shared_context 'with temporary testing client' do
         let(:client_name){unique_name("temporary_client")}
         let(:client_admin){false}
+        let(:client_validator){false}
         let(:client) do
           {
             "name" => client_name,
-            "admin" => client_admin
+            "admin" => client_admin,
+            "validator" => client_validator
           }
         end
         before :each do
