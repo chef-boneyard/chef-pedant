@@ -97,7 +97,7 @@ RSpec::Matchers.define :have_status_code do |code|
   codes = Pedant::RSpec::HTTP::STATUS_CODES
 
   description do
-    "have HTTP status code #{code} ('#{codes[code]}')"
+    "respond with #{code} #{codes[code]}"
   end
 
   failure_message_for_should do |response|
@@ -119,7 +119,7 @@ RSpec::Matchers.define :have_error do |code, message|
   codes = Pedant::RSpec::HTTP::STATUS_CODES
 
   description do
-    "have HTTP status code #{code} ('#{codes[code]}') and an error message of '#{message}'"
+    "respond with #{code} #{codes[code]} and an error message of '#{message}'"
   end
 
   failure_message_for_should do |response|
