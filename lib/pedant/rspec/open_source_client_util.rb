@@ -95,34 +95,11 @@ module Pedant
 
       let(:post_named_client_method_not_allowed_response) { incorrect_ruby_named_client_resource_method_not_allowed_response }
 
-      let(:fetch_admin_client_success_response) do
-        {
-          :status => 200,
-          :body_exact => new_client(client_name, true)
-        }
-      end
-      let(:fetch_validator_client_success_response) do
-        {
-          :status => 200,
-          :body_exact => new_client(client_name, false, true)
-        }
-      end
-      let(:fetch_nonadmin_client_success_response) do
-        {
-          :status => 200,
-          :body_exact => new_client(client_name, false)
-        }
-      end
+      let(:fetch_admin_client_success_response)     { ok_response.with(body_exact: new_client(client_name, true)) }
+      let(:fetch_validator_client_success_response) { ok_response.with(body_exact: new_client(client_name, false, true)) }
+      let(:fetch_nonadmin_client_success_response)  { ok_response.with(body_exact: new_client(client_name, false)) }
 
-      let(:delete_client_success_response) do
-        {
-          :status => 200,
-          :body => {
-            "name" => client_name
-          }
-        }
-      end
-
+      let(:delete_client_success_response) { ok_response.with(body: { 'name' => client_name }) }
       let(:delete_client_as_non_admin_response) { open_source_not_allowed_response }
 
       let(:create_client_success_response) do
