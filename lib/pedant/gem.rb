@@ -17,9 +17,9 @@
 module Pedant
   class Gem
     class << self
-      # Return an array of names of all chef-pedant gems.
+      # Return an array of names of all chef-pedant gems (names end with "-pedant")
       def names
-        @names ||= ::Gem::Specification.map(&:name).grep(/chef-pedant/)
+        @names ||= ::Gem::Specification.map(&:name).grep(/-pedant$/)
       end
 
       # Returns an array of absolute paths to Pedant gems
