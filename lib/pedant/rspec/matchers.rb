@@ -77,6 +77,10 @@ module RSpec
         end
       end
 
+      def description
+        "respond with exact keys"
+      end
+
       def failure_message_for_should
         "'#{@k}' should match '#{@v}', but we got '#{@actual}' instead."
       end
@@ -108,6 +112,10 @@ end
 RSpec::Matchers.define :have_error_message do |message|
   match do |response|
     parse(response)["error"] == message
+  end
+
+  description do
+    "respond with error message '#{message}'"
   end
 end
 
@@ -165,8 +173,10 @@ end
 
 RSpec::Matchers.define :look_like do |expected_response_spec|
   include ::Pedant::JSON
+
   match do |response|
     begin
+      last_matcher, last_should = RSpec::Matchers.last_matcher, RSpec::Matchers.last_should
       things_to_check = expected_response_spec.keys
       json_tests = [:body, :body_exact]
 
@@ -215,12 +225,19 @@ RSpec::Matchers.define :look_like do |expected_response_spec|
       end
 
       # if we get down here without throwing an exception, we pass!
+      # Reset last matchers and should to this one
+      RSpec::Matchers.last_matcher, RSpec::Matchers.last_should = last_matcher, last_should
       true
     rescue RSpec::Expectations::ExpectationNotMetError => e
       @error_message = e.message
       # fail the overall matcher
       false
     end
+  end
+
+  description do
+    code = expected_response_spec[:status]
+    "respond with #{code} #{Pedant::RSpec::HTTP::STATUS_CODES[code]}"
   end
 
   failure_message_for_should do |response|
