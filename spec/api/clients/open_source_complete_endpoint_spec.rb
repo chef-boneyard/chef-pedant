@@ -102,10 +102,14 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
 
     end
     context 'POST' do
-      let(:request_method){:POST}
-      let(:client_name){unique_name("testclient")}
-      let(:client_is_admin){false}
-      let(:request_payload) do
+      include Pedant::RSpec::Validations::Create
+
+      let(:request_method)  { :POST }
+      let(:request_payload) { default_client_attributes }
+
+      let(:client_name) { unique_name("testclient") }
+      let(:client_is_admin) { false }
+      let(:default_client_attributes) do
         {
           "name" => client_name,
           "admin" => client_is_admin
@@ -113,7 +117,15 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
       end
 
       # useful for checking the result of a create operation
-      let(:client_url){api_url("/clients/#{client_name}")}
+      # TODO: Refactor to resource_url
+      let(:client_url) { api_url("/clients/#{client_name}") }
+
+      let(:expected_response) { resource_created_full_response }
+      let(:created_resource) { { "uri" => resource_url } }
+      let(:resource_url) { client_url }
+      let(:persisted_resource_response) { get(resource_url, superuser) }
+      let(:default_resource_attributes) { default_client_attributes }
+      let(:required_attributes) { default_client_attributes.except('admin').except('private_key') }
 
       after :each do
         begin
@@ -121,6 +133,29 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
         rescue URI::InvalidURIError
           # ok, since some bad names can result in bad URLs
         end
+      end
+
+      context 'when validating' do
+        context 'when updating public_key' do
+          let(:request_payload) { required_attributes.with('public_key', public_key) }
+          let(:updated_resource) { required_attributes.with('public_key', public_key) }
+          let(:private_key) { OpenSSL::PKey::RSA.new(2048) }
+          let(:public_key) { private_key.public_key.to_s }
+          let(:updated_requestor) { Pedant::Client.new(client_name, private_key, platform: platform, preexisting: false) }
+          let(:updated_response) { http_200_response.with(:body, updated_resource) }
+
+
+          should_respond_with 201, 'and update the user' do
+            parsed_response['public_key'].should_not be_nil
+            parsed_response.member?('private_key').should be_false # Make sure private_key is not returned at all
+
+            # Now verify that you can retrieve it again
+            persisted_resource_response.should look_like updated_response
+
+            # Verify that we can use the new credentials
+            get(resource_url, updated_requestor).should look_like updated_response
+          end
+        end # when setting private_key to true
       end
 
       context 'valid requests of various types to create a client' do
@@ -348,8 +383,54 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
     should_not_allow_method :POST
 
     context 'PUT' do
-      let(:request_method){:PUT}
+      let(:request_method)  { :PUT }
+      let(:request_payload) { default_client_attributes }
+
       let(:client_url){api_url("/clients/#{client_name}")}
+
+      let(:client_name) { unique_name("testclient") }
+      let(:client_is_admin) { false }
+      let(:default_client_attributes) do
+        {
+          "name" => client_name,
+          "admin" => client_is_admin
+        }
+      end
+
+      # useful for checking the result of a create operation
+      # TODO: Refactor to resource_url
+      let(:client_url) { api_url("/clients/#{client_name}") }
+
+      let(:expected_response) { ok_response }
+      let(:resource_url) { client_url }
+      let(:persisted_resource_response) { get(resource_url, superuser) }
+      let(:default_resource_attributes) { default_client_attributes }
+      let(:required_attributes) { default_client_attributes.except('admin').except('private_key') }
+
+      context 'when validating' do
+        include_context 'with temporary testing client'
+
+        context 'when updating public_key' do
+          let(:request_payload) { required_attributes.with('public_key', public_key) }
+          let(:updated_resource) { required_attributes.with('public_key', public_key) }
+          let(:private_key) { OpenSSL::PKey::RSA.new(2048) }
+          let(:public_key) { private_key.public_key.to_s }
+          let(:updated_requestor) { Pedant::Client.new(client_name, private_key, platform: platform, preexisting: false) }
+          let(:updated_response) { http_200_response.with(:body, updated_resource) }
+
+
+          should_respond_with 200, 'and update the user' do
+            parsed_response['public_key'].should_not be_nil
+            parsed_response.member?('private_key').should be_false # Make sure private_key is not returned at all
+
+            # Now verify that you can retrieve it again
+            persisted_resource_response.should look_like updated_response
+
+            # Verify that we can use the new credentials
+            get(resource_url, updated_requestor).should look_like updated_response
+          end
+        end # when setting private_key to true
+      end
 
       context 'modifying a non-existent client' do
         let(:requestor) {admin_requestor}
