@@ -40,7 +40,6 @@ describe 'Search Endpoint Open Source Permission Checks', :search => true, :plat
       include_context 'permission checks' do
         let(:admin_response){ok_response}
         let(:non_admin_response){ok_response}
-        let(:validator_response){ok_response}
       end
     end
 
@@ -76,8 +75,6 @@ describe 'Search Endpoint Open Source Permission Checks', :search => true, :plat
         include_context 'permission checks' do
           let(:admin_response){ok_response}
           let(:non_admin_response){ok_response}
-          # Validators can GET... we will change this
-          let(:validator_response){ok_response}
         end
       end
 
@@ -92,8 +89,6 @@ describe 'Search Endpoint Open Source Permission Checks', :search => true, :plat
           include_context 'permission checks' do
             let(:admin_response){ok_response}
             let(:non_admin_response){ok_response}
-            # Validators can GET... we will change this
-            let(:validator_response){ok_response}
           end
         end
       end

@@ -27,7 +27,6 @@ describe 'Data Bag Endpoint Open Source Permission Checks', :data_bags => true, 
       include_context 'permission checks' do
         let(:admin_response){ok_response}
         let(:non_admin_response){ok_response}
-        let(:validator_response){ok_response}
       end
     end
 
@@ -75,7 +74,6 @@ describe 'Data Bag Endpoint Open Source Permission Checks', :data_bags => true, 
       include_context 'permission checks' do
         let(:admin_response){ok_response}
         let(:non_admin_response){ok_response}
-        let(:validator_response){ok_response}
       end
     end
 
@@ -138,7 +136,6 @@ describe 'Data Bag Endpoint Open Source Permission Checks', :data_bags => true, 
       include_context 'permission checks' do
         let(:admin_response){ok_response}
         let(:non_admin_response){ok_response}
-        let(:validator_response){ok_response}
       end
     end
 

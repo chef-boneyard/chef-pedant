@@ -329,10 +329,6 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
           include_context 'permission checks' do
             let(:admin_response){ok_response}
             let(:non_admin_response){forbidden_response}
-            # TODO: can validators fetch other validators, or just
-            # themselves?  I suppose the question is academic since
-            # there's only one validator (currently)...
-            let(:validator_response){ok_response}
           end
         end
 
