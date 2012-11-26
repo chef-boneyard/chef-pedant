@@ -32,30 +32,26 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
   include Pedant::OpenSource::PermissionChecks
 
   # Just until we rename the requestors
-  let(:admin_requestor){ admin_user }
-  let(:normal_requestor){ normal_user }
+  let(:admin_requestor)  { admin_user }
+  let(:normal_requestor) { normal_user }
   # TODO: Pull this out
 
   let(:validator_client){ Pedant::Client.new("#{open_source_validator_client_name}",
                                              "/etc/chef-server/#{open_source_validator_client_name}.pem")}
-  let(:requestor){ admin_requestor }
-  let(:client_name){pedant_admin_client_name}
+  let(:requestor)   { admin_requestor }
+  let(:client_name) { pedant_admin_client_name }
 
   shared_context 'non-admin clients cannot perform operation' do
     let(:not_allowed_response){fail 'Please define not_allowed_response'}
 
     context 'as a non-admin client' do
-      let(:requestor){normal_requestor}
-      it 'is not allowed' do
-        should look_like not_allowed_response
-      end
+      let(:requestor) { normal_requestor }
+      it { should look_like not_allowed_response }
     end
 
     context 'as a validator client' do
-      let(:requestor){validator_client}
-      it 'is not allowed' do
-        should look_like not_allowed_response
-      end
+      let(:requestor) { validator_client }
+      it { should look_like not_allowed_response }
     end
   end
 
@@ -180,9 +176,8 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
         ['pedanttestingclient', 'pedanttestingclient123', 'pedant_testing_client', 'pedant.testing.client'].each do |n|
           context "like '#{n}'" do
             let(:client_name){n}
-            it 'succeeds' do
-              should look_like create_client_success_response
-            end
+
+            it { should look_like create_client_success_response }
           end
         end
       end # valid names
@@ -240,9 +235,7 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
     context 'creation of an existing client' do
       include_context 'with temporary testing client'
 
-      it 'is a conflict' do
-        should look_like create_client_conflict_response
-      end
+      it { should look_like create_client_conflict_response }
     end
 
     context 'as different kinds of clients' do
@@ -430,9 +423,8 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
       let(:request_payload) do
         {"name" => client_name}
       end
-      it "returns a 404 not found" do
-        should look_like client_not_found_response
-      end
+
+      it { should look_like client_not_found_response }
     end
 
     def self.test_property_change(property, payload_value, client_is_admin)
@@ -614,9 +606,8 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
         context 'as admin client' do
           let(:requestor){admin_requestor}
           # Admins should be able to delete a client whether it is admin or not
-          it 'succeeds' do
-            should look_like delete_client_success_response
-          end
+          it { should look_like delete_client_success_response }
+
           # TODO: Does not test for the edge case of deleting the last admin client
           # TODO: Does not test for an admin deleting itself
         end
@@ -630,18 +621,15 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
     context 'deleting a non-existent client' do
       let(:requestor) {admin_requestor}
       let(:client_name) {pedant_nonexistent_client_name}
-      it "returns a 404 not found" do
-        should look_like client_not_found_response
-      end
+
+      it { should look_like client_not_found_response }
     end
 
     context 'deleting a validator' do
       include_context 'with temporary testing client' do
-        let(:client_validator){true}
+        let(:client_validator) { true }
       end
-      it 'is allowed' do
-        should look_like delete_client_success_response
-      end
+      it { should look_like delete_client_success_response }
     end
 
   end
