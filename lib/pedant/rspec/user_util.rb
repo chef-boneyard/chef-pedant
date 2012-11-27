@@ -120,8 +120,29 @@ module Pedant
               # Verify that we can use the new credentials
               get(resource_url, updated_requestor).should look_like updated_response
             end
+
+            context 'without public key' do
+              let(:request_payload) { required_attributes }
+
+              # Use the original public key
+              let(:updated_resource) { required_attributes.with('public_key', test_user_public_key) }
+
+              should_respond_with 200, 'and update the user' do
+                parsed_response['public_key'].should be_nil # We did not update the public key, so this should not be set
+                parsed_response.member?('private_key').should be_false # Make sure private_key is not returned at all
+
+                # Now verify that you can retrieve it again
+                persisted_resource_response.should look_like updated_response
+                authenticate_user(default_user_name, default_user_password).should be_true
+
+                # Verify that we can use the new credentials
+                get(resource_url, test_user_requestor).should look_like updated_response
+              end
+
+            end
           end # when setting private_key to true
         end
+
 
         def should_update_without_password
           context 'without a password' do
