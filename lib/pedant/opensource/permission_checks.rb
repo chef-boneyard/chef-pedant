@@ -34,20 +34,20 @@ module Pedant
         let(:validator_client){ Pedant::Client.new("chef-validator", "/etc/chef-server/chef-validator.pem")}
 
         context 'as an administrator' do
-          let(:requestor){admin_user}
-          it {should look_like admin_response}
+          let(:requestor) { admin_user }
+          it { should look_like admin_response }
         end
         context 'as a non-administrator' do
-          let(:requestor){normal_user}
-          it {should look_like non_admin_response}
+          let(:requestor) { normal_user }
+          it { should look_like non_admin_response }
         end
         context 'as a validator client' do
-          let(:requestor){validator_client}
-          it {should look_like validator_response}
+          let(:requestor) { validator_client }
+          it { should look_like validator_response }
         end
         context 'as a bad client' do
-          let(:requestor){outside_user}
-          it {should look_like bad_client_response}
+          let(:requestor) { outside_user }
+          it { should look_like bad_client_response }
         end
       end # checks permissions
 
@@ -72,14 +72,16 @@ module Pedant
       end
 
       module ClassMethods
-        def should_not_allow_method(http_method)
-          context http_method.to_s do
-            let(:request_method){http_method}
+        def should_not_allow_method(http_method, _request_path = nil)
+          context [http_method, _request_path].compact.join(" ") do
+            let(:request_method) { http_method }
+            let(:request_url)    { api_url _request_path } if _request_path
+
             include_context 'permission checks' do
-              let(:admin_response){method_not_allowed_response}
-              let(:non_admin_response){method_not_allowed_response}
-              let(:validator_response){method_not_allowed_response}
-              let(:bad_client_response){method_not_allowed_response}
+              let(:admin_response)      { method_not_allowed_response }
+              let(:non_admin_response)  { method_not_allowed_response }
+              let(:validator_response)  { method_not_allowed_response }
+              let(:bad_client_response) { method_not_allowed_response }
             end
           end
         end
