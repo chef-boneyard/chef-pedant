@@ -3,6 +3,7 @@ Gemfile.local
 Gemfile.orig
 Gemfile.lock.orig
 .bundle/
+vendor/bundle
 
 # Ignore generated files in the dot_chef directory of our test
 # repository
