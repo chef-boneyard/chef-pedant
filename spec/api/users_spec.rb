@@ -177,6 +177,16 @@ describe "Open Source /users endpoint", :users => true, :platform => :open_sourc
       end
     end
 
+    context 'as an non-existent user' do
+      let(:requestor) { Pedant::User.new(non_existant_admin, private_key, platform: platform, preexisting: false) }
+      let(:non_existant_admin) { "pedant_ghost" }
+      let(:private_key) { OpenSSL::PKey::RSA.new(2048) }
+      let(:public_key) { private_key.public_key.to_s }
+      let(:request_payload) { default_user_attributes.with('admin', true) }
+
+      it { should look_like http_401_response }
+    end
+
   end # POST /users/
 
   context 'PUT /users/<name>' do
@@ -464,6 +474,18 @@ describe "Open Source /users endpoint", :users => true, :platform => :open_sourc
         end
       end
     end # as normal user
+
+    context 'as an non-existent user' do
+      let(:requestor) { Pedant::User.new(non_existant_admin, private_key, platform: platform, preexisting: false) }
+      let(:non_existant_admin) { "pedant_ghost" }
+      let(:private_key) { OpenSSL::PKey::RSA.new(2048) }
+      let(:public_key) { private_key.public_key.to_s }
+      let(:request_payload) { default_user_attributes.with('admin', false) }
+      let(:default_resource_attributes) { default_user_attributes.with('admin', true) }
+
+      it { should look_like http_401_response }
+    end
+
   end # PUT /users/<name>
 
   context 'DELETE /users/<name>' do
