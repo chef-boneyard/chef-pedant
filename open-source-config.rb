@@ -90,9 +90,10 @@ requestors({
              },
              :users => {
                :admin => {
-                 :name => "pedant_admin_user",
-                 :create_me => true,
-                 :create_knife => true,
+                 :name => "admin",
+                 :key_file => "/etc/chef-server/admin.pem",
+                 :create_me => false,
+                 :create_knife => false,
                  :admin => true
                 },
                :non_admin => {
