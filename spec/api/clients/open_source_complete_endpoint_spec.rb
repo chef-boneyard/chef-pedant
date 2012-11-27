@@ -14,6 +14,7 @@
 # limitations under the License.
 
 require 'pedant/rspec/open_source_client_util'
+require 'pedant/rspec/validations'
 
 # Since we've already got an open-source only test spec for the
 # clients endpoint, and since many of the operations that can be done
