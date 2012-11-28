@@ -263,9 +263,7 @@ describe "Sandboxes API Endpoint", :sandboxes do
           "guid"        => sandbox_id,
           "name"        => sandbox_id,
           "checksums"   => checksums,
-          "create_time" => timestamp_regexp,
-          "json_class"  => "Chef::Sandbox",
-          "chef_type"   => "sandbox"
+          "create_time" => timestamp_regexp
         }
       end
 
