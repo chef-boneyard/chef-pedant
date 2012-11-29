@@ -145,6 +145,7 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
           # Verify that we can use the new credentials
           get(resource_url, updated_requestor).should look_like updated_response
         end
+
       end # when setting private_key to true
     end
 
@@ -367,13 +368,14 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
   should_not_allow_method :POST, '/clients/pedant_test_client'
 
   context 'PUT /clients/<name>' do
+    include Pedant::RSpec::Validations::Update
+
     let(:request_method)  { :PUT }
     let(:request_url)     { named_client_url }
     let(:request_payload) { default_client_attributes }
 
     let(:client_url){api_url("/clients/#{client_name}")}
 
-    let(:client_name) { unique_name("testclient") }
     let(:client_is_admin) { false }
     let(:default_client_attributes) do
       {
@@ -381,6 +383,23 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
         "admin" => client_is_admin
       }
     end
+
+    after :each do
+      begin
+        delete_client(admin_requestor, client_name)
+      rescue URI::InvalidURIError
+        # ok, since some bad names can result in bad URLs
+      end
+    end
+
+    let(:client_name) { test_client }
+    let(:test_client) { "pedant_test_#{rand(100000)}" }
+    let(:test_client_response) { create_client admin_requestor, default_resource_attributes }
+    let(:test_client_parsed_response) { parse(test_client_response) }
+    let(:test_client_private_key) { test_client_parsed_response['private_key'] }
+    let(:test_client_public_key) { test_client_parsed_response['public_key'] }
+    let(:test_client_requestor) { Pedant::User.new(test_client, test_client_private_key, platform: platform, preexisting: false) }
+
 
     # useful for checking the result of a create operation
     # TODO: Refactor to resource_url
@@ -393,7 +412,7 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
     let(:required_attributes) { default_client_attributes.except('admin').except('private_key') }
 
     context 'when validating' do
-      include_context 'with temporary testing client'
+      before(:each) { test_client_response }
 
       context 'when updating public_key' do
         let(:request_payload) { required_attributes.with('public_key', public_key) }
@@ -414,7 +433,9 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
           # Verify that we can use the new credentials
           get(resource_url, updated_requestor).should look_like updated_response
         end
-      end # when setting private_key to true
+      end # when updating public_key
+
+      should_update_public_key
     end
 
     context 'modifying a non-existent client' do
