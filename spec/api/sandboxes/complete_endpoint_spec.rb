@@ -102,7 +102,7 @@ describe "Sandboxes API Endpoint", :sandboxes do
           should look_like ({
                               :status => 400,
                               :body_exact => {
-                                "error" =>["Field 'checksums' invalid"]
+                                "error" =>["Bad checksums!"]
                               }
                             })
         end
@@ -114,7 +114,7 @@ describe "Sandboxes API Endpoint", :sandboxes do
           should look_like ({
                               :status => 400,
                               :body_exact => {
-                                "error" => ["Field 'checksums' invalid"]
+                                "error" => ["Bad checksums!"]
                               }
                             })
         end
