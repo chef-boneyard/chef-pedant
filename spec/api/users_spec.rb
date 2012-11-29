@@ -125,27 +125,7 @@ describe "Open Source /users endpoint", :users => true, :platform => :open_sourc
         rejects_invalid_value_of 'admin', with: {}
         rejects_invalid_value_of 'admin', with: 1
 
-        context 'when updating public_key' do
-          let(:request_payload) { required_attributes.with('public_key', public_key) }
-          let(:updated_resource) { required_attributes.with('public_key', public_key).except('password') }
-          let(:private_key) { OpenSSL::PKey::RSA.new(2048) }
-          let(:public_key) { private_key.public_key.to_s }
-          let(:updated_requestor) { Pedant::User.new(test_user, private_key, platform: platform, preexisting: false) }
-          let(:updated_response) { http_200_response.with(:body, updated_resource) }
-
-
-          should_respond_with 201, 'and update the user' do
-            parsed_response['public_key'].should_not be_nil
-            parsed_response.member?('private_key').should be_false # Make sure private_key is not returned at all
-
-            # Now verify that you can retrieve it again
-            persisted_resource_response.should look_like updated_response
-            authenticate_user(default_user_name, default_user_password).should be_true
-
-            # Verify that we can use the new credentials
-            get(resource_url, updated_requestor).should look_like updated_response
-          end
-        end # when setting private_key to true
+        should_create_public_key
       end
 
       it 'cannot create a user without an authorized signing key'
