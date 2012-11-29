@@ -15,6 +15,7 @@
 #
 
 require 'pedant/rspec/cookbook_util'
+require 'pedant/rspec/validations'
 
 describe "Cookbooks API endpoint", :cookbooks do
   include Pedant::RSpec::CookbookUtil
@@ -24,9 +25,33 @@ describe "Cookbooks API endpoint", :cookbooks do
   end
 
   context "PUT /cookbooks/<name>/<version> [create]" do
+    include Pedant::RSpec::Validations::Create
     let(:request_method){:PUT}
     let(:request_url){api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}")}
     shared(:requestor){admin_user}
+
+
+    # Start using the new validation macros
+    context "when validating", :pending => ruby? do
+      
+      let(:cookbook_name) { "cookbook_name" }
+      let(:cookbook_version) { "1.2.3" }
+
+      let(:resource_url){api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}")}
+      let(:default_resource_attributes){ new_cookbook(cookbook_name, cookbook_version)}
+      let(:persisted_resource_response){ get(resource_url, requestor) }
+      
+      after(:each){ delete_cookbook(requestor, cookbook_name, cookbook_version)}
+
+      context "the 'json_class' field" do
+        let(:validate_attribute){"json_class"}
+        accepts_valid_value "Chef::CookbookVersion"
+        rejects_invalid_value "Chef::Node"
+      end
+
+      rejects_invalid_keys
+
+    end
 
     context "creating broken cookbooks to test validation and defaults" do
       let(:cookbook_name) { "cookbook_name" }

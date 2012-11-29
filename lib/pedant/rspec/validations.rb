@@ -35,7 +35,14 @@ module Pedant
             should_respond_with 400
           else
             should_respond_with 400, 'and not persist the resource' do
-              persisted_resource_response.should look_like does_not_persist_response
+              begin 
+                persisted_resource_response.should look_like does_not_persist_response
+              rescue URI::InvalidURIError
+                # This can happen when we try to create an item with a
+                # name that is illegal in a URL (like "this+ is
+                # bad!!!").  In this case, we can assume the item was
+                # not persisted :)
+              end
             end
           end
         end
