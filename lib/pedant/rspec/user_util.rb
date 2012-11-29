@@ -84,20 +84,87 @@ module Pedant
 
       module ClassMethods
         def should_generate_new_keys
-          context 'when setting private_key to true' do
-            let(:request_payload) { required_attributes.with('private_key', true) }
-            let(:new_public_key) { parsed_response['public_key'] }
-            let(:updated_resource) { required_attributes.with('public_key', new_public_key) }
+          context 'when generating key pairs' do
+            let(:updated_private_key) { parsed_response['private_key'] }
+            let(:updated_response) { http_200_response.with(:body, updated_resource) }
 
-            should_respond_with 200, 'and update the user' do
-              parsed_response['private_key'].should_not be_nil
+            context 'with private_key set to true' do
+              let(:request_payload) { required_attributes.with('private_key', true) }
+              let(:new_public_key) { parsed_response['public_key'] }
+              let(:updated_resource) { required_attributes.with('public_key', updated_public_key) }
+              let(:updated_public_key) { parsed_response['public_key'] }
+              let(:updated_requestor) { Pedant::User.new(test_user, updated_private_key, platform: platform, preexisting: false) }
+
+              should_respond_with 200, 'and generate a new key pair' do
+                updated_private_key.should_not be_nil
+                updated_public_key.should_not be_nil
+
+                # Now verify that you can retrieve it again
+                persisted_resource_response.should look_like http_200_response.with(:body, updated_resource)
+                authenticate_user(default_user_name, default_user_password).should be_true
+
+                # Now verify we can use the new credentials
+                get(resource_url, updated_requestor).should look_like updated_response
+              end
+            end # when private_key is true
+
+            context 'with private_key set to false' do
+              let(:request_payload) { required_attributes.with('private_key', false) }
+              let(:updated_resource) { required_attributes.with('public_key', test_user_public_key) }
+
+              should_not_generate_new_key_pair
+            end # when private_key is false
+
+            context 'without a private_key' do
+              let(:request_payload) { required_attributes.except('private_key') }
+              let(:updated_resource) { required_attributes.with('public_key', test_user_public_key) }
+
+              should_not_generate_new_key_pair
+            end # when private_key is nil
+
+            rejects_invalid_private_key_flag nil
+            rejects_invalid_private_key_flag 1
+            rejects_invalid_private_key_flag ""
+            rejects_invalid_private_key_flag []
+            rejects_invalid_private_key_flag Hash.new
+
+          end # when generating key pairs
+        end
+
+        # Private macro
+        def should_not_generate_new_key_pair
+          should_respond_with 200, 'and does not generate a new key pair' do
+            parsed_response['private_key'].should_not be_true
+
+            # Now verify that you can retrieve it again
+            persisted_resource_response.should look_like http_200_response.with(:body, updated_resource)
+            authenticate_user(default_user_name, default_user_password).should be_true
+
+            # Now verify we can use the original credentials
+            get(resource_url, test_user_requestor).should look_like updated_response
+          end
+        end
+
+        # Private macro
+        def rejects_invalid_private_key_flag(value)
+          context "with private_key set to #{value.inspect}" do
+            let(:expected_response) { bad_request_response }
+            let(:request_payload) { required_attributes.with('private_key', value) }
+            let(:updated_resource) { required_attributes.with('public_key', test_user_public_key) }
+
+            should_respond_with 400, 'and does not generate a new key pair' do
+              parsed_response['private_key'].should_not be_true
 
               # Now verify that you can retrieve it again
               persisted_resource_response.should look_like http_200_response.with(:body, updated_resource)
               authenticate_user(default_user_name, default_user_password).should be_true
+
+              # Now verify we can use the original credentials
+              get(resource_url, test_user_requestor).should look_like updated_response
             end
-          end # when setting private_key to true
+          end # when private_key is nil
         end
+
 
         def should_update_public_key
           context 'when updating public_key' do
