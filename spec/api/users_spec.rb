@@ -415,14 +415,14 @@ describe "Open Source /users endpoint", :users => true, :platform => :open_sourc
         # Should not be able to modify another user
         forbids_update_to 'name', with: 'username'
         forbids_update_to 'private_key', with: true
-        forbids_update_to 'public_key', with: random_text
+        forbids_update_to 'public_key', with: random_public_key
         forbids_update_to 'password', with: random_text
 
         # Tests priv escalation
         forbids_update_to 'admin', with: true
       end
 
-      context 'when turning off admin on an admin user' do
+      context 'when modifying another admin user' do
         let(:requestor) { platform.non_admin_user }
         let(:expected_response) { forbidden_response }
         let(:request_payload) { default_user_attributes.with('admin', false) }
@@ -431,7 +431,7 @@ describe "Open Source /users endpoint", :users => true, :platform => :open_sourc
         # Should not be able to modify another user
         forbids_update_to 'name', with: 'username'
         forbids_update_to 'private_key', with: true
-        forbids_update_to 'public_key', with: random_text
+        forbids_update_to 'public_key', with: random_public_key
         forbids_update_to 'password', with: random_text
 
         # Tests priv escalation

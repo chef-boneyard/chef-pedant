@@ -175,8 +175,7 @@ module Pedant
             let(:updated_requestor) { Pedant::User.new(test_user, private_key, platform: platform, preexisting: false) }
             let(:updated_response) { http_200_response.with(:body, updated_resource) }
 
-
-            should_respond_with 200, 'and update the user' do
+            should_respond_with 200, 'and update the public key' do
               parsed_response['public_key'].should_not be_nil
               parsed_response.member?('private_key').should be_false # Make sure private_key is not returned at all
 
@@ -188,13 +187,13 @@ module Pedant
               get(resource_url, updated_requestor).should look_like updated_response
             end
 
-            context 'without public key' do
+            context 'without a public key' do
               let(:request_payload) { required_attributes }
 
               # Use the original public key
               let(:updated_resource) { required_attributes.with('public_key', test_user_public_key) }
 
-              should_respond_with 200, 'and update the user' do
+              should_respond_with 200, 'and does not update the public key' do
                 parsed_response['public_key'].should be_nil # We did not update the public key, so this should not be set
                 parsed_response.member?('private_key').should be_false # Make sure private_key is not returned at all
 
@@ -205,9 +204,41 @@ module Pedant
                 # Verify that we can use the new credentials
                 get(resource_url, test_user_requestor).should look_like updated_response
               end
-
             end
+
+            rejects_public_key_with "well-formed, bogus", public_key: Proc.new { bogus_key }
+            rejects_public_key_with "mal-formed", public_key: "-----BEGIN PUBLIC KEY-----You have been trolled :-)-----END PUBLIC KEY-----"
+            rejects_public_key_with "mal-formed RSA", public_key: "-----BEGIN RSA PUBLIC KEY-----You have been trolled :-)-----END RSA PUBLIC KEY-----"
+            rejects_public_key_with "mal-formed cert", public_key: "-----BEGIN CERTIFICATE-----You have been trolled :-)-----END CERTIFICATE-----"
+            rejects_public_key_with "nil", public_key: nil
+            rejects_public_key_with "blank", public_key: ""
+
+            # Invalid JSON types
+            rejects_public_key_with "1 for the",  public_key: 1
+            rejects_public_key_with "[] for the", public_key: []
+            rejects_public_key_with "{} for the", public_key: {}
+
           end # when setting private_key to true
+        end
+
+        def rejects_public_key_with(adjective, _options = {})
+          context "with a #{adjective} public key" do
+            let(:public_key) { instance_eval_if_proc(_options[:public_key]) }
+            let(:expected_response) { bad_request_response }
+
+            # Use the original public key
+            let(:updated_resource) { required_attributes.with('public_key', test_user_public_key) }
+
+            should_respond_with 400, 'and does not update the user' do
+              # Verify nothing has changed
+              persisted_resource_response.should look_like updated_response
+              authenticate_user(default_user_name, default_user_password).should be_true
+
+              # Verify that we can use the original credentials
+              get(resource_url, test_user_requestor).should look_like updated_response
+            end
+
+          end
         end
 
 
