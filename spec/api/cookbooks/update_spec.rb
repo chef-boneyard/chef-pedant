@@ -984,7 +984,6 @@ describe "Cookbooks API endpoint", :cookbooks do
 
       context "for other stuff" do
         should_change('frozen?', true)
-        should_change('blah', 'bleargh')
       end # context for other stuff
     end # context when modifying data
 

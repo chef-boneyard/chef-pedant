@@ -15,6 +15,7 @@
 
 require 'pedant/rspec/role_util'
 require 'pedant/rspec/environment_util'
+require 'pedant/rspec/validations'
 
 describe "Testing the Roles API endpoint", :roles do
   include Pedant::RSpec::RoleUtil
@@ -52,6 +53,7 @@ describe "Testing the Roles API endpoint", :roles do
     end # GET
 
     context 'using POST' do
+      include Pedant::RSpec::Validations::Create
       let(:request_method){:POST}
 
       let(:role_name){unique_name('pedant_testing_role')}
@@ -67,16 +69,43 @@ describe "Testing the Roles API endpoint", :roles do
         should_successfully_create_a_role
       end
 
-      context 'with various valid inputs' do
+      # Don't want to tax the Ruby endpoint with tests it can't handle
+      context 'when validating', :pending => ruby? do
+        let(:resource_url){api_url("/roles/#{resource_name}")}
+        let(:default_resource_attributes){new_role(role_name)}
+        let(:persisted_resource_response){ get(resource_url, requestor) }
 
-        # TODO: add more valid names
-        valid_names = ["a1-_"]
-        valid_names.each do |n|
-          context "with a name of '#{n}'" do
-            let(:role_name){n}
-            should_successfully_create_a_role
-          end
+        after(:each){ delete_role(admin_requestor, resource_name)}
+
+        context "the 'name' field" do
+          let(:validate_attribute) {'name'}
+
+          accepts_valid_value 'pedant_role'
+          accepts_valid_value 'PEDANT_ROLE'
+          accepts_valid_value 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqurstuvwxyz0123456789-_:'
+
+          # Need to be able to not try and delete these
+          rejects_invalid_value "this+ is bad!!!"
+          rejects_invalid_value "I-do-not-like!!!"
         end
+
+        context "the 'json_class' field" do
+          let(:validate_attribute){"json_class"}
+          accepts_valid_value "Chef::Role"
+          rejects_invalid_value "Chef::NotReallyAClass"
+        end
+        
+        context "the 'chef_type' field" do
+          let(:validate_attribute){"chef_type"}
+          accepts_valid_value "role"
+          rejects_invalid_value "node"
+        end
+
+        rejects_invalid_keys
+        
+      end
+
+      context 'with various valid inputs' do
 
         should_set_default_value_for 'role', 'default_attributes', {}
         should_set_default_value_for 'role', 'override_attributes', {}
@@ -131,16 +160,6 @@ describe "Testing the Roles API endpoint", :roles do
 
       # Ruby endpoint can't do these kinds of validations gracefully
       context 'with various invalid inputs', :pending => ruby? do
-        invalid_names = ["this+ is bad!!!", 'I-do-not-like!!!']
-        invalid_names.each do |n|
-          context "with a name of '#{n}'" do
-            let(:role_name){n}
-            should_fail_to_create_a_role 400, "Field 'name' invalid"
-          end
-        end
-
-        test_create_behavior_of_type_metadata 'role', 'json_class', 'Chef::Role'
-        test_create_behavior_of_type_metadata 'role', 'chef_type', 'role'
 
         should_not_allow_creation_with_incorrect_types 'role', 'default_attributes', 'hash', "This is clearly not a hash"
         should_not_allow_creation_with_incorrect_types 'role', 'override_attributes', 'hash', "This is clearly not a hash"

@@ -323,7 +323,7 @@ module Pedant
           "override_attributes" => {},
           "chef_type" => "role",
           "run_list" =>  [],
-          "env_run_lists" => lists[:env_run_list] || {}
+          "env_run_lists" => lists[:env_run_lists] || {}
         }.merge(opts.stringify_keys).merge(lists.stringify_keys)
         # TODO: For backwards compatibility. This should be simplified to arity 1 and the tests refactored
       end

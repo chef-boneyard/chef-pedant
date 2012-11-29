@@ -64,10 +64,10 @@ describe "Environments API Endpoint", :environments, :roles do
     let(:role_not_found_in_environment_exact_response) { http_200_response.with(:body_exact => { 'run_list' => nil }) }
 
     let(:role_with_no_env) { new_role(new_role_name, {}, { run_list: run_list } ) }
-    let(:role_with_env) { new_role(new_role_name, {}, { env_run_list: env_run_list } ) }
+    let(:role_with_env) { new_role(new_role_name, {}, { env_run_lists: env_run_lists } ) }
 
     let(:run_list) { [ "recipe[apache2]" ] }
-    let(:env_run_list) { { new_environment_name => run_list } }
+    let(:env_run_lists) { { new_environment_name => run_list } }
 
     let(:create_role_with_env!) { add_role(admin_user, role_with_env) }
     let(:create_role_without_env!) { add_role(admin_user, role_with_no_env) }
