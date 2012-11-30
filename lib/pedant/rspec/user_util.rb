@@ -174,6 +174,9 @@ module Pedant
             let(:created_requestor) { Pedant::User.new(test_user, private_key, platform: platform, preexisting: false) }
             let(:updated_response) { http_200_response.with(:body, updated_resource) }
 
+            let(:created_public_key) { parsed_response['public_key'] }
+            let(:created_private_key) { parsed_response['private_key'] }
+
 
             should_respond_with 201, 'and create the user' do
               parsed_response['public_key'].should_not be_nil
@@ -189,13 +192,31 @@ module Pedant
 
             context 'without a public key' do
               let(:request_payload) { required_attributes }
-
-              let(:public_key) { parsed_response['public_key'] }
-              let(:private_key) { parsed_response['private_key'] }
+              let(:private_key) { created_private_key }
+              let(:public_key) { created_public_key }
 
               should_respond_with 200, 'and generates a new keypair' do
-                public_key.should_not be_nil
-                private_key.should_not be_nil
+                created_public_key.should_not be_nil
+                created_private_key.should_not be_nil
+
+                # Now verify that you can retrieve it again
+                persisted_resource_response.should look_like updated_response
+                authenticate_user(default_user_name, default_user_password).should be_true
+
+                # Verify that we can use the new credentials
+                get(resource_url, created_requestor).should look_like updated_response
+              end
+            end
+
+            context 'with nil for the public key' do
+              let(:public_key) { nil }
+              let(:private_key) { created_private_key }
+
+              let(:updated_resource) { required_attributes.with('public_key', created_public_key).except('password') }
+
+              should_respond_with 200, 'and generates a new keypair' do
+                created_public_key.should_not be_nil
+                created_private_key.should_not be_nil
 
                 # Now verify that you can retrieve it again
                 persisted_resource_response.should look_like updated_response
@@ -214,7 +235,6 @@ module Pedant
               rejects_public_key_on_create_with "mal-formed", public_key: "-----BEGIN PUBLIC KEY-----You have been trolled :-)-----END PUBLIC KEY-----"
               rejects_public_key_on_create_with "mal-formed RSA", public_key: "-----BEGIN RSA PUBLIC KEY-----You have been trolled :-)-----END RSA PUBLIC KEY-----"
               rejects_public_key_on_create_with "mal-formed cert", public_key: "-----BEGIN CERTIFICATE-----You have been trolled :-)-----END CERTIFICATE-----"
-              rejects_public_key_on_create_with "nil",   public_key: nil
               rejects_public_key_on_create_with "blank", public_key: ""
 
               # Invalid JSON types
@@ -267,6 +287,26 @@ module Pedant
               end
             end
 
+            # PATCHy public_key that also accepts nil
+            context 'with nil for the public key' do
+              let(:public_key) { nil }
+
+              # Use the original public key
+              let(:updated_resource) { required_attributes.with('public_key', test_user_public_key) }
+
+              should_respond_with 200, 'and does not update the public key' do
+                parsed_response['public_key'].should be_nil # We did not update the public key, so this should not be set
+                parsed_response.member?('private_key').should be_false # Make sure private_key is not returned at all
+
+                # Now verify that you can retrieve it again
+                persisted_resource_response.should look_like updated_response
+                authenticate_user(default_user_name, default_user_password).should be_true
+
+                # Verify that we can use the new credentials
+                get(resource_url, test_user_requestor).should look_like updated_response
+              end
+            end
+
             context 'with a bad public_key' do
               # Use the original public key
               let(:updated_resource) { required_attributes.with('public_key', test_user_public_key) }
@@ -275,7 +315,6 @@ module Pedant
               rejects_public_key_on_update_with "mal-formed", public_key: "-----BEGIN PUBLIC KEY-----You have been trolled :-)-----END PUBLIC KEY-----"
               rejects_public_key_on_update_with "mal-formed RSA", public_key: "-----BEGIN RSA PUBLIC KEY-----You have been trolled :-)-----END RSA PUBLIC KEY-----"
               rejects_public_key_on_update_with "mal-formed cert", public_key: "-----BEGIN CERTIFICATE-----You have been trolled :-)-----END CERTIFICATE-----"
-              rejects_public_key_on_update_with "nil", public_key: nil
               rejects_public_key_on_update_with "blank", public_key: ""
 
               # Invalid JSON types
