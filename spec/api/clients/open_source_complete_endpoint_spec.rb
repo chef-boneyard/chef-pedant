@@ -397,6 +397,7 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
     context 'when validating' do
       before(:each) { test_client_response }
 
+      should_generate_new_keys
       should_update_public_key
     end
 
