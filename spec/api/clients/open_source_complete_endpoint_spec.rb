@@ -126,27 +126,10 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
     end
 
     context 'when validating' do
-      context 'when updating public_key' do
-        let(:request_payload) { required_attributes.with('public_key', public_key) }
-        let(:updated_resource) { required_attributes.with('public_key', public_key) }
-        let(:private_key) { OpenSSL::PKey::RSA.new(2048) }
-        let(:public_key) { private_key.public_key.to_s }
-        let(:updated_requestor) { Pedant::Client.new(client_name, private_key, platform: platform, preexisting: false) }
-        let(:updated_response) { http_200_response.with(:body, updated_resource) }
+      let(:client_name) { test_client }
+      let(:test_client) { "pedant_test_#{rand(100000)}" }
 
-
-        should_respond_with 201, 'and update the user' do
-          parsed_response['public_key'].should_not be_nil
-          parsed_response.member?('private_key').should be_false # Make sure private_key is not returned at all
-
-          # Now verify that you can retrieve it again
-          persisted_resource_response.should look_like updated_response
-
-          # Verify that we can use the new credentials
-          get(resource_url, updated_requestor).should look_like updated_response
-        end
-
-      end # when setting private_key to true
+      should_create_public_key
     end
 
     context 'valid requests of various types to create a client' do
@@ -413,27 +396,6 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
 
     context 'when validating' do
       before(:each) { test_client_response }
-
-      context 'when updating public_key' do
-        let(:request_payload) { required_attributes.with('public_key', public_key) }
-        let(:updated_resource) { required_attributes.with('public_key', public_key) }
-        let(:private_key) { OpenSSL::PKey::RSA.new(2048) }
-        let(:public_key) { private_key.public_key.to_s }
-        let(:updated_requestor) { Pedant::Client.new(client_name, private_key, platform: platform, preexisting: false) }
-        let(:updated_response) { http_200_response.with(:body, updated_resource) }
-
-
-        should_respond_with 200, 'and update the user' do
-          parsed_response['public_key'].should_not be_nil
-          parsed_response.member?('private_key').should be_false # Make sure private_key is not returned at all
-
-          # Now verify that you can retrieve it again
-          persisted_resource_response.should look_like updated_response
-
-          # Verify that we can use the new credentials
-          get(resource_url, updated_requestor).should look_like updated_response
-        end
-      end # when updating public_key
 
       should_update_public_key
     end
