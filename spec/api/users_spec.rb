@@ -125,27 +125,7 @@ describe "Open Source /users endpoint", :users => true, :platform => :open_sourc
         rejects_invalid_value_of 'admin', with: {}
         rejects_invalid_value_of 'admin', with: 1
 
-        context 'when updating public_key' do
-          let(:request_payload) { required_attributes.with('public_key', public_key) }
-          let(:updated_resource) { required_attributes.with('public_key', public_key).except('password') }
-          let(:private_key) { OpenSSL::PKey::RSA.new(2048) }
-          let(:public_key) { private_key.public_key.to_s }
-          let(:updated_requestor) { Pedant::User.new(test_user, private_key, platform: platform, preexisting: false) }
-          let(:updated_response) { http_200_response.with(:body, updated_resource) }
-
-
-          should_respond_with 201, 'and update the user' do
-            parsed_response['public_key'].should_not be_nil
-            parsed_response.member?('private_key').should be_false # Make sure private_key is not returned at all
-
-            # Now verify that you can retrieve it again
-            persisted_resource_response.should look_like updated_response
-            authenticate_user(default_user_name, default_user_password).should be_true
-
-            # Verify that we can use the new credentials
-            get(resource_url, updated_requestor).should look_like updated_response
-          end
-        end # when setting private_key to true
+        should_create_public_key
       end
 
       it 'cannot create a user without an authorized signing key'
@@ -175,6 +155,16 @@ describe "Open Source /users endpoint", :users => true, :platform => :open_sourc
 
         should_respond_with 400
       end
+    end
+
+    context 'as an non-existent user' do
+      let(:requestor) { Pedant::User.new(non_existant_admin, private_key, platform: platform, preexisting: false) }
+      let(:non_existant_admin) { "pedant_ghost" }
+      let(:private_key) { OpenSSL::PKey::RSA.new(2048) }
+      let(:public_key) { private_key.public_key.to_s }
+      let(:request_payload) { default_user_attributes.with('admin', true) }
+
+      it { should look_like http_401_response }
     end
 
   end # POST /users/
@@ -405,14 +395,14 @@ describe "Open Source /users endpoint", :users => true, :platform => :open_sourc
         # Should not be able to modify another user
         forbids_update_to 'name', with: 'username'
         forbids_update_to 'private_key', with: true
-        forbids_update_to 'public_key', with: random_text
+        forbids_update_to 'public_key', with: random_public_key
         forbids_update_to 'password', with: random_text
 
         # Tests priv escalation
         forbids_update_to 'admin', with: true
       end
 
-      context 'when turning off admin on an admin user' do
+      context 'when modifying another admin user' do
         let(:requestor) { platform.non_admin_user }
         let(:expected_response) { forbidden_response }
         let(:request_payload) { default_user_attributes.with('admin', false) }
@@ -421,7 +411,7 @@ describe "Open Source /users endpoint", :users => true, :platform => :open_sourc
         # Should not be able to modify another user
         forbids_update_to 'name', with: 'username'
         forbids_update_to 'private_key', with: true
-        forbids_update_to 'public_key', with: random_text
+        forbids_update_to 'public_key', with: random_public_key
         forbids_update_to 'password', with: random_text
 
         # Tests priv escalation
@@ -464,6 +454,18 @@ describe "Open Source /users endpoint", :users => true, :platform => :open_sourc
         end
       end
     end # as normal user
+
+    context 'as an non-existent user' do
+      let(:requestor) { Pedant::User.new(non_existant_admin, private_key, platform: platform, preexisting: false) }
+      let(:non_existant_admin) { "pedant_ghost" }
+      let(:private_key) { OpenSSL::PKey::RSA.new(2048) }
+      let(:public_key) { private_key.public_key.to_s }
+      let(:request_payload) { default_user_attributes.with('admin', false) }
+      let(:default_resource_attributes) { default_user_attributes.with('admin', true) }
+
+      it { should look_like http_401_response }
+    end
+
   end # PUT /users/<name>
 
   context 'DELETE /users/<name>' do
