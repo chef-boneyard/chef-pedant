@@ -199,7 +199,6 @@ describe "Open Source /users endpoint", :users => true, :platform => :open_sourc
         with('public_key', test_user_public_key)
     end
 
-    pending 'as superuser'
     pending 'as admin client'
     pending 'as normal client'
 
@@ -208,22 +207,13 @@ describe "Open Source /users endpoint", :users => true, :platform => :open_sourc
 
       context 'when validating' do
 
-        validates_existence_of 'name'
-        rejects_invalid_value_of 'name', with: 'USERNAME'
-        rejects_invalid_value_of 'name', with: 'user@example.org'
-        rejects_invalid_value_of 'name', with: 'user name'
-        rejects_invalid_value_of 'name', with: 'user|name'
+        validates_name
+        validates_admin_flag
 
         # optionally_accepts password, but this requires special handling.
         # See password handling specs below
         validates_length_of 'password', min: 6, error_message: "Password must have at least 6 characters"
 
-        optionally_accepts 'admin', with: true, default: false
-        optionally_accepts 'admin', with: false, default: false
-        rejects_invalid_value_of 'admin', with: 'random string'
-        rejects_invalid_value_of 'admin', with: []
-        rejects_invalid_value_of 'admin', with: {}
-        rejects_invalid_value_of 'admin', with: 1
 
         should_generate_new_keys
         should_update_public_key
@@ -234,20 +224,9 @@ describe "Open Source /users endpoint", :users => true, :platform => :open_sourc
       context 'when modifying a normal user' do
         let(:default_resource_attributes) { default_user_attributes.with('admin', false) }
 
-        validates_existence_of 'name'
-        rejects_invalid_value_of 'name', with: 'USERNAME'
-        rejects_invalid_value_of 'name', with: 'user@example.org'
-        rejects_invalid_value_of 'name', with: 'user name'
-        rejects_invalid_value_of 'name', with: 'user|name'
-
+        validates_name
+        validates_admin_flag
         validates_length_of 'password', min: 6, error_message: "Password must have at least 6 characters"
-
-        optionally_accepts 'admin', with: true, default: false
-        optionally_accepts 'admin', with: false, default: false
-        rejects_invalid_value_of 'admin', with: 'random string'
-        rejects_invalid_value_of 'admin', with: []
-        rejects_invalid_value_of 'admin', with: {}
-        rejects_invalid_value_of 'admin', with: 1
 
         should_generate_new_keys
         should_update_public_key
@@ -258,20 +237,9 @@ describe "Open Source /users endpoint", :users => true, :platform => :open_sourc
       context 'when modifying another admin' do
         let(:default_resource_attributes) { default_user_attributes.with('admin', true) }
 
-        validates_existence_of 'name'
-        rejects_invalid_value_of 'name', with: 'USERNAME'
-        rejects_invalid_value_of 'name', with: 'user@example.org'
-        rejects_invalid_value_of 'name', with: 'user name'
-        rejects_invalid_value_of 'name', with: 'user|name'
-
+        validates_name
+        validates_admin_flag
         validates_length_of 'password', min: 6, error_message: "Password must have at least 6 characters"
-
-        optionally_accepts 'admin', with: false, default: false
-        optionally_accepts 'admin', with: false, default: false
-        rejects_invalid_value_of 'admin', with: 'random string'
-        rejects_invalid_value_of 'admin', with: []
-        rejects_invalid_value_of 'admin', with: {}
-        rejects_invalid_value_of 'admin', with: 1
 
         should_generate_new_keys
         should_update_public_key
@@ -351,6 +319,7 @@ describe "Open Source /users endpoint", :users => true, :platform => :open_sourc
       end
     end # as admin user
 
+
     context 'as normal user' do
       let(:requestor) { test_user_requestor }
       let(:default_resource_attributes) { default_user_attributes.with('admin', false) }
@@ -363,12 +332,8 @@ describe "Open Source /users endpoint", :users => true, :platform => :open_sourc
 
       context 'when modifying self' do
 
-        validates_existence_of 'name'
-        rejects_invalid_value_of 'name', with: 'USERNAME'
-        rejects_invalid_value_of 'name', with: 'user@example.org'
-        rejects_invalid_value_of 'name', with: 'user name'
-        rejects_invalid_value_of 'name', with: 'user|name'
 
+        validates_name
 
         # optionally_accepts password, but this requires special handling.
         # See password handling specs below

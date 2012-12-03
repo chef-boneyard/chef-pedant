@@ -184,9 +184,9 @@ module Pedant
           end
 
           def optionally_accepts_value(_value, options = {})
-            _value = _value || options[:with]
+            _value = _value.nil? ? options[:with] : _value
 
-            context "with the attribute" do
+            context "with a value of #{_value}" do
               accepts_with_201 payload: Proc.new { default_resource_attributes.with(validate_attribute, _value) }
             end
 
@@ -267,9 +267,9 @@ module Pedant
           end
 
           def optionally_accepts_value(_value, options = {})
-            _value = _value || options[:with]
+            _value = _value.nil? ? options[:with] : _value
 
-            context "with the attribute" do
+            context "with a value of #{_value}" do
               accepts_with_200 payload: Proc.new { default_resource_attributes.with(validate_attribute, _value) }
             end
 

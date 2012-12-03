@@ -83,6 +83,32 @@ module Pedant
       end
 
       module ClassMethods
+
+        def validates_name
+          context "when validating 'name' field" do
+            let(:validate_attribute) { 'name' }
+            validates_existence_of 'name'
+
+            rejects_invalid_value 'USERNAME'
+            rejects_invalid_value 'user@example.org'
+            rejects_invalid_value 'user name'
+            rejects_invalid_value 'user|name'
+          end
+        end
+
+        def validates_admin_flag
+          context "when validating 'admin' field" do
+            let(:validate_attribute) { 'admin' }
+            optionally_accepts_value true, default: false
+            optionally_accepts_value false, default: false
+
+            rejects_invalid_value 'random string'
+            rejects_invalid_value []
+            rejects_invalid_value Hash.new
+            rejects_invalid_value 1
+          end
+        end
+
         def should_generate_new_keys
           context 'when generating key pairs' do
             let(:updated_private_key) { parsed_response['private_key'] }
