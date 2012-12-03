@@ -70,7 +70,6 @@ describe "Environments API Endpoint", :environments do
         let(:not_found_error_message) { ["Cannot load environment #{non_existent_environment_name}"] }
 
         should_respond_with 404
-        pending 'should respond with proper error message'
       end
     end # DELETE /environments/<name>
   end # without additional non-default environments
