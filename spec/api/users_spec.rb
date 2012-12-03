@@ -199,7 +199,6 @@ describe "Open Source /users endpoint", :users => true, :platform => :open_sourc
         with('public_key', test_user_public_key)
     end
 
-    pending 'as admin client'
     pending 'as normal client'
 
     context 'as admin user' do
@@ -319,6 +318,122 @@ describe "Open Source /users endpoint", :users => true, :platform => :open_sourc
       end
     end # as admin user
 
+    context 'as admin client' do
+      let(:requestor)       { platform.admin_client }
+
+      context 'when validating' do
+
+        validates_name
+        validates_admin_flag
+
+        # optionally_accepts password, but this requires special handling.
+        # See password handling specs below
+        validates_length_of 'password', min: 6, error_message: "Password must have at least 6 characters"
+
+        should_generate_new_keys
+        should_update_public_key
+        should_update_without_password
+        should_update_password
+      end
+
+      context 'when modifying a normal user' do
+        let(:default_resource_attributes) { default_user_attributes.with('admin', false) }
+
+        validates_name
+        validates_admin_flag
+        validates_length_of 'password', min: 6, error_message: "Password must have at least 6 characters"
+
+        should_generate_new_keys
+        should_update_public_key
+        should_update_without_password
+        should_update_password
+      end
+
+      context 'when modifying another admin' do
+        let(:default_resource_attributes) { default_user_attributes.with('admin', true) }
+
+        validates_name
+        validates_admin_flag
+        validates_length_of 'password', min: 6, error_message: "Password must have at least 6 characters"
+
+        should_generate_new_keys
+        should_update_public_key
+        should_update_without_password
+        should_update_password
+      end
+
+      context 'when setting admin flag to false on an admin user' do
+        let(:request_payload) { default_user_attributes.with('admin', false) }
+        let(:default_resource_attributes) { default_user_attributes.with('admin', true) }
+
+        should_respond_with 200, 'and update the user' do
+          # Now verify that you can retrieve it again
+          persisted_resource_response.should look_like http_200_response.with(:body, request_payload.except('salt').except('password'))
+          authenticate_user(default_user_name, default_user_password).should be_true
+        end
+
+        context 'when turning off admin for another admin' do
+          let(:request_payload) { default_user_attributes.with('admin', false) }
+          let(:default_resource_attributes) { default_user_attributes.with('admin', true) }
+
+          should_respond_with 200, 'and update the user' do
+            # Now verify that you can retrieve it again
+            persisted_resource_response.should look_like http_200_response.with(:body, request_payload.except('salt').except('password'))
+            authenticate_user(default_user_name, default_user_password).should be_true
+          end
+        end
+
+        context 'when turning off admin for self' do
+          let(:requestor) { test_user_requestor }
+          let(:request_payload) { default_user_attributes.with('admin', false) }
+          let(:default_resource_attributes) { default_user_attributes.with('admin', true) }
+
+          should_respond_with 200, 'and update the user' do
+            # Now verify that you can retrieve it again
+            persisted_resource_response.should look_like http_200_response.with(:body, request_payload.except('salt').except('password'))
+            authenticate_user(default_user_name, default_user_password).should be_true
+          end
+        end
+
+        # this test is dangerous, as it tries to de-admin the last pedant admin user
+        # if it succeeds in deleting the user (it shouldn't) other tests could fail
+        # Note that this test will fail if other admin users exist on the system for some reason
+        # ensure the only other admin in the system doesn't exist
+        # BUG: Marked as pending: admin clients can turn off the last user admin
+        context 'when turning off admin for last admin', pending: "CHEF-3658: admin clients should not be able to de-admin admin user", smoke: false do
+          before(:each) { delete_user(test_user) }
+
+          let(:expected_response) { forbidden_response }
+          let(:success_message) { { 'name' => platform.admin_user.name} }
+          let(:request_url)       { api_url "/users/#{platform.admin_user.name}" }
+
+          should_respond_with 403
+        end # end delete with an admin user context
+      end # when setting admin flag to false on an admin user
+
+
+      context 'with an empty request body' do
+        let(:expected_response) { bad_request_response }
+        let(:request_payload) { }
+
+        should_respond_with 400
+      end
+
+      context 'when modifying a non-existent user' do
+        let(:request_url) { api_url "/users/does_not_exist" }
+        let(:expected_response) { resource_not_found_response }
+        let(:request_payload) { { 'name' => 'does_not_exist' } }
+
+        should_respond_with 404
+
+        context 'with an empty request body' do
+          let(:expected_response) { bad_request_response }
+          let(:request_payload) { }
+
+          should_respond_with 400
+        end
+      end
+    end # as admin client
 
     context 'as normal user' do
       let(:requestor) { test_user_requestor }
