@@ -215,9 +215,16 @@ describe "Environments API Endpoint", :environments do
 
           # TODO: Looks like we're losing the null character with the
           # ejson:decode call which is eating it silently
-          context 'ejson:decode eats nulls', :pending do
+          # OSC is not using ejson anymore.
+          # Test works on OSC, but unknown if it works on the other platforms
+          if open_source?
             fails_with_value("name", "abc\u0000123",
                              "Field 'name' invalid", true)
+          else
+            context 'ejson:decode eats nulls', :pending do
+              fails_with_value("name", "abc\u0000123",
+                               "Field 'name' invalid", true)
+            end
           end
 
           # Ruby endpoint happily takes these, which fail in erlang
