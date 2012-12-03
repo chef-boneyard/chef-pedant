@@ -25,6 +25,10 @@ module Pedant
           SecureRandom.hex(100)
         end
 
+        def random_public_key
+          OpenSSL::PKey::RSA.new(2048).public_key.to_s
+        end
+
         # Acceptance / Rejection macros
         def rejects_with_400(options)
           let(:request_payload) { instance_eval_if_proc(options[:payload]) }
