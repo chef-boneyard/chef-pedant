@@ -48,24 +48,6 @@ describe 'Search Endpoint Open Source Permission Checks', :search => true, :plat
     should_not_allow_method :DELETE
   end # /search
 
-  context "/search/reindex", :pending => erlang? do
-    let(:request_url){ api_url("/search/reindex") }
-
-    should_not_allow_method :GET
-
-    context 'POST' do
-      let(:request_method){:POST}
-      include_context 'permission checks' do
-        let(:admin_response){ok_response}
-        let(:non_admin_response){forbidden_response}
-      end
-    end
-
-    should_not_allow_method :PUT
-    should_not_allow_method :DELETE
-  end # /search/reindex
-
-
   def self.test_search_index(index)
     context "/search/#{index}" do
       let(:request_url){ api_url("/search/#{index}") }

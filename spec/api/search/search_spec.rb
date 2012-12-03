@@ -55,25 +55,6 @@ describe 'Search API endpoint', :search do
     end # GET
   end # /search
 
-  context '/search/reindex', :pending => "/search/reindex is not implemented yet" do
-    let(:request_url){api_url("/search/reindex")}
-    context 'POST' do
-      let(:request_method){:POST}
-      context 'with no data bags' do
-        it 'should succeed' do
-          should look_like reindex_search_success_response
-        end
-      end # with no data bags
-
-      context 'with a data bag' do
-        include_context 'with testing data bag'
-        it 'should succeed' do
-          should look_like reindex_search_success_response
-        end
-      end # with a data bag
-    end # POST
-  end # /search/reindex
-
   context '/search/environment' do
     let(:request_url){api_url("/search/environment")}
 
