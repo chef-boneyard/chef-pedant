@@ -146,31 +146,29 @@ describe "Environments API Endpoint", :environments do
                            :payload => full_environment(new_environment_name))
         end
 
-        def search_returns_environment(query)
+        def search_returns_environment(query, options = {})
+          _default_environment = options[:returns_default] ? default_environment : nil
+          expected_results = [_default_environment, full_environment(new_environment_name)].compact
           search_should_return(
             :type => "environment",
             :query => query,
-            :results => [full_environment(new_environment_name)])
+            :results => expected_results)
         end
 
-        # FIXME: two pending tests below actually work, but the
-        # queries also return the _default environment. This is
-        # correct behavior, so we need to use a different result
-        # matcher.
         it 'can be searched for by name' do
           search_returns_environment("name:#{new_environment_name}")
         end
         it 'can be searched for by description' do
           search_returns_environment("description:Behold*")
         end
-        it 'can be searched for by JSON class', :pending => true do
-          search_returns_environment("json_class:Chef*")
+        it 'can be searched for by JSON class' do
+          search_returns_environment("json_class:Chef*", returns_default: true)
         end
         it 'can be searched for by cookbook versions' do
           search_returns_environment("cookbook_versions:ultimatecookbook")
         end
-        it 'can be searched for by chef type', :pending => true do
-          search_returns_environment("chef_type:environment")
+        it 'can be searched for by chef type' do
+          search_returns_environment("chef_type:environment", returns_default: true)
         end
         it 'can be searched for by default attribute' do
           search_returns_environment("default_attributes:defaultattr")
