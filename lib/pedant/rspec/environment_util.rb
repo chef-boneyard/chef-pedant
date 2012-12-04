@@ -133,7 +133,7 @@ module Pedant
         }
       end
 
-      def full_environment(name)
+      def full_environment(name, attributes = {})
         {
           "name" => name,
           "description" => "Behold, a testing environment!",
@@ -148,6 +148,18 @@ module Pedant
           "override_attributes" => {
             "overrideattr" => "b"
           }
+        }.merge(attributes)
+      end
+
+      def default_environment
+        {
+          "name" => "_default",
+          "description" => "The default Chef environment",
+          "cookbook_versions" => {},
+          "json_class" => "Chef::Environment",
+          "chef_type" => "environment",
+          "default_attributes" => {},
+          "override_attributes" => {}
         }
       end
 
