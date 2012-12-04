@@ -199,8 +199,6 @@ describe "Open Source /users endpoint", :users => true, :platform => :open_sourc
         with('public_key', test_user_public_key)
     end
 
-    pending 'as normal client'
-
     context 'as admin user' do
       let(:requestor)       { platform.admin_user }
 
@@ -467,6 +465,83 @@ describe "Open Source /users endpoint", :users => true, :platform => :open_sourc
         should_update_without_password
         should_update_password
       end # when modifying self
+
+      context 'when modifying another normal user' do
+        let(:requestor) { platform.non_admin_user }
+        let(:expected_response) { forbidden_response }
+
+        # Should not be able to modify another user
+        forbids_update_to 'name', with: 'username'
+        forbids_update_to 'private_key', with: true
+        forbids_update_to 'public_key', with: random_public_key
+        forbids_update_to 'password', with: random_text
+
+        # Tests priv escalation
+        forbids_update_to 'admin', with: true
+      end
+
+      context 'when modifying another admin user' do
+        let(:requestor) { platform.non_admin_user }
+        let(:expected_response) { forbidden_response }
+        let(:request_payload) { default_user_attributes.with('admin', false) }
+        let(:default_resource_attributes) { default_user_attributes.with('admin', true) }
+
+        # Should not be able to modify another user
+        forbids_update_to 'name', with: 'username'
+        forbids_update_to 'private_key', with: true
+        forbids_update_to 'public_key', with: random_public_key
+        forbids_update_to 'password', with: random_text
+
+        # Tests priv escalation
+        forbids_update_to 'admin', with: true
+
+        # this test is dangerous, as it tries to de-admin the last pedant admin user
+        # if it succeeds in deleting the user (it shouldn't) other tests could fail
+        # Note that this test will fail if other admin users exist on the system for some reason
+        # ensure the only other admin in the system doesn't exist
+        context 'when turning off admin for last admin', :smoke => false do
+          before(:each) { delete_user test_user }
+          let(:expected_response) { forbidden_response }
+          let(:success_message) { { 'name' => platform.admin_user.name} }
+          let(:request_url)       { api_url "/users/#{platform.admin_user.name}" }
+
+          should_respond_with 403
+        end # end delete with an admin user context
+      end # when setting admin flag to false on an admin user
+
+
+      context 'with an empty request body' do
+        let(:expected_response) { bad_request_response }
+        let(:request_payload) { }
+
+        should_respond_with 400
+      end
+
+      context 'when modifying a non-existent user' do
+        let(:request_url) { api_url "/users/does_not_exist" }
+        let(:expected_response) { resource_not_found_response }
+        let(:request_payload) { { 'name' => 'does_not_exist' } }
+
+        should_respond_with 404
+
+        context 'with an empty request body' do
+          let(:expected_response) { bad_request_response }
+          let(:request_payload) { }
+
+          should_respond_with 400
+        end
+      end
+    end # as normal user
+
+    context 'as normal user' do
+      let(:requestor) { platform.non_admin_client }
+      let(:default_resource_attributes) { default_user_attributes.with('admin', false) }
+      let(:original_resource_attributes) do
+        default_resource_attributes.
+          except('password').
+          except('private_key').
+          with('public_key', test_user_public_key)
+      end
 
       context 'when modifying another normal user' do
         let(:requestor) { platform.non_admin_user }
