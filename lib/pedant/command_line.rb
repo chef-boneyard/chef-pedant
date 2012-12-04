@@ -77,23 +77,29 @@ module Pedant
         self.run_all = true
       end
     end
-
-    def api_options(opts)
-      tags = %w(environments cookbooks data_bags nodes roles sandboxes users
-                clients depsolver search knife).sort
+    
+    def export_options(opts, tags) 
+      sorted = tags.sort
 
       # --help does not actually sort these, so ordering is important.
-      tags.each do |tag|
+      sorted.each do |tag|
         opts.on("--focus-#{tag}", "Run only #{tag} tests") do
           self.foci << tag
         end
       end
 
-      tags.each do |tag|
+      sorted.each do |tag|
         opts.on("--skip-#{tag}", "Skip #{tag} tests") do
           self.skip << tag
         end
       end
+
+    end
+
+    def api_options(opts)
+      tags = %w(environments cookbooks data_bags nodes roles sandboxes users
+                clients depsolver search knife)
+      export_options(opts, tags)
     end
 
     def parser(option_sets)
