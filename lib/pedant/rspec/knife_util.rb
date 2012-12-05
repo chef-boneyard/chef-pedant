@@ -88,6 +88,14 @@ module Pedant
           let(:item_file_content) { ::JSON.generate(item.with(:id, item_name)) }
 
         end
+      end # DataBag
+
+      module Node
+        extend Pedant::Concern
+
+        included do
+          let(:node_name) { "pedant_#{rand(1000000)}" }
+        end
       end
     end # KnifeUtil
   end # RSpec
