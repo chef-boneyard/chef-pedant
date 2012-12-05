@@ -50,12 +50,19 @@ module Pedant
           shell_out(command_line).tap(&:run_command)
         end
 
+        def run_debug(command_line)
+          shell_out(command_line.tap(&watch)).tap { |x| puts "status: #{x.status} #{x.stdout} #{x.stderr}" }
+        end
+
         def knife(knife_command)
           run "knife #{knife_command}"
         end
 
-      end # included
+        def knife_debug(knife_command)
+          debug_run "knife #{knife_command}"
+        end
 
+      end # included
 
       module DataBag
         extend Pedant::Concern
