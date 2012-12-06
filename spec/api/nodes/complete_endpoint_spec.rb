@@ -219,7 +219,7 @@ describe "Testing the Nodes API endpoint", :nodes do
       let(:default_resource_attributes) { node }
       let(:required_attributes) { } # PUT /nodes works like PATCH
       let(:original_resource_attributes) { node }
-      let(:persisted_resource_response) { get(resource_url, superuser) }
+      let(:persisted_resource_response) { get(resource_url, platform.admin_user) }
 
       # Node names are fixed, once created cannot be renamed
       # If you pass 'name' in the update, it must match the URL
