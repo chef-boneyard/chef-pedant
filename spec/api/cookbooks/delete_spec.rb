@@ -105,7 +105,7 @@ describe "Cookbooks API endpoint", :cookbooks do
         before(:each) { setup_cookbooks(cookbooks) }
         after(:each)  { remove_cookbooks(cookbooks) }
 
-        it "should cleanup unused checksum data in s3/bookshelf" do
+        it "should cleanup unused checksum data in s3/bookshelf", :pending => ruby?, :focus => true do
           verify_checksum_cleanup(:recipes) do
             response.should look_like(:status => 200)
           end
