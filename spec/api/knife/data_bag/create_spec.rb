@@ -22,11 +22,12 @@ describe 'knife', :knife do
       include Pedant::RSpec::KnifeUtil::DataBag
 
       let(:command) { "knife data bag create #{bag_name} -c #{knife_config}" }
-      before(:all)  { knife_admin }
       after(:each)  { knife "data bag delete #{bag_name} -c #{knife_config} --yes" }
 
       context 'without existing data bag of the same name' do
         context 'as an admin' do
+          let(:requestor) { knife_admin }
+
           it 'should succeed' do
             should have_outcome :status => 0, :stdout => /Created data_bag\[#{bag_name}\]/
           end
@@ -35,6 +36,8 @@ describe 'knife', :knife do
 
       context 'with an existing data bag of the same name' do
         context 'as an admin' do
+          let(:requestor) { knife_admin }
+
           it 'should fail' do
             # Create a data bag with the same name
             knife "data bag create #{bag_name} -c #{knife_config}"

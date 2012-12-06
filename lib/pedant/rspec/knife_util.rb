@@ -14,6 +14,7 @@
 # limitations under the License.
 
 require 'mixlib/shellout'
+require 'pathname'
 
 module Pedant
   module RSpec
@@ -29,13 +30,37 @@ module Pedant
         # relative to the top-level opscode-pedant directory.
         let(:repository) { Pedant::Utility.fixture_path "test_repository" }
 
+        let(:assume_fixture_file!) do
+          File.open(fixture_file_path, 'w') do |f|
+            f.write(fixture_file_content)
+          end
+        end
+
+        let(:with_random_key_and_value) { ->(h, i) { h.with(SecureRandom.uuid, SecureRandom.base64(rand(50) + 100)) } }
+        let(:random_hash) { ->(m) { (1..m).to_a.inject({}, &with_random_key_and_value) } }
+        let(:random_array) { ->(m) { (1..m).map { SecureRandom.uuid } } }
+
+        # Override
+        let(:fixture_file_path)    { fail "Define :fixture_file_path" }
+        let(:fixture_file_content) { fail "Define :fixture_file_content" }
+
         # The knife config file that everyone uses.  It is relative to
         # +repository+ (see above).
         #
         # TODO: In the future, have a knife config for each of multiple users
-        let(:knife_config) { knife_config_for_admin_user }
+        let(:knife_config) { requestor.knife_rb_path }
         let(:knife_config_for_normal_user) { knife_user.knife_rb_path}
         let(:knife_config_for_admin_user)  { knife_admin.knife_rb_path }
+
+        # Override let(:requestor) for a different directory.
+        # If the requestor does not have :create_knife set to true, then this
+        # will fail.
+        def knife_fixture(fixture)
+          _path = Pathname.new(requestor.knife_dir).join(fixture)
+          return _path if File.exists?(_path)
+          Dir.mkdir(_path)
+          _path
+        end
 
         # Convenience method for creating a Mixlib::ShellOut representation
         # of a knife command in our test repository
@@ -69,24 +94,19 @@ module Pedant
 
         included do
           let(:bag_name) { "pedant_#{rand(1000000)}" }
-          let(:assume_data_bag_item_file!) do
-            File.open(data_bag_item_file_path, 'w') do |f|
-              f.write(item_file_content)
-            end
-          end
+          let(:assume_data_bag_item_file!) { assume_fixture_file! }
+
+          let(:fixture_file_path) { data_bag_item_file_path }
+          let(:fixture_file_content) { item_file_content }
 
           let(:data_bag_item_file_path) { "#{data_bag_dir}/#{item_name}.json" }
-          let(:data_bag_dir) { "#{repository}/data_bags" }
-
-          let(:available_characters) { [('a'..'z'),('A'..'Z')].map{|i| i.to_a}.flatten + [ ' ', '_', '|', '/' ] }
+          let(:data_bag_dir) { knife_fixture "data_bags" }
 
           let(:max_keys) { rand(7) + 3 }
           let(:item_name) { "item_#{rand(100000)}" }
-          let(:with_random_key_and_value) { ->(h, i) { h.with(SecureRandom.uuid, SecureRandom.base64(rand(50) + 100)) } }
-          let(:item) { (1..max_keys).to_a.inject({}, &with_random_key_and_value) }
+          let(:item) { random_hash.(max_keys) }
 
           let(:item_file_content) { ::JSON.generate(item.with(:id, item_name)) }
-
         end
       end # DataBag
 

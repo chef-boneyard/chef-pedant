@@ -22,15 +22,12 @@ describe 'knife', :knife do
       include Pedant::RSpec::KnifeUtil::DataBag
 
       let(:command) { "knife data bag delete #{bag_name} -c #{knife_config} --yes" }
-
-      # just referring to the user to ensure it's created,
-      # since we don't actually need to refer to it in the
-      # test, as we do when exercising the REST API
-      before(:all) { knife_admin }
       after(:each) { knife "data bag delete #{bag_name} -c #{knife_config} --yes" }
 
       context 'without existing data bag' do
         context 'as an admin' do
+          let(:requestor) { knife_admin }
+
           it 'should fail' do
             should have_outcome :status => 100,
               :stdout => /Cannot load data bag #{bag_name}/,
@@ -42,7 +39,9 @@ describe 'knife', :knife do
       context 'with existing data bag' do
         context 'as an admin' do
           let(:command) { "knife data bag delete #{bag_name} -c #{knife_config} --yes" }
+          let(:requestor) { knife_admin }
           let(:knife_run) { run command }
+
           it 'should succeed' do
             # Create a data bag with the same name
             knife "data bag create #{bag_name} -c #{knife_config}"

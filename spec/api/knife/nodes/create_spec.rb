@@ -22,11 +22,12 @@ describe 'knife', :knife do
       include Pedant::RSpec::KnifeUtil::Node
 
       let(:command) { "knife node create #{node_name} -c #{knife_config} --disable-editing" }
-      before(:all)  { knife_admin }
       after(:each)  { knife "node delete #{node_name} -c #{knife_config} --yes" }
 
       context 'without existing node of the same name' do
         context 'as an admin' do
+          let(:requestor) { knife_admin }
+
           it 'should succeed' do
             should have_outcome :status => 0, :stdout => /Created node\[#{node_name}\]/
           end
@@ -35,6 +36,8 @@ describe 'knife', :knife do
 
       context 'with an existing node of the same name' do
         context 'as an admin' do
+          let(:requestor) { knife_admin }
+
           it 'should fail' do
             pending 'CHEF-982: `knife node create` does not report name conflicts' do
               # Create a node with the same name
