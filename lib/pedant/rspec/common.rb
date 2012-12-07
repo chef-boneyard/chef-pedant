@@ -57,8 +57,8 @@ module Pedant
           "#{code} #{Pedant::RSpec::HTTP::STATUS_CODES[code]}"
         end
 
-        def self.should_respond_with(code, additional_message = nil, &additional_assertions)
-          it ["should respond with", named_response_code(code), additional_message].compact.join(' ') do
+        def self.should_respond_with(code, additional_message = nil, metadata = {}, &additional_assertions)
+          it ["should respond with", named_response_code(code), additional_message].compact.join(' '), metadata do
             should look_like expected_response
 
             instance_eval(&additional_assertions) if additional_assertions

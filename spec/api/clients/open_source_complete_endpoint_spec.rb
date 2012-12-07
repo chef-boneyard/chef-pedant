@@ -84,6 +84,10 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
 
     context 'as an admin client' do
       let(:requestor){admin_requestor}
+      let(:expected_response) { ok_response }
+
+      should_respond_with 200, '', :smoke
+
       it 'should return a list of name/url mappings for all clients' do
         should look_like(fetch_prepopulated_clients_success_response)
       end
@@ -144,7 +148,7 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
         end
       end
 
-      context 'with a "normal" admin client payload' do
+      context 'with a "normal" admin client payload', :smoke do
         let(:client_is_admin){true}
         it 'creates a new admin client' do
           should look_like create_client_success_response
@@ -283,13 +287,13 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
 
     context 'an admin client' do
       let(:client_name){pedant_admin_client_name}
-      it 'returns the client' do
+      it 'returns the client', :smoke do
         should look_like fetch_admin_client_success_response
       end
     end
     context 'a non-admin client' do
       let(:client_name){pedant_nonadmin_client_name}
-      it 'returns a non-admin client' do
+      it 'returns a non-admin client', :smoke do
         should look_like fetch_nonadmin_client_success_response
       end
     end
@@ -399,6 +403,17 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
 
       should_generate_new_keys
       should_update_public_key
+
+    end
+    context 'as an admin' do
+      before(:each) { test_client_response }
+      let(:requestor) { platform.admin_client }
+
+      context 'with admin set to true', :smoke do
+        let(:request_payload) { required_attributes.with('admin', true) }
+
+        it { should look_like ok_response }
+      end
     end
 
     context 'modifying a non-existent client' do
@@ -589,8 +604,10 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
 
         context 'as admin client' do
           let(:requestor){admin_requestor}
-          # Admins should be able to delete a client whether it is admin or not
-          it { should look_like delete_client_success_response }
+          context 'with an existing client', :smoke do
+            # Admins should be able to delete a client whether it is admin or not
+            it { should look_like delete_client_success_response }
+          end
 
           # TODO: Does not test for the edge case of deleting the last admin client
           # TODO: Does not test for an admin deleting itself
