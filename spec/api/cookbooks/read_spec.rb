@@ -168,7 +168,7 @@ describe "Cookbooks API endpoint", :cookbooks do
           }
         end
 
-        it 'should respond with a cookbook collection containing all versions of each cookbook' do
+        it 'should respond with a cookbook collection containing all versions of each cookbook', :smoke do
           should look_like expected_response
         end
 

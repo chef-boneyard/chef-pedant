@@ -153,7 +153,7 @@ describe "Cookbooks API endpoint, named filters", :cookbooks do
   end
 
 
-  context "with one cookbook, one version" do
+  context "with one cookbook, one version", :smoke do
     let(:cookbooks) do
       {"my_cookbook" => {"1.0.0" => ["recipe1", "recipe2"]}}
     end

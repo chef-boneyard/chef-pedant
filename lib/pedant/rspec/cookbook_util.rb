@@ -463,9 +463,9 @@ module Pedant
         # checked
         #   key:     key to change
         #   value:   value to use
-        def should_create(key, value, ignores_value = false, actual_value = nil)
+        def should_create(key, value, ignores_value = false, actual_value = nil, metadata = {})
           # create and update are identical; both use PUT
-          should_change(key, value, ignores_value, actual_value, true)
+          should_change(key, value, ignores_value, actual_value, true, metadata)
         end
 
         # This is used for testing updates with changes to the default
@@ -488,8 +488,8 @@ module Pedant
         # should_not_change_data instead (possibly same for ignores_value as well)
         # create shouldn't ever be passed, use should_create instead
         def should_change(key, value, ignores_value = false, actual_value = nil,
-                          create = false)
-          it "#{key} = #{value} returns 200" do
+                          create = false, metadata = {})
+          it "#{key} = #{value} returns 200", metadata do
             payload = new_cookbook(cookbook_name, cookbook_version)
             if (value == :delete)
               payload.delete(key)

@@ -81,7 +81,7 @@ describe "Cookbooks API endpoint", :cookbooks do
         end
       end # it doesn't delete the wrong version of an existing cookbook
 
-      context "when deleting existent version of an existing cookbook" do
+      context "when deleting existent version of an existing cookbook", :smoke do
         let(:recipe_name) { "test_recipe" }
         let(:recipe_content) { Pedant::Utility.with_unique_suffix("hello") }
         let(:recipe_spec) do

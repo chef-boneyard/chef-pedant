@@ -97,7 +97,7 @@ describe "Cookbook Versions API endpoint, GET", :cookbooks do
       should_respond_with 403
     end
 
-    context "when requesting the 'latest' Cookbook version" do
+    context "when requesting the 'latest' Cookbook version", :smoke do
       let(:expected_response) { fetch_cookbook_version_success_exact_response }
       let(:request_url) { latest_cookbook_version_url }
       let(:cookbook_version) { latest }
