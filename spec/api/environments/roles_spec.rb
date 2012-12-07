@@ -84,9 +84,11 @@ describe "Environments API Endpoint", :environments, :roles do
 
       let(:run_list) { ["recipe[nginx]"] }
 
-      should_respond_with 200
+      context 'with an existing role', :smoke do
+        should_respond_with 200
+      end
 
-      context 'with non-existent role' do
+      context 'without an existing role' do
         let(:request_url) { api_url("/environments/_default/roles/#{role_name}") }
         let(:expected_response) { resource_not_found_exact_response }
         let(:not_found_error_message) { ["Cannot load role #{role_name}"] }

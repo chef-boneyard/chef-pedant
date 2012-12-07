@@ -155,7 +155,7 @@ describe "/environments/ENVIRONMENT/cookbooks API endpoint", :environments, :coo
       end
 
       context 'from the _default environment' do
-        context 'when fetching cookbooks in the _default environment' do
+        context 'when fetching cookbooks in the _default environment', :smoke do
           let(:request_url)       { api_url "/environments/#{default}/cookbooks" }
           let(:expected_response) { ok_exact_response }
           let(:success_message)   { expected_for_cookbooks(cookbooks, 1) }

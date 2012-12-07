@@ -41,7 +41,7 @@ describe "Environments API Endpoint", :environments do
     let(:request_method) { :GET }
 
     context 'with no additional environments' do
-      context 'GET /environments' do
+      context 'GET /environments', :smoke do
         let(:request_url) { api_url "/environments" }
         let(:expected_response) { ok_exact_response }
         let(:success_message) { { "_default" => api_url("/environments/_default") } }
@@ -49,7 +49,7 @@ describe "Environments API Endpoint", :environments do
         should_respond_with 200
       end
 
-      context 'GET /environments/_default' do
+      context 'GET /environments/_default', :smoke do
         let(:request_url) { api_url '/environments/_default' }
         let(:expected_response) { ok_exact_response }
         let(:success_message) do
@@ -83,7 +83,7 @@ describe "Environments API Endpoint", :environments do
       before(:each) { add_environment(admin_user, full_environment(new_environment_name)) }
       after(:each)  { delete_environment(admin_user, new_environment_name) }
 
-      context 'GET /environments' do
+      context 'GET /environments', :smoke do
         let(:request_url) { api_url "/environments" }
         let(:expected_response) { ok_exact_response }
         let(:success_message) do
@@ -98,19 +98,20 @@ describe "Environments API Endpoint", :environments do
 
       pending 'GET /environments open-source permissions', :platform => :open_source
 
-      context 'GET /environments/:environment' do
-        let(:request_url) { api_url "/environments/#{new_environment_name}" }
-        let(:expected_response) { ok_exact_response }
-        let(:success_message) { full_environment(new_environment_name) }
-
-        should_respond_with 200, 'and the environment'
-      end # GET /environment/:environments
-
       context 'GET /environments/<name>' do
         let(:request_method) { :GET }
         let(:request_url)    { api_url "/environments/#{environment_name}" }
 
         let(:environment_name) { new_environment_name }
+
+        context 'with an existing environment', :smoke do
+          let(:environment_name) { new_environment_name }
+          let(:expected_response) { ok_exact_response }
+          let(:success_message) { full_environment(new_environment_name) }
+
+          should_respond_with 200, 'and the environment'
+        end # GET /environment/:environments
+
 
         context 'when handling authentication headers' do
           # Unconverted Auth Header DSL

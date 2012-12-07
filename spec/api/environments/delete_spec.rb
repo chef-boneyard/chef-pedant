@@ -100,7 +100,12 @@ describe "Environments API Endpoint", :environments do
         include_context 'handles authentication headers correctly'
       end
 
-      context 'when the environment does not exist' do
+      context 'with an existing environment', :smoke do
+        let(:environment_name) { new_environment_name }
+        it { should look_like ok_response }
+      end
+
+      context 'without an existing environment' do
         let(:environment_name) { 'doesnotexistatall' }
         let(:expected_response) { resource_not_found_response }
         should_respond_with 404
