@@ -84,7 +84,7 @@ describe "Environments API Endpoint", :environments, :roles do
 
       let(:run_list) { ["recipe[nginx]"] }
 
-      context 'with an existing role', :smoke do
+      context 'with an existing role' do
         should_respond_with 200
       end
 
@@ -108,7 +108,9 @@ describe "Environments API Endpoint", :environments, :roles do
 
       let(:create_environment!) { add_environment(admin_user, new_environment(new_environment_name)) }
 
-      should_respond_with 200, 'and the role'
+      context 'with an existing role', :smoke do
+        should_respond_with 200, 'and the role'
+      end
 
       context 'with non-existent environment' do
         before(:each) { create_role_with_env! }

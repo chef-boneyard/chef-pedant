@@ -152,8 +152,11 @@ describe "Cookbooks API endpoint, named filters", :cookbooks do
     should_respond_with_single_cookbook_not_found
   end
 
-
-  context "with one cookbook, one version", :smoke do
+  # TODO: This would be a good candidate for a smoke test
+  # if there were a way to turn off testing against exact body responses.
+  # We don't know what existing cookbooks are on the target server for
+  # smoke tests.
+  context "with one cookbook, one version" do
     let(:cookbooks) do
       {"my_cookbook" => {"1.0.0" => ["recipe1", "recipe2"]}}
     end

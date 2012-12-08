@@ -86,7 +86,9 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
       let(:requestor){admin_requestor}
       let(:expected_response) { ok_response }
 
-      should_respond_with 200, '', :smoke
+      context 'with an operational server', :smoke do
+        it { should look_like ok_response }
+      end
 
       it 'should return a list of name/url mappings for all clients' do
         should look_like(fetch_prepopulated_clients_success_response)

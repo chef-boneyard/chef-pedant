@@ -34,7 +34,15 @@ describe "Open Source /users endpoint", :users => true, :platform => :open_sourc
     let(:request_url)    { api_url '/users' }
     let(:requestor)      { superuser }
 
-    context 'with no extra users', :smoke do
+    context 'with an operational server', :smoke do
+      # For the smoke version of this test, we just want to make
+      # sure that GET /users responds at all. We have no idea what
+      # kind of data already exists.
+
+      it { should look_like ok_response }
+    end
+
+    context 'with only Pedant-created users' do
       let(:expected_response) { ok_exact_response }
       let(:success_message)   { users_collection.(pedant_users) }
 
