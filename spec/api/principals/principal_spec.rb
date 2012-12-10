@@ -30,13 +30,13 @@ describe "Open Source /princiapals endpoint", :principals => true, :platform => 
     end
   end
 
-  context 'GET /users/<name>' do
+  context 'GET /principals/<name>' do
     let(:request_method) { :GET }
     let(:requestor)      { superuser }
     let(:expected_response) { ok_full_response }
     let(:request_url)    { api_url "/principals/#{principal_name}" }
 
-    context "a regular user" do
+    context "a regular user", :smoke do
       let(:principal_name) { user_name }
       let(:success_message) do
         {
@@ -49,7 +49,7 @@ describe "Open Source /princiapals endpoint", :principals => true, :platform => 
       should_respond_with 200, 'and the user'
     end
 
-    context "a regular client" do
+    context "a regular client", :smoke do
       let(:principal_name) { client_name }
       let(:success_message) do
         {

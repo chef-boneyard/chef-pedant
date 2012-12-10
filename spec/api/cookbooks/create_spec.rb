@@ -30,17 +30,28 @@ describe "Cookbooks API endpoint", :cookbooks do
     let(:request_url){api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}")}
     shared(:requestor){admin_user}
 
+    let(:default_resource_attributes){ new_cookbook(cookbook_name, cookbook_version)}
+
+    context 'with a basic cookbook', :smoke do
+      after(:each) { delete_cookbook(admin_user, cookbook_name, cookbook_version) }
+
+      let(:request_payload) { default_resource_attributes }
+      let(:cookbook_name) { "pedant_basic" }
+      let(:cookbook_version) { "1.0.0" }
+      let(:created_resource) { default_resource_attributes }
+
+      it { should look_like created_exact_response }
+    end
 
     # Start using the new validation macros
     context "when validating", :pending => ruby? do
-      
+
       let(:cookbook_name) { "cookbook_name" }
       let(:cookbook_version) { "1.2.3" }
 
       let(:resource_url){api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}")}
-      let(:default_resource_attributes){ new_cookbook(cookbook_name, cookbook_version)}
       let(:persisted_resource_response){ get(resource_url, requestor) }
-      
+
       after(:each){ delete_cookbook(requestor, cookbook_name, cookbook_version)}
 
       context "the 'json_class' field" do

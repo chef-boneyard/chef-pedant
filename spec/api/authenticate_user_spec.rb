@@ -41,7 +41,7 @@ describe "Open source /authenticate_users endpoing", :users => true, :platform =
       before(:each) { create_user(default_user_attributes.with('admin', false), requestor) }
       after(:each) { delete_user(default_user_name) }
 
-      context 'and correct password' do
+      context 'and correct password', :smoke do
         let(:expected_response) { ok_full_response }
         let(:success_message) do
           {
@@ -60,7 +60,7 @@ describe "Open source /authenticate_users endpoing", :users => true, :platform =
         should_respond_with 200, 'verified => true'
       end # context
 
-      context 'and wrong password' do
+      context 'and wrong password', :smoke do
         let(:expected_response) { ok_full_response }
         let(:success_message) do
           {

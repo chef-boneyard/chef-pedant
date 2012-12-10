@@ -70,8 +70,8 @@ describe "Cookbooks API endpoint", :cookbooks do
       respects_maximum_payload_size
     end
 
-    context "with permissions for" do
-      it "admin user returns 200" do
+    context "as admin user" do
+      it "should respond with 200 Ok", :smoke do
         payload = new_cookbook(cookbook_name, cookbook_version)
         metadata = payload["metadata"]
         metadata["description"] = "hi there"

@@ -440,7 +440,7 @@ describe "Depsolver API endpoint", :depsolver do
         delete_cookbook(admin_user, cookbook_name, cookbook_version)
       }
 
-      it "returns 200 with a minimal good cookbook" do
+      it "returns 200 with a minimal good cookbook", :smoke do
         post(api_url("/environments/#{env}/cookbook_versions"), normal_user,
             :payload => payload) do |response|
           response.should look_like({

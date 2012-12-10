@@ -43,6 +43,7 @@ module Pedant
         # TODO: Refactor tests to use these generic responses
         let(:ok_full_response)                  { http_200_full_response }
         let(:ok_exact_response)                 { http_200_exact_response }
+        let(:created_exact_response)            { http_201_exact_response }
         let(:resource_created_full_response)    { http_201_full_response }
         let(:resource_created_exact_response)   { http_201_exact_response }
         let(:bad_request_exact_response)        { http_400_exact_response }

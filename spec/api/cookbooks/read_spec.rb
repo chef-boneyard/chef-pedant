@@ -41,6 +41,10 @@ describe "Cookbooks API endpoint", :cookbooks do
       }
     end
 
+    context "with an operational server", :smoke do
+      it { should look_like ok_response }
+    end
+
     context "without existing cookbooks" do
       let(:expected_response) { fetch_cookbook_collection_success_exact_response }
 

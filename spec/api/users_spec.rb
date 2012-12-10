@@ -34,7 +34,15 @@ describe "Open Source /users endpoint", :users => true, :platform => :open_sourc
     let(:request_url)    { api_url '/users' }
     let(:requestor)      { superuser }
 
-    context 'with no extra users' do
+    context 'with an operational server', :smoke do
+      # For the smoke version of this test, we just want to make
+      # sure that GET /users responds at all. We have no idea what
+      # kind of data already exists.
+
+      it { should look_like ok_response }
+    end
+
+    context 'with only Pedant-created users' do
       let(:expected_response) { ok_exact_response }
       let(:success_message)   { users_collection.(pedant_users) }
 
@@ -62,7 +70,9 @@ describe "Open Source /users endpoint", :users => true, :platform => :open_sourc
       }
     end
 
-    should_respond_with 200, 'and the user'
+    context 'with an existing user', :smoke do
+      should_respond_with 200, 'and the user'
+    end
   end
 
 
@@ -94,10 +104,12 @@ describe "Open Source /users endpoint", :users => true, :platform => :open_sourc
     context 'as an admin' do
       let(:requestor) { platform.admin_user }
 
-      should_respond_with 201, 'and create the user' do
-        # Now verify that you can retrieve it again
-        persisted_resource_response.should look_like http_200_response.with(:body, request_payload.except('salt').except('password'))
-        authenticate_user(default_user_name, default_user_password).should be_true
+      context 'without an existing user of the same name', :smoke do
+        should_respond_with 201, 'and create the user' do
+          # Now verify that you can retrieve it again
+          persisted_resource_response.should look_like http_200_response.with(:body, request_payload.except('salt').except('password'))
+          authenticate_user(default_user_name, default_user_password).should be_true
+        end
       end
 
       context 'with existing user of the same name' do
@@ -201,6 +213,12 @@ describe "Open Source /users endpoint", :users => true, :platform => :open_sourc
 
     context 'as admin user' do
       let(:requestor)       { platform.admin_user }
+
+
+      context 'with a valid update', :smoke do
+        let(:request_payload) { required_attributes }
+        it { should look_like ok_response }
+      end
 
       context 'when validating' do
 
@@ -446,6 +464,11 @@ describe "Open Source /users endpoint", :users => true, :platform => :open_sourc
       context 'when modifying self' do
 
 
+        context 'with a valid update' do
+          let(:request_payload) { required_attributes }
+          it { should look_like ok_response }
+        end
+
         validates_name
 
         # optionally_accepts password, but this requires special handling.
@@ -636,10 +659,12 @@ describe "Open Source /users endpoint", :users => true, :platform => :open_sourc
       let(:create_user!) { ->(name) { create_user default_user_attributes.with('name', name), superuser } }
       after(:each) { delete_user(test_user) }
 
-      context 'delete with an admin client'  do
+      context 'as an admin client'  do
         let(:expected_response) { ok_full_response }
         # clients right now dont have any limiting perms
-        should_respond_with 200, 'and delete the user'
+        context 'with an existing admin user', :smoke do
+          should_respond_with 200, 'and delete the user'
+        end
 
         context 'with non-existent user' do
           before(:each) { delete_user(test_user_name) }
@@ -651,7 +676,7 @@ describe "Open Source /users endpoint", :users => true, :platform => :open_sourc
       end # end delete with admin client context
 
       # This tests that a non-admin user cannot delete an admin user
-      context 'delete with non-admin user' do
+      context 'as a non-admin user' do
         let(:requestor) { platform.non_admin_user }
         let(:expected_response) { forbidden_response }
 
@@ -666,10 +691,13 @@ describe "Open Source /users endpoint", :users => true, :platform => :open_sourc
         end # end non-existend user context
      end # end non-admin user context
 
-      context 'delete with an admin user' do
+      context 'as an admin user' do
         let(:requestor) { platform.admin_user }
         let(:expected_response) { ok_full_response }
-        should_respond_with 200
+
+        context 'with an existing admin user', :smoke do
+          should_respond_with 200
+        end
 
         # this test is dangerous, as it tries to delete the main pedant admin user
         # if it succeeds in deleting the user (it shouldn't) other tests could fail
@@ -690,41 +718,41 @@ describe "Open Source /users endpoint", :users => true, :platform => :open_sourc
     end # end user to be deleted is admin context
 
     context 'user to be deleted is non-admin' do
-        let(:request_url) { api_url "/users/#{another_non_admin_user}"}
-        after(:each) { delete_user another_non_admin_user }
-        let(:requestor) { platform.non_admin_user }
+      let(:request_url) { api_url "/users/#{another_non_admin_user}"}
+      after(:each) { delete_user another_non_admin_user }
+      let(:requestor) { platform.non_admin_user }
 
-        let(:another_non_admin_user) do
-          "another_pedant_non_admin_user_#{rand(1000)}".tap do |name|
-            create_user default_user_attributes.with('name', name).with('admin', false), superuser
-          end
+      let(:another_non_admin_user) do
+        "another_pedant_non_admin_user_#{rand(1000)}".tap do |name|
+          create_user default_user_attributes.with('name', name).with('admin', false), superuser
         end
+      end
 
-        context 'non-admin can delete themselves' do
-          let(:non_admin_user) { parse(create_user default_user_attributes.with('name', non_admin_user_name).with('admin', false), superuser) }
-          let(:non_admin_user_name){ "pedant_non_admin_user_#{rand(10000)}" }
-          let(:success_message) { { 'name' => non_admin_user_name} }
-          let(:request_url)       { api_url "/users/#{non_admin_user_name}" }
-          # Set a non-admin user we can delete as the requestor and have them delete themselves
-          let(:requestor) { Pedant::Requestor.new( non_admin_user_name, non_admin_user["private_key"] ) }
-          let(:expected_response) { ok_full_response }
+      context 'non-admin can delete themselves', :smoke do
+        let(:non_admin_user) { parse(create_user default_user_attributes.with('name', non_admin_user_name).with('admin', false), superuser) }
+        let(:non_admin_user_name){ "pedant_non_admin_user_#{rand(10000)}" }
+        let(:success_message) { { 'name' => non_admin_user_name} }
+        let(:request_url)       { api_url "/users/#{non_admin_user_name}" }
+        # Set a non-admin user we can delete as the requestor and have them delete themselves
+        let(:requestor) { Pedant::Requestor.new( non_admin_user_name, non_admin_user["private_key"] ) }
+        let(:expected_response) { ok_full_response }
 
-          should_respond_with 200
-        end # end non-admin can delete themselves
+        should_respond_with 200
+      end # end non-admin can delete themselves
 
-        context 'cannot be deleted by another non-admin user' do
-          let(:expected_response) { forbidden_response }
+      pending 'cannot be deleted by another non-admin user' do
+        let(:expected_response) { forbidden_response }
 
-          should_respond_with 403
-        end
+        should_respond_with 403
+      end
 
-        context 'with non-existent user' do
-          let(:expected_response) { forbidden_response}
+      context 'with non-existent user' do
+        let(:expected_response) { forbidden_response}
 
-          should_respond_with 403
-        end # end non-existend user context
+        should_respond_with 403
+      end # end non-existend user context
 
-     #end # end non-admin user context
+      #end # end non-admin user context
 
     end # end user to be deleted is non-admin context
 
