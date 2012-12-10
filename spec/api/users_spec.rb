@@ -740,7 +740,7 @@ describe "Open Source /users endpoint", :users => true, :platform => :open_sourc
         should_respond_with 200
       end # end non-admin can delete themselves
 
-      context 'cannot be deleted by another non-admin user' do
+      pending 'cannot be deleted by another non-admin user' do
         let(:expected_response) { forbidden_response }
 
         should_respond_with 403
