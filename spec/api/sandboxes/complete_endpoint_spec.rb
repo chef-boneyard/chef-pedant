@@ -73,7 +73,7 @@ describe "Sandboxes API Endpoint", :sandboxes do
         }
       end
 
-      it 'should respond with 201 Created' do
+      it 'should respond with 201 Created', :smoke do
         checksums[0].should_not eq checksums[1]
         response.should look_like expected_response
       end
@@ -270,7 +270,7 @@ describe "Sandboxes API Endpoint", :sandboxes do
       # YYYY-MM-DDT00:00:00+00:00, but we'll constraint it to at least today's date
       let(:timestamp_regexp) { Regexp.new "#{Time.new.strftime('%Y-%m-%d')}T\\d\\d:\\d\\d:\\d\\d\\+\\d\\d:\\d\\d" }
 
-      it 'should respond with 200 OK' do
+      it 'should respond with 200 OK', :smoke do
         # Upload and check files
         responses_from_upload.each { |r| r.should look_like({:status => [200, 204]}) }
 

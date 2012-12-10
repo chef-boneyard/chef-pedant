@@ -96,6 +96,10 @@ describe "Environments API Endpoint", :environments do
         respects_maximum_payload_size
       end
 
+      context 'with a valid update', :smoke  do
+        it { should look_like ok_response }
+      end
+
       context 'when handling request headers and payload' do
         include_context "environment_body_util"
 

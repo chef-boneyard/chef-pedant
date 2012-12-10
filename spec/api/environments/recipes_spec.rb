@@ -73,19 +73,19 @@ describe "/environments/ENVIRONMENT/recipes API endpoint", :environments do
   context 'with multiple versions of multiple cookbooks' do
     let(:cookbooks) do
       {
-        "cb_one" =>
+        "pedant_cb_one" =>
         {
           "1.0.0" => ['webserver'],
           "2.0.0" => ['database', 'webserver'],
           "3.0.0" => ['awesome_sauce', 'database', 'webserver']
         },
-          "cb_two" =>
+          "pedant_cb_two" =>
         {
           "1.0.0" => ['chicken'],
           "1.2.0" => ['beef', 'chicken'],
           "1.2.5" => ['beef', 'chicken', 'stewed_monkey_brains']
         },
-          "cb_three" =>
+          "pedant_cb_three" =>
         {
           "0.0.1" => ['server'],
           "0.5.0" => ['client', 'server'],
@@ -99,22 +99,23 @@ describe "/environments/ENVIRONMENT/recipes API endpoint", :environments do
 
     context 'with no environment constraints' do
       let(:expected_recipes) do
-        %w( cb_one::awesome_sauce
-            cb_one::database
-            cb_one::webserver
-            cb_three::client
-            cb_three::replication
-            cb_three::server
-            cb_two::beef
-            cb_two::chicken
-            cb_two::stewed_monkey_brains )
+        %w( pedant_cb_one::awesome_sauce
+            pedant_cb_one::database
+            pedant_cb_one::webserver
+            pedant_cb_three::client
+            pedant_cb_three::replication
+            pedant_cb_three::server
+            pedant_cb_two::beef
+            pedant_cb_two::chicken
+            pedant_cb_two::stewed_monkey_brains )
       end
 
-      context 'when fetching recipes from a non-default environment' do
+      # These smoke tests may be too slow
+      context 'when fetching recipes from a non-default environment', :smoke do
         should_respond_with_success 'and recipes from the latest version of all cookbooks within the environment'
       end
 
-      context 'when fetching recipes from _default environment' do
+      context 'when fetching recipes from _default environment', :smoke do
         let(:environment_name) { default }
         should_respond_with_success 'and recipes from the latest version of all cookbooks within the environment'
       end
@@ -148,51 +149,51 @@ describe "/environments/ENVIRONMENT/recipes API endpoint", :environments do
 
     context 'with environment constraints' do
       test_with_constraints({
-                              'cb_one' => '= 1.0.0'
+                              'pedant_cb_one' => '= 1.0.0'
                             },
                             [
-                             'cb_one::webserver',
-                             'cb_three::client',
-                             'cb_three::replication',
-                             'cb_three::server',
-                             'cb_two::beef',
-                             'cb_two::chicken',
-                             'cb_two::stewed_monkey_brains'
+                             'pedant_cb_one::webserver',
+                             'pedant_cb_three::client',
+                             'pedant_cb_three::replication',
+                             'pedant_cb_three::server',
+                             'pedant_cb_two::beef',
+                             'pedant_cb_two::chicken',
+                             'pedant_cb_two::stewed_monkey_brains'
                             ])
 
       test_with_constraints({
-                              'cb_one' => '< 2.5.0'
+                              'pedant_cb_one' => '< 2.5.0'
                             },
                             [
-                             'cb_one::database',
-                             'cb_one::webserver',
-                             'cb_three::client',
-                             'cb_three::replication',
-                             'cb_three::server',
-                             'cb_two::beef',
-                             'cb_two::chicken',
-                             'cb_two::stewed_monkey_brains'
+                             'pedant_cb_one::database',
+                             'pedant_cb_one::webserver',
+                             'pedant_cb_three::client',
+                             'pedant_cb_three::replication',
+                             'pedant_cb_three::server',
+                             'pedant_cb_two::beef',
+                             'pedant_cb_two::chicken',
+                             'pedant_cb_two::stewed_monkey_brains'
                             ])
 
       test_with_constraints({
-                              'cb_one' => '< 2.5.0',
-                              'cb_two' => '= 1.0.0'
+                              'pedant_cb_one' => '< 2.5.0',
+                              'pedant_cb_two' => '= 1.0.0'
                             },
                             [
-                             'cb_one::database',
-                             'cb_one::webserver',
-                             'cb_three::client',
-                             'cb_three::replication',
-                             'cb_three::server',
-                             'cb_two::chicken'
+                             'pedant_cb_one::database',
+                             'pedant_cb_one::webserver',
+                             'pedant_cb_three::client',
+                             'pedant_cb_three::replication',
+                             'pedant_cb_three::server',
+                             'pedant_cb_two::chicken'
                             ])
 
       # Nothing satisfies these constraints!
       # 6.6.6 = The Semantic Version of the Beast
       test_with_constraints({
-                              'cb_one' => '= 6.6.6',
-                              'cb_two' => '= 6.6.6',
-                              'cb_three' => '= 6.6.6',
+                              'pedant_cb_one' => '= 6.6.6',
+                              'pedant_cb_two' => '= 6.6.6',
+                              'pedant_cb_three' => '= 6.6.6',
                             },
                             [])
     end

@@ -36,39 +36,22 @@ describe "Environments API Endpoint", :environments do
   let(:non_existent_environment_name) { 'pedant_dummy_environment' }
 
   let(:requestor) { admin_user }
+  let(:request_method) { :GET }
 
-  context 'GET' do
-    let(:request_method) { :GET }
+  context 'GET /environments'  do
+    let(:request_url) { api_url "/environments" }
+
+    context 'with an operational server', :smoke do
+      it { should look_like ok_response }
+    end
 
     context 'with no additional environments' do
-      context 'GET /environments' do
-        let(:request_url) { api_url "/environments" }
-        let(:expected_response) { ok_exact_response }
-        let(:success_message) { { "_default" => api_url("/environments/_default") } }
+      let(:expected_response) { ok_exact_response }
+      let(:success_message) { { "_default" => api_url("/environments/_default") } }
 
-        should_respond_with 200
-      end
-
-      context 'GET /environments/_default' do
-        let(:request_url) { api_url '/environments/_default' }
-        let(:expected_response) { ok_exact_response }
-        let(:success_message) do
-          {
-            "name" => "_default",
-            "description" => "The default Chef environment",
-            "cookbook_versions" => {},
-            "json_class" => "Chef::Environment",
-            "chef_type" => "environment",
-            "default_attributes" => {},
-            "override_attributes" => {}
-          }
-        end
-
-        should_respond_with 200, 'and the default environment'
-      end
+      should_respond_with 200
 
       it 'should respond to cookbook versions'
-
 
       context 'with a non-existant environment' do
         let(:request_url) { api_url "/environments/#{non_existent_environment_name}" }
@@ -77,107 +60,135 @@ describe "Environments API Endpoint", :environments do
 
         should_respond_with 404
       end # with non-existant environment
-    end # with no additional environments
+    end
 
     context 'with non-default environments' do
       before(:each) { add_environment(admin_user, full_environment(new_environment_name)) }
       after(:each)  { delete_environment(admin_user, new_environment_name) }
 
-      context 'GET /environments' do
-        let(:request_url) { api_url "/environments" }
-        let(:expected_response) { ok_exact_response }
-        let(:success_message) do
-          {
-            "_default"           => api_url("/environments/_default"),
-            new_environment_name => api_url("/environments/#{new_environment_name}")
-          }
-        end
-
-        should_respond_with 200, 'and an index of all the available environments'
-      end # GET /environments
-
-      pending 'GET /environments open-source permissions', :platform => :open_source
-
-      context 'GET /environments/:environment' do
-        let(:request_url) { api_url "/environments/#{new_environment_name}" }
-        let(:expected_response) { ok_exact_response }
-        let(:success_message) { full_environment(new_environment_name) }
-
-        should_respond_with 200, 'and the environment'
-      end # GET /environment/:environments
-
-      context 'GET /environments/<name>' do
-        let(:request_method) { :GET }
-        let(:request_url)    { api_url "/environments/#{environment_name}" }
-
-        let(:environment_name) { new_environment_name }
-
-        context 'when handling authentication headers' do
-          # Unconverted Auth Header DSL
-          let(:method) { request_method }
-          let(:url)    { request_url }
-          let(:body)   { nil }
-
-          let(:response_should_be_successful) do
-            response.
-              should look_like({
-              :status => 200,
-              :body_exact => full_environment(new_environment_name)
-            })
-          end
-          let(:success_user) { admin_user }
-          let(:failure_user) { outside_user }
-
-          include_context 'handles authentication headers correctly'
-        end
-
-        context 'when the environment does not exist' do
-          let(:environment_name) { 'doesnotexistatall' }
-          let(:expected_response) { resource_not_found_response }
-          should_respond_with 404
-        end
+      let(:expected_response) { ok_exact_response }
+      let(:success_message) do
+        {
+          "_default"           => api_url("/environments/_default"),
+          new_environment_name => api_url("/environments/#{new_environment_name}")
+        }
       end
 
-      context 'search' do
-        before(:each) do
-          # Create the environment
-          @response = post(api_url("/environments"),
-                           admin_user,
-                           :payload => full_environment(new_environment_name))
-        end
+      should_respond_with 200, 'and an index of all the available environments'
+    end
 
-        def search_returns_environment(query, options = {})
-          _default_environment = options[:returns_default] ? default_environment : nil
-          expected_results = [_default_environment, full_environment(new_environment_name)].compact
-          search_should_return(
-            :type => "environment",
-            :query => query,
-            :results => expected_results)
-        end
+    pending 'GET /environments open-source permissions', :platform => :open_source
+  end # GET /environments
 
-        it 'can be searched for by name' do
-          search_returns_environment("name:#{new_environment_name}")
-        end
-        it 'can be searched for by description' do
-          search_returns_environment("description:Behold*")
-        end
-        it 'can be searched for by JSON class' do
-          search_returns_environment("json_class:Chef*", returns_default: true)
-        end
-        it 'can be searched for by cookbook versions' do
-          search_returns_environment("cookbook_versions:ultimatecookbook")
-        end
-        it 'can be searched for by chef type' do
-          search_returns_environment("chef_type:environment", returns_default: true)
-        end
-        it 'can be searched for by default attribute' do
-          search_returns_environment("default_attributes:defaultattr")
-        end
-        it 'can be searched for by override attribute' do
-          search_returns_environment("override_attributes:overrideattr")
-        end
+
+
+  context 'GET /environments/_default' do
+    let(:request_url) { api_url '/environments/_default' }
+
+    context 'with an operational server', :smoke do
+      it { should look_like ok_response }
+    end
+
+    context 'with a newly installed server' do
+      let(:expected_response) { ok_exact_response }
+      let(:success_message) do
+        {
+          "name" => "_default",
+          "description" => "The default Chef environment",
+          "cookbook_versions" => {},
+          "json_class" => "Chef::Environment",
+          "chef_type" => "environment",
+          "default_attributes" => {},
+          "override_attributes" => {}
+        }
       end
-    end # with non-default environments
 
-  end # GET
+      should_respond_with 200, 'and the default environment'
+    end
+  end
+
+  context 'GET /environments/<name>' do
+    let(:request_url)    { api_url "/environments/#{environment_name}" }
+
+    before(:each) { add_environment(admin_user, full_environment(new_environment_name)) }
+    after(:each)  { delete_environment(admin_user, new_environment_name) }
+
+    let(:environment_name) { new_environment_name }
+
+    context 'with an existing environment', :smoke do
+      let(:environment_name) { new_environment_name }
+      let(:expected_response) { ok_exact_response }
+      let(:success_message) { full_environment(new_environment_name) }
+
+      should_respond_with 200, 'and the environment'
+    end # GET /environment/:environments
+
+    context 'when handling authentication headers' do
+      # Unconverted Auth Header DSL
+      let(:method) { request_method }
+      let(:url)    { request_url }
+      let(:body)   { nil }
+
+      let(:response_should_be_successful) do
+        response.
+          should look_like({
+          :status => 200,
+          :body_exact => full_environment(new_environment_name)
+        })
+      end
+      let(:success_user) { admin_user }
+      let(:failure_user) { outside_user }
+
+      include_context 'handles authentication headers correctly'
+    end
+
+    context 'when the environment does not exist' do
+      let(:environment_name) { 'doesnotexistatall' }
+      let(:expected_response) { resource_not_found_response }
+      should_respond_with 404
+    end
+  end
+
+  context 'search' do
+    before(:each) do
+      # Create the environment
+      @response = post(api_url("/environments"),
+                       admin_user,
+                       :payload => full_environment(new_environment_name))
+    end
+
+    after(:each)  { delete_environment(admin_user, new_environment_name) }
+
+    def search_returns_environment(query, options = {})
+      _default_environment = options[:returns_default] ? default_environment : nil
+      expected_results = [_default_environment, full_environment(new_environment_name)].compact
+      search_should_return(
+        :type => "environment",
+        :query => query,
+        :results => expected_results)
+    end
+
+    it 'can be searched for by name' do
+      search_returns_environment("name:#{new_environment_name}")
+    end
+    it 'can be searched for by description' do
+      search_returns_environment("description:Behold*")
+    end
+    it 'can be searched for by JSON class' do
+      search_returns_environment("json_class:Chef*", returns_default: true)
+    end
+    it 'can be searched for by cookbook versions' do
+      search_returns_environment("cookbook_versions:ultimatecookbook")
+    end
+    it 'can be searched for by chef type' do
+      search_returns_environment("chef_type:environment", returns_default: true)
+    end
+    it 'can be searched for by default attribute' do
+      search_returns_environment("default_attributes:defaultattr")
+    end
+    it 'can be searched for by override attribute' do
+      search_returns_environment("override_attributes:overrideattr")
+    end
+  end # Search
+
 end # Environments API endpoint

@@ -94,19 +94,19 @@ describe "/environments/ENVIRONMENT/cookbooks API endpoint", :environments, :coo
 
     let(:cookbooks) do
       {
-        "cb_one" =>
+        "pedant_cb_one" =>
         {
           "1.0.0" => [],
           "2.0.0" => [],
           "3.0.0" => []
         },
-          "cb_two" =>
+          "pedant_cb_two" =>
         {
           "1.0.0" => [],
           "1.2.0" => [],
           "1.2.5" => []
         },
-          "cb_three" =>
+          "pedant_cb_three" =>
         {
           "0.0.1" => [],
           "0.5.0" => [],
@@ -136,9 +136,8 @@ describe "/environments/ENVIRONMENT/cookbooks API endpoint", :environments, :coo
     end
 
     context 'with no environment constraints' do
-
       context 'from a non-default environment' do
-        context 'when fetching cookbooks' do
+        context 'when fetching cookbooks', :smoke do
           let(:expected_response) { ok_exact_response }
           let(:success_message)   { expected_for_cookbooks(cookbooks, 1) }
           should_respond_with 200, 'and latest versions of ALL cookbooks'
@@ -173,7 +172,7 @@ describe "/environments/ENVIRONMENT/cookbooks API endpoint", :environments, :coo
       end
     end
 
-    def self.test_with_constraints(constraint_hash, expected_cb_and_versions, num_versions=nil)
+    def self.test_with_constraints(constraint_hash, expected_pedant_cb_and_versions, num_versions=nil)
       context "with constraints #{constraint_hash.inspect}" do
         ## Temporary work-around until I can fix the environment_body_util shared context
         let(:new_environment_name) { env }
@@ -219,7 +218,7 @@ describe "/environments/ENVIRONMENT/cookbooks API endpoint", :environments, :coo
           get(url, admin_user) do |response|
             response.should look_like({
               :status => 200,
-              :body_exact => expected_filtered_response(expected_cb_and_versions)
+              :body_exact => expected_filtered_response(expected_pedant_cb_and_versions)
             })
           end
         end
@@ -228,51 +227,51 @@ describe "/environments/ENVIRONMENT/cookbooks API endpoint", :environments, :coo
 
     context 'with environment constraints' do
 
-      test_with_constraints({'cb_one' => '= 1.0.0'},
+      test_with_constraints({'pedant_cb_one' => '= 1.0.0'},
                             {
-        'cb_one' => ['1.0.0'],
-        'cb_two' => ['1.2.5'],
-        'cb_three' => ['1.0.0']
+        'pedant_cb_one' => ['1.0.0'],
+        'pedant_cb_two' => ['1.2.5'],
+        'pedant_cb_three' => ['1.0.0']
       })
-      test_with_constraints({"cb_one" => '> 1.0.0'},
+      test_with_constraints({"pedant_cb_one" => '> 1.0.0'},
                             {
-        'cb_one' => ['3.0.0'],
-        'cb_two' => ['1.2.5'],
-        'cb_three' => ['1.0.0']
+        'pedant_cb_one' => ['3.0.0'],
+        'pedant_cb_two' => ['1.2.5'],
+        'pedant_cb_three' => ['1.0.0']
       })
-      test_with_constraints({"cb_one" => '> 1.0.0'},
+      test_with_constraints({"pedant_cb_one" => '> 1.0.0'},
                             {
-        'cb_one' => ['3.0.0', '2.0.0'],
-        'cb_two' => ['1.2.5', '1.2.0'],
-        'cb_three' => ['1.0.0', '0.5.0']
+        'pedant_cb_one' => ['3.0.0', '2.0.0'],
+        'pedant_cb_two' => ['1.2.5', '1.2.0'],
+        'pedant_cb_three' => ['1.0.0', '0.5.0']
       },
         2)
       # This is an odd response to me...
-      test_with_constraints({"cb_one" => '> 1.0.0'},
+      test_with_constraints({"pedant_cb_one" => '> 1.0.0'},
                             {
-        'cb_one' => [],
-        'cb_two' => [],
-        'cb_three' => []
+        'pedant_cb_one' => [],
+        'pedant_cb_two' => [],
+        'pedant_cb_three' => []
       },
         0)
       test_with_constraints({
-        'cb_one' => '> 1.0.0',
-        'cb_two' => '< 1.2.3'
+        'pedant_cb_one' => '> 1.0.0',
+        'pedant_cb_two' => '< 1.2.3'
       },
         {
-        'cb_one' => ['3.0.0', '2.0.0'],
-        'cb_two' => ['1.2.0', '1.0.0'],
-        'cb_three' => ['1.0.0', '0.5.0']
+        'pedant_cb_one' => ['3.0.0', '2.0.0'],
+        'pedant_cb_two' => ['1.2.0', '1.0.0'],
+        'pedant_cb_three' => ['1.0.0', '0.5.0']
       },
         2)
       test_with_constraints({
-        'cb_one' => '> 1.0.0',
-        'cb_two' => '< 1.2.3'
+        'pedant_cb_one' => '> 1.0.0',
+        'pedant_cb_two' => '< 1.2.3'
       },
         {
-        'cb_one' => ['3.0.0', '2.0.0'],
-        'cb_two' => ['1.2.0', '1.0.0'],
-        'cb_three' => ['1.0.0', '0.5.0', '0.0.1']
+        'pedant_cb_one' => ['3.0.0', '2.0.0'],
+        'pedant_cb_two' => ['1.2.0', '1.0.0'],
+        'pedant_cb_three' => ['1.0.0', '0.5.0', '0.0.1']
       },
         'all')
     end

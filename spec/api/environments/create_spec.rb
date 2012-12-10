@@ -67,6 +67,13 @@ describe "Environments API Endpoint", :environments do
         instance_eval(&additional_examples) if additional_examples
       end
 
+      context 'when creating a valid environment', :smoke do
+        before(:each) { get_environment(admin_user, new_environment_name).should have_status_code 404 }
+        let(:request_payload) { new_environment(new_environment_name) }
+
+        should_create_an_environment
+      end # when creating a valid environment
+
 
       context 'when handling the payload', :pedantic do
         context 'with authentication headers' do
