@@ -17,22 +17,22 @@ require 'pedant/rspec/knife_util'
 require 'securerandom'
 
 describe 'knife', :knife do
-  context 'data bag' do
-    context 'show [ITEM]' do
+  context 'node' do
+    context 'list' do
       include Pedant::RSpec::KnifeUtil
-      include Pedant::RSpec::KnifeUtil::DataBag
+      include Pedant::RSpec::KnifeUtil::Node
 
-      let(:command) { "knife data bag list -c #{knife_config}" }
-      after(:each)  { knife "data bag delete #{bag_name} -c #{knife_config} --yes" }
+      let(:command) { "knife node list -c #{knife_config}" }
+      after(:each)  { knife "node delete #{node_name} -c #{knife_config} --yes" }
 
       context 'as an admin' do
         let(:requestor) { knife_admin }
 
         it 'should succeed' do
-          knife "data bag create #{bag_name} -c #{knife_config}"
+          knife "node create #{node_name} -c #{knife_config} --disable-editing"
 
-          # Runs knife data bag list
-          should have_outcome :status => 0, :stdout => /#{bag_name}/
+          # Runs knife node list
+          should have_outcome :status => 0, :stdout => /#{node_name}/
         end
       end
 

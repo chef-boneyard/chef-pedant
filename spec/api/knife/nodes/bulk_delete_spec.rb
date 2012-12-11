@@ -17,22 +17,26 @@ require 'pedant/rspec/knife_util'
 require 'securerandom'
 
 describe 'knife', :knife do
-  context 'data bag' do
-    context 'show [ITEM]' do
+  context 'node' do
+    context 'bulk delete REGEX' do
       include Pedant::RSpec::KnifeUtil
-      include Pedant::RSpec::KnifeUtil::DataBag
+      include Pedant::RSpec::KnifeUtil::Node
 
-      let(:command) { "knife data bag list -c #{knife_config}" }
-      after(:each)  { knife "data bag delete #{bag_name} -c #{knife_config} --yes" }
+      let(:command) { "knife node bulk delete '^pedant-node-' -c #{knife_config} --yes" }
+      let(:nodes)   { %w(pedant-node-0 pedant-node-1 pedant-master) }
+      after(:each)  { nodes.each(&delete_node!) }
+
+      let(:create_node!) { ->(n) { knife "node create #{n} -c #{knife_config} --disable-editing" } }
+      let(:delete_node!) { ->(n) { knife "node delete #{n} -c #{knife_config} --yes" } }
 
       context 'as an admin' do
         let(:requestor) { knife_admin }
 
         it 'should succeed' do
-          knife "data bag create #{bag_name} -c #{knife_config}"
+          nodes.each(&create_node!)
 
-          # Runs knife data bag list
-          should have_outcome :status => 0, :stdout => /#{bag_name}/
+          # Runs knife node list
+          should have_outcome :status => 0, :stdout => /Deleted node pedant-node-0\s+Deleted node pedant-node-1/
         end
       end
 

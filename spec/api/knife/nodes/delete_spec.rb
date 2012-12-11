@@ -16,38 +16,38 @@
 require 'pedant/rspec/knife_util'
 
 describe 'knife', :knife do
-  context 'data bag' do
+  context 'node' do
     context 'delete' do
       include Pedant::RSpec::KnifeUtil
-      include Pedant::RSpec::KnifeUtil::DataBag
+      include Pedant::RSpec::KnifeUtil::Node
 
-      let(:command) { "knife data bag delete #{bag_name} -c #{knife_config} --yes" }
-      after(:each) { knife "data bag delete #{bag_name} -c #{knife_config} --yes" }
+      let(:command) { "knife node delete #{node_name} -c #{knife_config} --yes" }
+      after(:each) { knife "node delete #{node_name} -c #{knife_config} --yes" }
 
-      context 'without existing data bag' do
+      context 'without existing node' do
         context 'as an admin' do
           let(:requestor) { knife_admin }
 
           it 'should fail' do
             should have_outcome :status => 100,
-              :stdout => /Cannot load data bag #{bag_name}/,
+              :stdout => /node '#{node_name}' not found/,
               :stderr => /The object you are looking for could not be found/
           end
         end
       end
 
-      context 'with existing data bag' do
+      context 'with existing node' do
         context 'as an admin' do
-          let(:command) { "knife data bag delete #{bag_name} -c #{knife_config} --yes" }
+          let(:command) { "knife node delete #{node_name} -c #{knife_config} --yes" }
           let(:requestor) { knife_admin }
           let(:knife_run) { run command }
 
           it 'should succeed' do
-            # Create a data bag with the same name
-            knife "data bag create #{bag_name} -c #{knife_config}"
+            # Create a node with the same name
+            knife "node create #{node_name} -c #{knife_config} --disable-editing"
 
             # Run knife a second time
-            should have_outcome :status => 0, :stdout => /Deleted data_bag\[#{bag_name}\]/
+            should have_outcome :status => 0, :stdout => /Deleted node\[#{node_name}\]/
           end
         end
       end

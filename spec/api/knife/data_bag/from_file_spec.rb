@@ -23,11 +23,11 @@ describe 'knife', :knife do
       include Pedant::RSpec::KnifeUtil::DataBag
 
       let(:command) { "knife data bag from file #{bag_name} #{data_bag_item_file_path} -c #{knife_config}" }
-
-      before(:all) { knife_admin }
       after(:each) { knife "data bag delete #{bag_name} -c #{knife_config} -yes" }
 
       context 'as an admin' do
+        let(:requestor) { knife_admin }
+
         it 'should succeed' do
           assume_data_bag_item_file!
 

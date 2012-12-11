@@ -16,34 +16,37 @@
 require 'pedant/rspec/knife_util'
 
 describe 'knife', :knife do
-  context 'data bag' do
+  context 'node' do
     context 'create' do
       include Pedant::RSpec::KnifeUtil
-      include Pedant::RSpec::KnifeUtil::DataBag
+      include Pedant::RSpec::KnifeUtil::Node
 
-      let(:command) { "knife data bag create #{bag_name} -c #{knife_config}" }
-      after(:each)  { knife "data bag delete #{bag_name} -c #{knife_config} --yes" }
+      let(:command) { "knife node create #{node_name} -c #{knife_config} --disable-editing" }
+      after(:each)  { knife "node delete #{node_name} -c #{knife_config} --yes" }
 
-      context 'without existing data bag of the same name' do
+      context 'without existing node of the same name' do
         context 'as an admin' do
           let(:requestor) { knife_admin }
 
           it 'should succeed' do
-            should have_outcome :status => 0, :stdout => /Created data_bag\[#{bag_name}\]/
+            should have_outcome :status => 0, :stdout => /Created node\[#{node_name}\]/
           end
         end
       end
 
-      context 'with an existing data bag of the same name' do
+      context 'with an existing node of the same name' do
         context 'as an admin' do
           let(:requestor) { knife_admin }
 
           it 'should fail' do
-            # Create a data bag with the same name
-            knife "data bag create #{bag_name} -c #{knife_config}"
+            pending 'CHEF-982: `knife node create` does not report name conflicts' do
+              # Create a node with the same name
+              #knife "node create #{node_name} -c #{knife_config} --disable-editing"
+              post(api_url("/nodes"), platform.admin_user, payload: { "name" => node_name })
 
-            # Run knife a second time
-            should have_outcome :status => 0, :stdout => /Data bag #{bag_name} already exists/
+              # Run knife a second time
+              should have_outcome :status => 0, :stdout => /Node #{node_name} already exists/
+            end
           end
         end
       end

@@ -580,6 +580,10 @@ BOGUS_PRIVATE_KEY
         def instance_eval_if_proc(object)
           Proc === object ? instance_eval(&object) : object
         end
+
+        # Debugging
+        # Example: somevalue.tap(&watch)
+        let(:watch) { ->(x) { puts x } }
       end
     end
   end

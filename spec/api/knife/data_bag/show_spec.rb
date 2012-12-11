@@ -30,11 +30,12 @@ describe 'knife', :knife do
         knife "data bag from file #{bag_name} #{data_bag_item_file_path} -c #{knife_config}"
       end
 
-      before(:all) { knife_admin }
       after(:each) { knife "data bag delete #{bag_name} -c #{knife_config} --yes" }
 
       context 'with existing data bag' do
         context 'as an admin' do
+          let(:requestor) { knife_admin }
+
           it 'should succeed' do
             assume_existing_data_bag!
 
@@ -58,6 +59,8 @@ describe 'knife', :knife do
         let(:bag_name) { "does_not_exist_#{rand(1000)}" }
 
         context 'as an admin' do
+          let(:requestor) { knife_admin }
+
           it 'should fail' do
             should have_outcome :status => 100, :stdout => /Cannot load data bag item #{item_name} for data bag #{bag_name}/
           end
