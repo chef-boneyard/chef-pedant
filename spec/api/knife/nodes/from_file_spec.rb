@@ -17,22 +17,26 @@ require 'pedant/rspec/knife_util'
 require 'securerandom'
 
 describe 'knife', :knife do
-  context 'data bag' do
-    context 'show [ITEM]' do
+  context 'node' do
+    context 'from file NODE', pending: "OC-3957: Write specs for `knife node from file`" do
       include Pedant::RSpec::KnifeUtil
-      include Pedant::RSpec::KnifeUtil::DataBag
+      include Pedant::RSpec::KnifeUtil::Node
 
-      let(:command) { "knife data bag list -c #{knife_config}" }
-      after(:each)  { knife "data bag delete #{bag_name} -c #{knife_config} --yes" }
+      let(:command) { "knife node from file #{node_name}.json -c #{knife_config}" }
+      after(:each) { knife "node delete #{node_name} -c #{knife_config} --yes" }
 
-      context 'as an admin' do
-        let(:requestor) { knife_admin }
+      context 'with existing node' do
+        context 'as an admin' do
+          let(:requestor) { knife_admin }
 
-        it 'should succeed' do
-          knife "data bag create #{bag_name} -c #{knife_config}"
+          it 'should succeed' do #, pending: "ERROR: Method not allowed when using node from file?" do
+            assume_fixture_file!
 
-          # Runs knife data bag list
-          should have_outcome :status => 0, :stdout => /#{bag_name}/
+            # Runs knife node from file
+            should have_outcome :status => 0, :stdout => /Node Name:\s+#{node_name}/
+          end
+
+          pending 'should have attributes pulled in from file'
         end
       end
 

@@ -23,16 +23,13 @@ describe 'knife', :knife do
 
       let(:command) { "knife cookbook upload #{cookbook_name} -c #{knife_config}" }
       let(:cookbook_name){ "joy_of_cooking" }
-
-      before :all do
-        knife_admin # just referring to the user to ensure it's created,
-        # since we don't actually need to refer to it in the
-        # test, as we do when exercising the REST API
-      end
+      let(:cwd) { repository }
 
       after(:each) { knife "cookbook delete #{cookbook_name} -c #{knife_config} --yes" }
 
       context 'as an admin' do
+        let(:requestor) { knife_admin }
+
         it 'should succeed', :slow => !open_source? do
           should have_outcome :status => 0, :stdout => /Uploaded 1 cookbook/
         end
@@ -40,7 +37,7 @@ describe 'knife', :knife do
 
       # Only admin clients can upload cookbooks on Open Source Chef
       context 'as a normal client', :platform => :open_source do
-        let(:knife_config) { knife_config_for_normal_user }
+        let(:requestor) { knife_user }
 
         it 'should fail' do
           should have_outcome :status => 100, :stdout => /You are not allowed to take this action/
