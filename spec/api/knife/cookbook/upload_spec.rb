@@ -23,12 +23,7 @@ describe 'knife', :knife do
 
       let(:command) { "knife cookbook upload #{cookbook_name} -c #{knife_config}" }
       let(:cookbook_name){ "joy_of_cooking" }
-
-      before :all do
-        knife_admin # just referring to the user to ensure it's created,
-        # since we don't actually need to refer to it in the
-        # test, as we do when exercising the REST API
-      end
+      let(:cwd) { repository }
 
       after(:each) { knife "cookbook delete #{cookbook_name} -c #{knife_config} --yes" }
 

@@ -26,9 +26,15 @@ module Pedant
         let(:knife_run) { run command }
         let(:command)   { fail 'Define let(:command) in the spec' }
 
+        # Default cwd for executing knife commands
+        let(:cwd) { temp_repository }
+
         # Our test repository for all knife commands.  Note that this is
         # relative to the top-level opscode-pedant directory.
         let(:repository) { Pedant::Utility.fixture_path "test_repository" }
+
+        # The temporary test repository for randomly generated data
+        let(:temp_repository) { requestor.knife_dir }
 
         let(:assume_fixture_file!) do
           File.open(fixture_file_path, 'w') do |f|
@@ -65,7 +71,7 @@ module Pedant
         # Convenience method for creating a Mixlib::ShellOut representation
         # of a knife command in our test repository
         def shell_out(command_line)
-          Mixlib::ShellOut.new(command_line, {'cwd' => repository})
+          Mixlib::ShellOut.new(command_line, {'cwd' => cwd})
         end
 
         # Convenience method for actually running a knife command in our
@@ -76,7 +82,8 @@ module Pedant
         end
 
         def run_debug(command_line)
-          shell_out(command_line.tap(&watch)).tap { |x| puts "status: #{x.status} #{x.stdout} #{x.stderr}" }
+          puts "CWD: #{cwd}"
+          shell_out(command_line.tap(&watch)).tap(&:run_command).tap { |x| puts "Status: #{x.status} #{x.stdout} #{x.stderr}" }
         end
 
         def knife(knife_command)
@@ -84,7 +91,7 @@ module Pedant
         end
 
         def knife_debug(knife_command)
-          debug_run "knife #{knife_command}"
+          run_debug "knife #{knife_command}"
         end
 
       end # included
@@ -115,6 +122,28 @@ module Pedant
 
         included do
           let(:node_name) { "pedant_#{rand(1000000)}" }
+
+          let(:fixture_file_path) { "#{node_data_dir}/#{node_name}.json" }
+          let(:fixture_file_content) { ::JSON.generate(node_data) }
+          let(:node_data_dir) { knife_fixture "nodes" }
+
+          let(:node_data) do
+            {
+              'node_name' => node_name,
+              'override' => node_override,
+              'normal' => node_normal,
+              'default' => node_default,
+              'automatic' => node_automatic,
+              'run_list' => node_run_list
+            }
+          end
+
+          let(:random_max)     { ->() { rand(7) + 3 } }
+          let(:node_override)  { random_hash.(random_max.()) }
+          let(:node_normal)    { random_hash.(random_max.()) }
+          let(:node_default)   { random_hash.(random_max.()) }
+          let(:node_automatic) { random_hash.(random_max.()) }
+          let(:node_run_list)  { random_array.(random_max.()) }
         end
       end
     end # KnifeUtil
