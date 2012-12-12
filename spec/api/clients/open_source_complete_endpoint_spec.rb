@@ -44,12 +44,12 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
   shared_context 'non-admin clients cannot perform operation' do
     let(:not_allowed_response){fail 'Please define not_allowed_response'}
 
-    context 'as a non-admin client' do
+    context 'as a non-admin client', :authorization do
       let(:requestor) { normal_requestor }
       it { should look_like not_allowed_response }
     end
 
-    context 'as a validator client' do
+    context 'as a validator client', :authorization do
       let(:requestor) { validator_client }
       it { should look_like not_allowed_response }
     end
@@ -186,7 +186,7 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
       end
     end
 
-    context 'invalid requests of various types to create a client' do
+    context 'invalid requests of various types to create a client', :validation do
       context 'with an invalid name' do
         ['pedant$testing$client', 'pedant testing client', 'pedant{testing}client'].each do |n|
           context "like '#{n}'" do
@@ -228,7 +228,7 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
       it { should look_like create_client_conflict_response }
     end
 
-    context 'as different kinds of clients' do
+    context 'as different kinds of clients', :authorization do
 
       def self.should_be_able_to_create_client(is_admin=false)
         context "creating #{is_admin ? 'an admin' : 'a non-admin'} client" do

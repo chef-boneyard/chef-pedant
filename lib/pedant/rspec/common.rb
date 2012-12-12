@@ -1,17 +1,17 @@
-# Copyright: Copyright (c) 2012 Opscode, Inc.	
-# License: Apache License, Version 2.0							
-# 												
-# Licensed under the Apache License, Version 2.0 (the "License");				
-# you may not use this file except in compliance with the License.				
-# You may obtain a copy of the License at							
-# 												
-#     http://www.apache.org/licenses/LICENSE-2.0						
-# 												
-# Unless required by applicable law or agreed to in writing, software			
-# distributed under the License is distributed on an "AS IS" BASIS,			
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.			
-# See the License for the specific language governing permissions and			
-# limitations under the License.								
+# Copyright: Copyright (c) 2012 Opscode, Inc.
+# License: Apache License, Version 2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 require 'pedant/concern'
 require 'pedant/json'
@@ -58,6 +58,9 @@ module Pedant
         end
 
         def self.should_respond_with(code, additional_message = nil, metadata = {}, &additional_assertions)
+          metadata[:validation] = true if code == 400
+          metadata[:authentication] = true if code == 401
+          metadata[:authorization] = true if code == 403
           it ["should respond with", named_response_code(code), additional_message].compact.join(' '), metadata do
             should look_like expected_response
 
@@ -167,7 +170,7 @@ module Pedant
         # documentation for `self.should_set_default_value_for_object`
         # for other parameter descriptions and caveats; they are the same.
         def self.should_not_allow_creation_with_incorrect_types(object_type, field, proper_type, test_value)
-          context "with a non-#{proper_type} value for '#{field}'" do
+          context "with a non-#{proper_type} value for '#{field}'", :validation do
             it "fails to create the #{object_type}" do
               request_payload[field] = test_value
               response.should look_like({
@@ -195,7 +198,7 @@ module Pedant
         #
         # We're only testing whether the size is a problem or not.
         def self.respects_maximum_payload_size
-          context 'with a payload size' do
+          context 'with a payload size', :validation do
             let(:maximum_request_size){1000000}
             context 'exactly equal to the maximum allowable size' do
               let(:request_payload) { Pedant::Utility.get_pedant_file("payloads/maxfile.json").read }

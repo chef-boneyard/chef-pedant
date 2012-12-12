@@ -39,7 +39,7 @@ describe 'knife', :knife do
       context 'as a normal client', :platform => :open_source do
         let(:requestor) { knife_user }
 
-        it 'should fail' do
+        it 'should fail', :authorization do
           should have_outcome :status => 100, :stdout => /You are not allowed to take this action/
         end
       end

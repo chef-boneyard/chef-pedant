@@ -117,14 +117,14 @@ describe "Environments API Endpoint", :environments do
           end
         end
 
-        context 'with unparsable JSON payload' do
+        context 'with unparsable JSON payload', :validation do
           let(:request_payload) { '{"hi' }
           let(:expected_response) { bad_request_response }
 
           should_respond_with 400
         end
 
-        context 'with empty request payload' do
+        context 'with empty request payload', :validation do
           let(:request_payload) { '' }
           let(:expected_response) { bad_request_response }
 
@@ -145,13 +145,13 @@ describe "Environments API Endpoint", :environments do
 
         context 'with invalid body' do
           def self.should_respond_with_bad_request(message, _payload)
-            context message do
+            context message, :validation do
               let(:request_payload) { _payload }
               should_respond_with_error 400, incorrect_json_type_body_msg
             end
           end
 
-          context 'with an array' do
+          context 'with an array', :validation do
             let(:request_payload) { '["name","blah"]' }
 
             if (ruby?)

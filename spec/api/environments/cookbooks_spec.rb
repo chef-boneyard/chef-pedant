@@ -79,7 +79,7 @@ describe "/environments/ENVIRONMENT/cookbooks API endpoint", :environments, :coo
       end
     end
 
-    context 'when num_versions is not "all" or a number' do
+    context 'when num_versions is not "all" or a number', :validation do
       let(:request_url)       { api_url "/environments/#{environment_name}/cookbooks?num_versions=skittles" }
       let(:expected_response) { bad_request_exact_response }
       let(:error_message)     { ["You have requested an invalid number of versions (x >= 0 || 'all')"] }

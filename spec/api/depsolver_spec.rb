@@ -53,7 +53,7 @@ describe "Depsolver API endpoint", :depsolver do
         delete_cookbook(admin_user, cookbook_name, cookbook_version)
       }
 
-      it "returns 400 with an empty payload" do
+      it "returns 400 with an empty payload", :validation do
         payload = ""
         post(api_url("/environments/#{env}/cookbook_versions"), admin_user,
             :payload => payload) do |response|
@@ -71,7 +71,7 @@ describe "Depsolver API endpoint", :depsolver do
         end
       end
 
-      it "returns 400 with an non-json payload" do
+      it "returns 400 with an non-json payload", :validation do
         payload = "this_is_not_json"
         post(api_url("/environments/#{env}/cookbook_versions"), admin_user,
             :payload => payload) do |response|
@@ -118,7 +118,7 @@ describe "Depsolver API endpoint", :depsolver do
           end
         end
       end
-      it "returns 400 with non-Array as run_list value" do
+      it "returns 400 with non-Array as run_list value", :validation do
         payload = "{\"run_list\":\"#{cookbook_name}\"}"
         post(api_url("/environments/#{env}/cookbook_versions"), admin_user,
             :payload => payload) do |response|
@@ -150,7 +150,7 @@ describe "Depsolver API endpoint", :depsolver do
           end
         end
       else
-        it "returns 400 with malformed JSON" do
+        it "returns 400 with malformed JSON", :validation do
           payload = "{\"run_list\": "
           post(api_url("/environments/#{env}/cookbook_versions"), admin_user,
               :payload => payload) do |response|
@@ -164,7 +164,7 @@ describe "Depsolver API endpoint", :depsolver do
         end
       end
 
-      it "returns Error with an malformed item in run_list (int)" do
+      it "returns Error with an malformed item in run_list (int)", :validation do
         payload = "{\"run_list\": [12]}"
         post(api_url("/environments/#{env}/cookbook_versions"), admin_user,
             :payload => payload) do |response|

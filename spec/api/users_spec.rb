@@ -143,7 +143,7 @@ describe "Open Source /users endpoint", :users => true, :platform => :open_sourc
       it 'cannot create a user without an authorized signing key'
       it 'sets default values for unspecified fields'
 
-      context 'with an empty request body' do
+      context 'with an empty request body', :validation do
         let(:expected_response) { bad_request_response }
         let(:request_payload) { }
 
@@ -151,7 +151,7 @@ describe "Open Source /users endpoint", :users => true, :platform => :open_sourc
       end
     end
 
-    context 'as a normal user' do
+    context 'as a normal user', :authorization do
       let(:requestor) { platform.non_admin_user }
       let(:expected_response) { forbidden_response }
 
@@ -161,7 +161,7 @@ describe "Open Source /users endpoint", :users => true, :platform => :open_sourc
         authenticate_user(default_user_name, default_user_password).should_not be_true
       end
 
-      context 'with an empty request body' do
+      context 'with an empty request body', :validation do
         let(:expected_response) { bad_request_response }
         let(:request_payload) { }
 
@@ -169,7 +169,7 @@ describe "Open Source /users endpoint", :users => true, :platform => :open_sourc
       end
     end
 
-    context 'as an non-existent user' do
+    context 'as an non-existent user', :authentication do
       let(:requestor) { Pedant::User.new(non_existant_admin, private_key, platform: platform, preexisting: false) }
       let(:non_existant_admin) { "pedant_ghost" }
       let(:private_key) { OpenSSL::PKey::RSA.new(2048) }
@@ -633,7 +633,7 @@ describe "Open Source /users endpoint", :users => true, :platform => :open_sourc
       end
     end # as normal user
 
-    context 'as an non-existent user' do
+    context 'as an non-existent user', :authentication do
       let(:requestor) { Pedant::User.new(non_existant_admin, private_key, platform: platform, preexisting: false) }
       let(:non_existant_admin) { "pedant_ghost" }
       let(:private_key) { OpenSSL::PKey::RSA.new(2048) }

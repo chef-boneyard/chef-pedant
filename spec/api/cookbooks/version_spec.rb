@@ -90,7 +90,7 @@ describe "Cookbook Versions API endpoint, GET", :cookbooks do
       should_respond_with 200, 'and the cookbook version'
     end
 
-    context 'as a user outside the organization' do
+    context 'as a user outside the organization', :authorization do
       let(:expected_response) { unauthorized_access_credential_response }
       let(:requestor) { outside_user }
 

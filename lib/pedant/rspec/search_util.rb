@@ -133,7 +133,7 @@ module Pedant
                            ]
 
             bad_payloads.each do |bad|
-              context "with a request body of '#{bad}'" do
+              context "with a request body of '#{bad}'", :validation do
                 let(:request_query_parameters){"q=name:make-no-difference"}
                 let(:request_payload){bad}
                 it "fails" do

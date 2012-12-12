@@ -1,18 +1,18 @@
 # -*- coding: utf-8 -*-
-# Copyright: Copyright (c) 2012 Opscode, Inc.	
-# License: Apache License, Version 2.0							
-# 												
-# Licensed under the Apache License, Version 2.0 (the "License");				
-# you may not use this file except in compliance with the License.				
-# You may obtain a copy of the License at							
-# 												
-#     http://www.apache.org/licenses/LICENSE-2.0						
-# 												
-# Unless required by applicable law or agreed to in writing, software			
-# distributed under the License is distributed on an "AS IS" BASIS,			
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.			
-# See the License for the specific language governing permissions and			
-# limitations under the License.								
+# Copyright: Copyright (c) 2012 Opscode, Inc.
+# License: Apache License, Version 2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 require 'pedant/rspec/cookbook_util'
 
@@ -105,7 +105,7 @@ describe "Cookbooks API endpoint", :cookbooks do
         end
       end # it admin user returns 200
 
-      context 'as a user outside of the organization' do
+      context 'as a user outside of the organization', :authorization do
         let(:expected_response) { unauthorized_access_credential_response }
 
         it "should respond with 403 (\"Forbidden\") and does not update cookbook" do
@@ -117,7 +117,7 @@ describe "Cookbooks API endpoint", :cookbooks do
         end # it outside user returns 403 and does not update cookbook
       end
 
-      context 'with invalid user' do
+      context 'with invalid user', :authentication do
         let(:expected_response) { invalid_credential_exact_response }
 
         it "returns 401 and does not update cookbook" do
@@ -146,7 +146,8 @@ describe "Cookbooks API endpoint", :cookbooks do
 
       let(:committed_files) do
         files.each(&upload)
-        commit_sandbox(sandbox)
+        result = commit_sandbox(sandbox)
+        result
       end
 
       let(:checksums) { parse(committed_files)["checksums"] }
@@ -245,7 +246,7 @@ describe "Cookbooks API endpoint", :cookbooks do
         end
       end # it should return url when adding checksums (if ruby endpoint)
 
-      it "adding invalid checksum should fail" do
+      it "adding invalid checksum should fail", :validation do
         payload = new_cookbook(cookbook_name, cookbook_version)
         payload["files"] = [{"name" => "name1", "path" => "path/name1",
                               "checksum" => checksums[0],
@@ -565,7 +566,7 @@ describe "Cookbooks API endpoint", :cookbooks do
         end # verify_checksum_cleanup
       end # it changing some different checksums should succeed
 
-      it "changing to invalid checksums should fail" do
+      it "changing to invalid checksums should fail", :validation do
         delete_cookbook(admin_user, cookbook_name, cookbook_version)
 
         payload = new_cookbook(cookbook_name, cookbook_version)

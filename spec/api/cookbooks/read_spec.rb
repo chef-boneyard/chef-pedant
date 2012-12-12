@@ -63,7 +63,7 @@ describe "Cookbooks API endpoint", :cookbooks do
         let(:error_message) { invalid_versions_msg }
 
         def self.expects_response_of_400_with(message, _value)
-          context "with #{message}" do
+          context "with #{message}", :validation do
             let(:num_versions) { _value }
             should_respond_with 400
           end
@@ -288,8 +288,10 @@ describe "Cookbooks API endpoint", :cookbooks do
         it "net/http" do
           uri = URI.parse(recipe_url)
           http = Net::HTTP.new(uri.host, uri.port)
-          http.use_ssl = true
-          http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+          if uri.scheme == "https"
+            http.use_ssl = true
+            http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+          end
 
           # Need to add headers if on Ruby, since Erlang uses pre-signed URLs
           headers = if ruby?
@@ -328,14 +330,14 @@ describe "Cookbooks API endpoint", :cookbooks do
       should_respond_with 200
     end # as an admin user
 
-    context 'as an user outside of the organization' do
+    context 'as an user outside of the organization', :authorization do
       let(:expected_response) { unauthorized_access_credential_response }
       let(:requestor) { outside_user }
 
       should_respond_with 403
     end # as an outside user
 
-    context 'with invalid user' do
+    context 'with invalid user', :authentication do
       let(:expected_response) { invalid_credential_exact_response }
       let(:requestor) { invalid_user }
 
