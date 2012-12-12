@@ -411,7 +411,7 @@ describe "Data Bag API endpoint", :data_bags do
         end
         context 'POST' do
           let(:data_bag_item){data_bag_item_1}
-          it 'raises a conflict when creating an existing data bag item', do
+          it 'raises a conflict when creating an existing data bag item' do
             pending("Ruby conflates PUT and POST", :if => ruby?) do
               post(named_data_bag_url, requestor,
                    :payload => data_bag_item).should look_like create_data_bag_item_conflict_response
