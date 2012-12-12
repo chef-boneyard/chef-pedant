@@ -96,5 +96,7 @@ module Pedant
     # JUnit output is turned off by default
     junit_file(false)
 
+    # Error message verification is on by default
+    verify_error_messages(true)
   end
 end

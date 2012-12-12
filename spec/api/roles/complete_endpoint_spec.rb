@@ -326,9 +326,7 @@ describe "Testing the Roles API endpoint", :roles do
     let(:fetch_role_environment_success_response) do
       {
         :status => 200,
-        # Need to use body_raw right now since this endpoint returns
-        # a JSON array instead of a hash
-        :body_raw => to_json(role_environment_names)
+        :body => role_environment_names
       }
     end
 
