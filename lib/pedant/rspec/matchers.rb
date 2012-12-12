@@ -213,16 +213,20 @@ RSpec::Matchers.define :look_like do |expected_response_spec|
           parsed_json = parse(response)
 
           expected_body_spec = expected_response_spec[:body] || expected_response_spec[:body_exact]
-          expected_body_spec.class.should == Hash
 
           # :body_exact implies that there should be no keys that are
           # untested, i.e., you test everything that's there
-          if expected_response_spec[:body_exact]
-            parsed_json.keys.sort.should == expected_body_spec.keys.sort
-          end
+          if expected_body_spec.is_a?(Hash)
+            parsed_json.class.should == Hash
+            if expected_response_spec[:body_exact]
+              parsed_json.keys.sort.should == expected_body_spec.keys.sort
+            end
 
-          expected_body_spec.each do |kv|
-            parsed_json.should have_entry kv
+            expected_body_spec.each do |kv|
+              parsed_json.should have_entry kv
+            end
+          else
+            parsed_json.should == expected_body_spec
           end
         end
       end
