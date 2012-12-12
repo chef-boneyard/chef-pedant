@@ -71,8 +71,7 @@ module Pedant
             :status => 405,
             :headers => {
               "allow" => ["GET, POST"]
-            },
-            :body_raw => ""
+            }
           }
         end
       end
@@ -102,8 +101,7 @@ module Pedant
             :status => 405,
             :headers => {
               "allow" => ["GET, POST, DELETE"]
-            },
-            :body_raw => ""
+            }
           }
         end
       end
@@ -176,8 +174,7 @@ module Pedant
             :status => 405,
             :headers => {
               "allow" => ["GET, PUT, DELETE"]
-            },
-            :body_raw => ""
+            }
           }
         end
       end
