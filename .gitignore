@@ -4,6 +4,7 @@ Gemfile.orig
 Gemfile.lock.orig
 .bundle/
 vendor/bundle
+rspec.failures
 
 # Ignore generated files in the dot_chef directory of our test
 # repository
