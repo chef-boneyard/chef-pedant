@@ -239,7 +239,7 @@ module Pedant
         #
         # Private macro
         def rejects_invalid_private_key_flag(value)
-          context "with private_key set to #{value.inspect}" do
+          context "with private_key set to #{value.inspect}", :validation do
             let(:expected_response) { bad_request_response }
             let(:request_payload) { required_attributes.with('private_key', value) }
             let(:updated_resource) { required_attributes.with('public_key', test_client_public_key) }
@@ -316,7 +316,7 @@ module Pedant
               end
             end
 
-            context 'with a bad public_key' do
+            context 'with a bad public_key', :validation do
               # Use the original public key
               #let(:updated_resource) { required_attributes.with('public_key', public_key) }
 
@@ -406,7 +406,7 @@ module Pedant
               end
             end
 
-            context 'with a bad public_key' do
+            context 'with a bad public_key', :validation do
               # Use the original public key
               let(:updated_resource) { required_attributes.with('public_key', test_client_public_key) }
 

@@ -64,7 +64,7 @@ describe "Cookbooks API endpoint", :cookbooks do
 
     end
 
-    context "creating broken cookbooks to test validation and defaults" do
+    context "creating broken cookbooks to test validation and defaults", :validation do
       let(:cookbook_name) { "cookbook_name" }
       let(:cookbook_version) { "1.2.3" }
 

@@ -15,7 +15,7 @@
 
 require 'pedant/rspec/principal_util'
 
-describe "Open Source /princiapals endpoint", :principals => true, :platform => :open_source do
+describe "Open Source /principals endpoint", :principals => true, :platform => :open_source do
   include Pedant::RSpec::PrincipalUtil
 
   context 'GET /users' do

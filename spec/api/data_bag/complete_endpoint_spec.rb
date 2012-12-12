@@ -115,7 +115,7 @@ describe "Data Bag API endpoint", :data_bags do
 
         # These also make Ruby blow up
         if erlang?
-          context 'invalid requests of various types to create a data bag' do
+          context 'invalid requests of various types to create a data bag', :validation do
 
             context 'with an invalid name' do
               bad_names = ["pedant_badName!!$$$$_oh_very+bad", "pedant-does-not-like-punctuation!!!!"]
@@ -291,7 +291,7 @@ describe "Data Bag API endpoint", :data_bags do
 
           if erlang?
             # Ruby can't handle these
-            context 'various bad inputs to create a data bag item' do
+            context 'various bad inputs to create a data bag item', :validation do
               context 'without an ID' do
                 let(:data_bag_item) {{"answer" => 42}}
                 let(:expected_failure_response){create_data_bag_item_no_id_response}

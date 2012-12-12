@@ -121,6 +121,9 @@ module Pedant
         def self.with_modified_auth_headers(desc, expected_status, auth_header_options)
           context_options = auth_header_options[:focus] ? [:focus] : []
           context_options += auth_header_options[:pending] ? [:pending] : []
+          context_options << :validation if expected_status == 400
+          context_options << :authentication if expected_status == 401
+          context_options << :authorization if expected_status == 403
           context(desc, *context_options) do
             let(:auth_headers) { manufacture_signed_headers(user, method, url, body,
                                                             auth_header_options) }
@@ -154,7 +157,7 @@ module Pedant
                                      :pending => true)
           with_modified_auth_headers('nonexistent username in X-Ops-Userid', 401,
                                      :user_id => 'nowaythisexists')
-          context "when X-Ops-Userid does not match signature" do
+          context "when X-Ops-Userid does not match signature", :authentication do
             let(:auth_headers) do
               manufacture_signed_headers(user, method, url, body)
               .merge({ 'X-Ops-Userid' => failure_user.name })
@@ -180,7 +183,7 @@ module Pedant
               response_should_be_successful
             end
           end
-          context "when X-Ops-Timestamp does not match signature" do
+          context "when X-Ops-Timestamp does not match signature", :authentication do
             let(:auth_headers) do
               manufacture_signed_headers(user, method, url, body)
               .merge({ 'X-Ops-Timestamp' => (Time.now.utc - 30).iso8601 })
@@ -196,7 +199,7 @@ module Pedant
           with_modified_auth_headers('malformed X-Ops-Content-Hash', 401, :hashed_body => 'xxx')
           with_modified_auth_headers('when body does not match X-Ops-Content-Hash and signature', 401,
                                      :hashed_body => digester.hash_string('{thisisnotevenjson}'))
-          context "when X-Ops-Content-Hash does not match body and signature" do
+          context "when X-Ops-Content-Hash does not match body and signature", :authentication do
             let(:auth_headers) do
               manufacture_signed_headers(user, method, url, body)
               .merge({ 'X-Ops-Content-Hash' => digester.hash_string('{thisisnotevenjson}') })
@@ -210,7 +213,7 @@ module Pedant
           with_modified_auth_headers('missing signature in X-Ops-Authorization-', 401, :signature => nil)
           with_modified_auth_headers('malformed signature in X-Ops-Authorization-', 401, :signature => 'xxx')
           with_modified_auth_headers('empty signature in X-Ops-Authorization-', 401, :signature => '')
-          context 'missing line 1 in signature in X-Ops-Authorization-' do
+          context 'missing line 1 in signature in X-Ops-Authorization-', :authentication do
             let(:auth_headers) do
               headers = manufacture_signed_headers(user, method, url, body)
               headers.delete('X-Ops-Authorization-1')
@@ -220,7 +223,7 @@ module Pedant
               response.should look_like({ :status => 401 })
             end
           end
-          context 'missing a middle line in signature in X-Ops-Authorization-' do
+          context 'missing a middle line in signature in X-Ops-Authorization-', :authentication do
             let(:auth_headers) do
               headers = manufacture_signed_headers(user, method, url, body)
               headers.delete('X-Ops-Authorization-2')
@@ -230,7 +233,7 @@ module Pedant
               response.should look_like({ :status => 401 })
             end
           end
-          context 'missing the last line in signature in X-Ops-Authorization-' do
+          context 'missing the last line in signature in X-Ops-Authorization-', :authentication do
             let(:auth_headers) do
               headers = manufacture_signed_headers(user, method, url, body)
               signature_headers = headers.each_key.select { |key| key =~ /X-Ops-Authorization-/ }
@@ -242,7 +245,7 @@ module Pedant
               response.should look_like({ :status => 401 })
             end
           end
-          context 'with a different method in the signature' do
+          context 'with a different method in the signature', :authentication do
             let(:auth_headers) do
               manufacture_signed_headers(user, method, url, body,
                                          :method => (method == :GET ? :POST : :GET))
@@ -257,7 +260,7 @@ module Pedant
                                      :string_to_sign => '')
           with_modified_auth_headers('with a malformed decoded signature', 401,
                                      :string_to_sign => 'XXX')
-          context "when signature does not match body and X-Ops-Content-Hash" do
+          context "when signature does not match body and X-Ops-Content-Hash", :authentication do
             let(:auth_headers) do
               # Make a different signature
               other_headers = manufacture_signed_headers(user, method, url,
@@ -284,7 +287,7 @@ module Pedant
               response_should_be_successful
             end
           end
-          context 'impersonating failed user' do
+          context 'impersonating failed user', :authentication do
             let(:user) { impersonate(failure_user) }
             it 'fails' do
               response.should look_like failure_user_impersonation_response

@@ -231,10 +231,10 @@ module Pedant
       def self.fails_with_value(variable, value, expected_error, existing_environment = nil,
                                 pending = false)
         if (pending)
-          it "with #{variable} = #{value} it reports 400", :pending do
+          it "with #{variable} = #{value} it reports 400", :validation, :pending do
           end
         else
-          it "with #{variable} = #{value} it reports 400" do
+          it "with #{variable} = #{value} it reports 400", :validation do
             if (existing_environment)
               response = put(api_url("/environments/#{new_environment_name}"), admin_user,
                              :payload => make_payload(variable => value))

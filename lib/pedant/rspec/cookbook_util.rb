@@ -192,8 +192,10 @@ module Pedant
         deletions.each do |checksum|
           uri = URI.parse(existing_checksums[checksum])
           http = Net::HTTP.new(uri.host, uri.port)
-          http.use_ssl = true
-          http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+          if uri.scheme == 'https'
+            http.use_ssl = true
+            http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+          end
 
           response = http.get(uri.request_uri, {})
 
@@ -571,7 +573,9 @@ module Pedant
         # other functions instead
         def should_fail_to_change(key, value, error, message, server_error = false,
                                   create = false)
-          it "#{key} = #{value} returns #{error}" do
+          tags = []
+          tags << :validation if error == 400
+          it "#{key} = #{value} returns #{error}", *tags do
             payload = new_cookbook(cookbook_name, cookbook_version)
             if (value == :delete)
               payload.delete(key)
@@ -730,7 +734,9 @@ module Pedant
         # other functions instead
         def should_fail_to_change_metadata(key, value, error, message, create = false,
                                            server_error = false)
-          it "#{key} = #{value} returns #{error}" do
+          tags = []
+          tags << :validation if error == 400
+          it "#{key} = #{value} returns #{error}", *tags do
             payload = new_cookbook(cookbook_name, cookbook_version)
             metadata = payload["metadata"]
             if (value == :delete)

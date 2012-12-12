@@ -38,7 +38,7 @@ describe "Cookbooks API endpoint", :cookbooks do
 
       should_respond_with 404
 
-      context 'with bad version' do
+      context 'with bad version', :validation do
         # Quirk of the Open Source Chef (ruby) server
         let(:expected_response) {
           if ruby?
@@ -134,7 +134,7 @@ describe "Cookbooks API endpoint", :cookbooks do
         end # it admin user returns 200
       end # as admin user
 
-      context 'as normal user' do
+      context 'as normal user', :authorization do
         let(:requestor) { normal_user }
 
         it "should respond with 403 (\"Forbidden\") and does not delete cookbook", :platform => :open_source do
@@ -143,7 +143,7 @@ describe "Cookbooks API endpoint", :cookbooks do
         end # responds with 403
       end # with normal user
 
-      context 'as a user outside of the organization' do
+      context 'as a user outside of the organization', :authorization do
         let(:expected_response) { unauthorized_access_credential_response }
         let(:requestor) { outside_user }
 
@@ -153,7 +153,7 @@ describe "Cookbooks API endpoint", :cookbooks do
         end
       end # it outside user returns 403
 
-      context 'with invalid user'do
+      context 'with invalid user', :authorization do
         let(:expected_response) { invalid_credential_exact_response }
         let(:requestor) { invalid_user }
 

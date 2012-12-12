@@ -77,8 +77,8 @@ module Pedant
         self.run_all = true
       end
     end
-    
-    def export_options(opts, tags) 
+
+    def export_options(opts, tags)
       sorted = tags.sort
 
       # --help does not actually sort these, so ordering is important.
@@ -98,7 +98,7 @@ module Pedant
 
     def api_options(opts)
       tags = %w(environments cookbooks data_bags nodes roles sandboxes users
-                clients depsolver search knife)
+                clients depsolver search knife validation authentication authorization)
       export_options(opts, tags)
     end
 

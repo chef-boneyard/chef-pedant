@@ -1,17 +1,17 @@
-# Copyright: Copyright (c) 2012 Opscode, Inc.	
-# License: Apache License, Version 2.0							
-# 												
-# Licensed under the Apache License, Version 2.0 (the "License");				
-# you may not use this file except in compliance with the License.				
-# You may obtain a copy of the License at							
-# 												
-#     http://www.apache.org/licenses/LICENSE-2.0						
-# 												
-# Unless required by applicable law or agreed to in writing, software			
-# distributed under the License is distributed on an "AS IS" BASIS,			
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.			
-# See the License for the specific language governing permissions and			
-# limitations under the License.								
+# Copyright: Copyright (c) 2012 Opscode, Inc.
+# License: Apache License, Version 2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 require 'pedant/rspec/role_util'
 require 'pedant/rspec/environment_util'
@@ -94,7 +94,7 @@ describe "Testing the Roles API endpoint", :roles do
           accepts_valid_value "Chef::Role"
           rejects_invalid_value "Chef::NotReallyAClass"
         end
-        
+
         context "the 'chef_type' field" do
           let(:validate_attribute){"chef_type"}
           accepts_valid_value "role"
@@ -102,7 +102,7 @@ describe "Testing the Roles API endpoint", :roles do
         end
 
         rejects_invalid_keys
-        
+
       end
 
       context 'with various valid inputs' do
@@ -169,7 +169,7 @@ describe "Testing the Roles API endpoint", :roles do
 
         should_not_allow_creation_with_incorrect_types 'role', 'run_list', 'valid run list', ["recipe["]
 
-        context 'with invalid env_run_lists hashes' do
+        context 'with invalid env_run_lists hashes', :validation do
           let(:expected_response) { invalid_role_response }
           let(:invalid_role_error_message) { ["Field 'env_run_lists' contains invalid run lists"] }
 
@@ -180,7 +180,7 @@ describe "Testing the Roles API endpoint", :roles do
             end
           end
 
-          context "without proper run lists in the 'env_run_lists hash'" do
+          context "without proper run lists in the 'env_run_lists hash'", :validation do
             it 'should respond with an error' do
               request_payload['env_run_lists'] = {
                 "preprod" => ["recipe[blah]"],
@@ -254,7 +254,7 @@ describe "Testing the Roles API endpoint", :roles do
           should_successfully_update_a_role
         end
 
-        context 'with role name changed in the payload' do
+        context 'with role name changed in the payload', :validation do
           let(:updated_fields){ {'name' => 'this_is_not_the_same_name_as_before'} }
           if ruby?
             it "Returns 200, but does not change the role" do
@@ -275,7 +275,7 @@ describe "Testing the Roles API endpoint", :roles do
           should_successfully_update_a_role
         end
 
-        context 'with no name, but other invalid information in payload' do
+        context 'with no name, but other invalid information in payload', :validation do
           let(:updated_fields) do
             {
               'name' => :DELETE,  # this will remove the name from the payload

@@ -17,7 +17,7 @@ require 'pedant/rspec/user_util'
 require 'pedant/rspec/validations'
 require 'securerandom'
 
-describe "Open source /authenticate_users endpoing", :users => true, :platform => :open_source do
+describe "Open source /authenticate_users endpoint", :users => true, :platform => :open_source do
   include Pedant::RSpec::UserUtil
 
   # TODO: Open-Source Chef pretends that "admin_user" is a user when it is a client
@@ -100,7 +100,7 @@ describe "Open source /authenticate_users endpoing", :users => true, :platform =
       should_respond_with 200, 'verified => false'
     end # context
 
-    context 'with a bad request' do
+    context 'with a bad request', :validation do
       let(:expected_response) { http_400_exact_response }
       context 'missing password' do
         let(:error_message) { ["Field 'password' missing"] }

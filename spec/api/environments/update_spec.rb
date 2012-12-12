@@ -1,18 +1,18 @@
 # -*- coding: utf-8 -*-
-# Copyright: Copyright (c) 2012 Opscode, Inc.	
-# License: Apache License, Version 2.0							
-# 												
-# Licensed under the Apache License, Version 2.0 (the "License");				
-# you may not use this file except in compliance with the License.				
-# You may obtain a copy of the License at							
-# 												
-#     http://www.apache.org/licenses/LICENSE-2.0						
-# 												
-# Unless required by applicable law or agreed to in writing, software			
-# distributed under the License is distributed on an "AS IS" BASIS,			
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.			
-# See the License for the specific language governing permissions and			
-# limitations under the License.								
+# Copyright: Copyright (c) 2012 Opscode, Inc.
+# License: Apache License, Version 2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 require 'pedant/rspec/auth_headers_util'
 require 'pedant/rspec/environment_util'
@@ -143,14 +143,14 @@ describe "Environments API Endpoint", :environments do
           end
         end
 
-        context 'with unparsable JSON payload' do
+        context 'with unparsable JSON payload', :validation do
           let(:request_payload) { '{"hi' }
           let(:expected_response) { bad_request_response }
 
           should_respond_with 400
         end
 
-        context 'with empty request payload' do
+        context 'with empty request payload', :validation do
           let(:request_payload) { '' }
           let(:expected_response) { bad_request_response }
 
@@ -164,13 +164,13 @@ describe "Environments API Endpoint", :environments do
 
         context 'with invalid body' do
           def self.should_respond_with_bad_request(message, _payload)
-            context message do
+            context message, :validation do
               let(:request_payload) { _payload }
               should_respond_with_error 400, incorrect_json_type_body_msg
             end
           end
 
-          context 'with an array' do
+          context 'with an array', :validation do
             let(:request_payload) { '["name","blah"]' }
 
             if ruby?

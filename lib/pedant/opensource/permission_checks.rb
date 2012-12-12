@@ -37,15 +37,15 @@ module Pedant
           let(:requestor) { admin_user }
           it { should look_like admin_response }
         end
-        context 'as a non-administrator' do
+        context 'as a non-administrator', :authorization do
           let(:requestor) { normal_user }
           it { should look_like non_admin_response }
         end
-        context 'as a validator client' do
+        context 'as a validator client', :authorization do
           let(:requestor) { validator_client }
           it { should look_like validator_response }
         end
-        context 'as a bad client' do
+        context 'as a bad client', :authorization do
           let(:requestor) { outside_user }
           it { should look_like bad_client_response }
         end

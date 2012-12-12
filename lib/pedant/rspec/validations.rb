@@ -39,7 +39,7 @@ module Pedant
             should_respond_with 400
           else
             should_respond_with 400, 'and not persist the resource' do
-              begin 
+              begin
                 persisted_resource_response.should look_like does_not_persist_response
               rescue URI::InvalidURIError
                 # This can happen when we try to create an item with a
@@ -87,7 +87,7 @@ module Pedant
         end
 
         def rejects_invalid_value_of(attribute, options = {})
-          context "when passing invalid value of \"#{options[:with]}\" to \"#{attribute}\" attribute" do
+          context "when passing invalid value of \"#{options[:with]}\" to \"#{attribute}\" attribute", :validation do
             rejects_with_400 payload: Proc.new { default_resource_attributes.with(attribute, options[:with]) },
               error_message: options[:error_message] || options[:valid_format] || "Field '#{attribute}' invalid"
           end
@@ -95,14 +95,14 @@ module Pedant
 
         def rejects_invalid_value(value, options = {})
           value = value || options[:with]
-          context "when passing invalid value \"#{value}\"" do
+          context "when passing invalid value \"#{value}\"", :validation do
             rejects_with_400 payload: Proc.new { default_resource_attributes.with(validate_attribute, value) },
               error_message: options[:error_message] || options[:valid_format] || Proc.new { "Field '#{validate_attribute}' invalid" }
           end
         end
 
         def rejects_invalid_keys
-          context 'with invalid top-level keys' do
+          context 'with invalid top-level keys', :validation do
             rejects_invalid_value_of 'something_random', with: 'something random', error_message: 'Invalid key something_random in request body'
             rejects_invalid_value_of '漢字ひらがな한문', with: 'something random', error_message: 'Invalid key 漢字ひらがな한문 in request body'
             1.upto(3) do
@@ -136,7 +136,7 @@ module Pedant
               let(:test_payload) { ->(len) { default_resource_attributes.with(attribute, random_value_of_length.(len)) } }
 
               if options[:min]
-                context "with value below the minimum length of #{options[:min]}" do
+                context "with value below the minimum length of #{options[:min]}", :validation do
                   rejects_with_400 payload: Proc.new { test_payload.(options[:min] - 1) },
                     error_message: [ options[:error_message] ]
                 end
@@ -220,7 +220,7 @@ module Pedant
               let(:test_payload) { ->(len) { default_resource_attributes.with(attribute, random_value_of_length.(len)) } }
 
               if options[:min]
-                context "with value below the minimum length of #{options[:min]}" do
+                context "with value below the minimum length of #{options[:min]}", :validation do
                   rejects_with_400 payload: Proc.new { test_payload.(options[:min] - 1) },
                     error_message: [ options[:error_message] ]
                 end
@@ -281,7 +281,7 @@ module Pedant
           end
 
           def forbids_update_to(attribute, options = {})
-            context "when attempting to change \"#{attribute}\" attribute" do
+            context "when attempting to change \"#{attribute}\" attribute", :authorization do
               rejects_with_403 payload: Proc.new { default_resource_attributes.with(attribute, options[:with]) }
             end
           end

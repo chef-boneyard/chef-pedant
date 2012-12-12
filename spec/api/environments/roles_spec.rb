@@ -121,7 +121,7 @@ describe "Environments API Endpoint", :environments, :roles do
         should_respond_with 404
       end
 
-      context 'without authorization' do
+      context 'without authorization', :authorization do
         let(:expected_response) { unauthorized_access_credential_response }
         let(:requestor) { outside_user }
 

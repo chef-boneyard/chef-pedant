@@ -15,7 +15,7 @@
 
 require 'pedant/rspec/cookbook_util'
 
-describe "Sandboxes API Endpoint", :sandboxes do
+describe "Sandboxes API Endpoint" do
   include Pedant::RSpec::CookbookUtil
 
   def self.ruby?
@@ -79,7 +79,7 @@ describe "Sandboxes API Endpoint", :sandboxes do
       end
     end
 
-    context 'when creating an invalid sandbox' do
+    context 'when creating an invalid sandbox', :validation do
       context 'with an empty request hash' do
         let(:request_payload){ {} }
         it 'should fail' do
