@@ -16,7 +16,7 @@
 require 'optparse'
 
 module Pedant
-  class CommandLine < Struct.new(:junit_file, :config_file, :log_file, :include_internal, :only_internal, :run_all)
+  class CommandLine < Struct.new(:junit_file, :config_file, :log_file, :include_internal, :only_internal, :run_all, :verify_error_messages)
 
     def initialize(argv)
       @argv = argv.dup
@@ -59,6 +59,10 @@ module Pedant
       opts.on("-h", "--help", "Print this help message") do
         puts opts
         exit 1
+      end
+
+      opts.on("--[no-]verify-error-messages", "Whether to verify error messages (on by default)") do |verify_error_messages|
+        self.verify_error_messages = verify_error_messages
       end
 
       opts.on("--skip-pedantic", "Skip pedantic tests") do

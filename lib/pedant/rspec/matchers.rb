@@ -111,7 +111,7 @@ end
 
 RSpec::Matchers.define :have_error_message do |message|
   match do |response|
-    parse(response)["error"] == message
+    Pedant.config.verify_error_messages || parse(response)["error"] == message
   end
 
   description do
@@ -121,7 +121,7 @@ end
 
 RSpec::Matchers.define :have_error do |code, message|
   match do |response|
-    response.code == code && parse(response) == { "error" => [message] }
+    response.code == code && (Pedant.config.verify_error_messages || parse(response) == { "error" => [message] })
   end
 
   codes = Pedant::RSpec::HTTP::STATUS_CODES
@@ -202,25 +202,28 @@ RSpec::Matchers.define :look_like do |expected_response_spec|
       end
 
       if not (things_to_check & json_tests).empty? # '&' = intersection
-        # Only parse the body as JSON if we're going to test it as
-        # JSON.  While all the "normal" calls to the API should return
-        # non-empty JSON bodies, some calls may not (such as trying to
-        # use a non-allowed HTTP method and getting a 405 response
-        # back with an empty body).  In cases like that, trying to
-        # parse an empty body will result in an error.
-        parsed_json = parse(response)
+        is_error = expected_response_spec[:status] && expected_response_spec[:status] >= 400
+        if Pedant.config.verify_error_messages || !is_error
+          # Only parse the body as JSON if we're going to test it as
+          # JSON.  While all the "normal" calls to the API should return
+          # non-empty JSON bodies, some calls may not (such as trying to
+          # use a non-allowed HTTP method and getting a 405 response
+          # back with an empty body).  In cases like that, trying to
+          # parse an empty body will result in an error.
+          parsed_json = parse(response)
 
-        expected_body_spec = expected_response_spec[:body] || expected_response_spec[:body_exact]
-        expected_body_spec.class.should == Hash
+          expected_body_spec = expected_response_spec[:body] || expected_response_spec[:body_exact]
+          expected_body_spec.class.should == Hash
 
-        # :body_exact implies that there should be no keys that are
-        # untested, i.e., you test everything that's there
-        if expected_response_spec[:body_exact]
-          parsed_json.keys.sort.should == expected_body_spec.keys.sort
-        end
+          # :body_exact implies that there should be no keys that are
+          # untested, i.e., you test everything that's there
+          if expected_response_spec[:body_exact]
+            parsed_json.keys.sort.should == expected_body_spec.keys.sort
+          end
 
-        expected_body_spec.each do |kv|
-          parsed_json.should have_entry kv
+          expected_body_spec.each do |kv|
+            parsed_json.should have_entry kv
+          end
         end
       end
 
@@ -262,8 +265,17 @@ RSpec::Matchers.define :have_outcome do |outcome_spec|
     end
 
     status = outcome_spec[:status] ? (executed_shellout_command.exitstatus == outcome_spec[:status]) : true
-    stdout = outcome_spec[:stdout] ? (executed_shellout_command.stdout =~ outcome_spec[:stdout]) : true
-    stderr = outcome_spec[:stderr] ? (executed_shellout_command.stderr =~ outcome_spec[:stderr]) : true
+    is_error = outcome_spec[:status] && outcome_spec[:status] != 0
+    if outcome_spec[:stdout] && (Pedant.config.verify_error_messages || !is_error)
+      stdout = executed_shellout_command.stdout =~ outcome_spec[:stdout]
+    else
+      stdout = true
+    end
+    if outcome_spec[:stderr] && (Pedant.config.verify_error_messages || !is_error)
+      stderr = executed_shellout_command.stderr =~ outcome_spec[:stderr]
+    else
+      stderr = true
+    end
     status && stdout && stderr
   end
 
