@@ -33,7 +33,7 @@ module Pedant
     # incorporating seconds (and nanoseconds) from the epoch, along
     # with the current process id
     def self.with_unique_suffix(prefix)
-      t = Time.now
+      t = Time.now.utc
       "#{prefix}-#{t.to_i}-#{t.nsec}-#{Process.pid}"
     end
 

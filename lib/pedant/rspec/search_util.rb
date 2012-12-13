@@ -702,7 +702,7 @@ module Pedant
 
         let(:requestor) { admin_user }
         let(:item_name){
-          t = Time.now
+          t = Time.now.utc
           # A string prefix, followed by the number of seconds from the
           # epoch, followed by the number of nanoseconds from the last
           # fractional second from the epoch, followed by the pid.  This
