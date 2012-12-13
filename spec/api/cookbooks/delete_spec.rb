@@ -83,7 +83,7 @@ describe "Cookbooks API endpoint", :cookbooks do
 
       context "when deleting existent version of an existing cookbook", :smoke do
         let(:recipe_name) { "test_recipe" }
-        let(:recipe_content) { Pedant::Utility.with_unique_suffix("hello") }
+        let(:recipe_content) { "hello-#{unique_suffix}" }
         let(:recipe_spec) do
             {
               :name => recipe_name,

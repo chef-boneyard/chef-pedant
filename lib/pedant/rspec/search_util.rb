@@ -23,6 +23,10 @@ module Pedant
       extend ::RSpec::Core::SharedContext
       extend Pedant::Concern
 
+      included do
+        let(:a_search_item) { ->(x) { "pedant-search-target-#{x}-#{unique_suffix}" } }
+      end
+
       module ClassMethods
 
         # Given a cookbook name and a version string (e.g., "1.0.0"), generate the legal
@@ -701,25 +705,21 @@ module Pedant
       if Pedant::Config.search_server
 
         let(:requestor) { admin_user }
-        let(:item_name){
-          t = Time.now
-          # A string prefix, followed by the number of seconds from the
-          # epoch, followed by the number of nanoseconds from the last
-          # fractional second from the epoch, followed by the pid.  This
-          # ought to be suitably unique.  Grabbing a UUID gem just for
-          # this seems a bit overblown.
-          "pedant-search-target-#{t.to_i}-#{t.nsec}-#{Process.pid}"
-        }
-
+        # A string prefix, followed by the number of seconds from the
+        # epoch, followed by the number of nanoseconds from the last
+        # fractional second from the epoch, followed by the pid.  This
+        # ought to be suitably unique.  Grabbing a UUID gem just for
+        # this seems a bit overblown.
+        let(:item_name) { a_search_item.('resource') }
         let(:deletion_identifier) { item_name } #default to item_name; override this for data bag items
 
         after :each do
           delete_chef_object(container, requestor, item_name)
         end
 
-        let (:index_name) { raise 'Must specify an :index_name! (e.g., a search index like "node", "role", or "data")' }
-        let (:container) { raise 'Must specify a :container! (e.g., "nodes", "roles", "data", etc.' }
-        let (:item) { raise 'Must specify an :item (JSON string or Hash to insert)'}
+        let(:index_name) { raise 'Must specify an :index_name! (e.g., a search index like "node", "role", or "data")' }
+        let(:container) { raise 'Must specify a :container! (e.g., "nodes", "roles", "data", etc.' }
+        let(:item) { raise 'Must specify an :item (JSON string or Hash to insert)'}
 
         it "deletes an object from Solr when deleting from the system as a whole" do
           # Assert that there is no item of the given type with the given name in the search index

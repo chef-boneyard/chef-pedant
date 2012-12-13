@@ -46,6 +46,7 @@ module Pedant
     configure_logging
     puts "Creating platform..."
     create_platform
+    puts "Starting Pedant Run: #{config.pedant_platform.pedant_run_timestamp}"
     configure_rspec
   end
 
@@ -69,7 +70,7 @@ module Pedant
     config.pedant_platform = platform_class.new(config.chef_server,
                                                 config.superuser_key,
                                                 config.superuser_name)
-    end
+  end
 
   def self.configure_rspec
     ::RSpec.configure do |c|

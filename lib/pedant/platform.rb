@@ -29,6 +29,8 @@ module Pedant
       @server = server
       @superuser_key_file = superuser_key_file
       @superuser = Pedant::Requestor.new(superuser_name, superuser_key_file, platform: self)
+      self.pedant_run_timestamp # Cache the global timestamp at initialization
+      self
     end
 
     def api_url(url_path)
@@ -133,6 +135,21 @@ yap6MUYSjPOa7eCrhg2zFZiqO6VLEogPc1nsjb9Zl2UWLLYyCVz=
 -----END RSA PRIVATE KEY-----"
 
       Pedant::Client.new(name, bogus_key, platform: self, preexisting: false, bogus: true)
+    end
+
+    # Normalize timestamps used in Pedant
+    # In tests, you can access this with:
+    # let(:timestamp) { platform.now }
+    def timestamp
+      Time.now.utc
+    end
+
+    alias now timestamp
+
+    # Global timestamp marking the beginning of the run
+    # Use this for things like generating unique names
+    def pedant_run_timestamp
+      @_pedant_run_timestamp ||= self.timestamp
     end
   end
 end
