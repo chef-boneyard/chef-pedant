@@ -319,7 +319,7 @@ module Pedant
         # re-use this name in multiple places in a test, you must set it in
         # a let block!
         def unique_name(name)
-          t = Time.now
+          t = Time.now.utc
           "pedant_#{name}_#{t.to_i}#{t.nsec}#{Process.pid}"
         end
 

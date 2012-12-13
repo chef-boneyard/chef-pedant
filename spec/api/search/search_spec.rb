@@ -486,7 +486,7 @@ describe 'Search API endpoint', :search do
       ROLE_STASH = Hash.new
       let(:role_names) {
         ROLE_STASH[:role_names] ||= 10.times.map { |i|
-          t = Time.now
+          t = Time.now.utc
           "pedant-search-target-#{i}-#{t.to_i}-#{t.nsec}-#{Process.pid}"
         }
       }
@@ -562,7 +562,7 @@ describe 'Search API endpoint', :search do
 
       let(:node_name) {
         STASH[:node_name] ||= begin
-                                t = Time.now
+                                t = Time.now.utc
                                 "pedant-search-target-#{t.to_i}-#{t.nsec}-#{Process.pid}"
                               end
       }
