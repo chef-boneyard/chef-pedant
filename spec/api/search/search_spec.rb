@@ -483,28 +483,19 @@ describe 'Search API endpoint', :search do
       end
 
     context "many results (roles)" do
+      # TODO: Refactor this to shared() ?
       ROLE_STASH = Hash.new
-      let(:role_names) {
-        ROLE_STASH[:role_names] ||= 10.times.map { |i|
-          t = Time.now
-          "pedant-search-target-#{i}-#{t.to_i}-#{t.nsec}-#{Process.pid}"
-        }
-      }
+      let(:role_names) { ROLE_STASH[:role_names] ||= 10.times.map(&a_search_item) }
+      let(:description) { ROLE_STASH[:description] ||= "partial-search-role-description-#{rand(10000).to_s}" }
 
-      let(:description) {
-        ROLE_STASH[:description] ||= "partial-search-role-description-#{rand(10000).to_s}"
-      }
-
-      let(:roles) {
-        i = 0
-        role_names.map do |name|
-          i += 1
+      let(:roles) do
+        role_names.each_with_index.map do |name, i|
           new_role(name, {
                      :override_attributes => {'top' => {'mid' => {'bottom' => i}}},
                      :description => description
                    })
         end
-      }
+      end
 
       before(:all) do
         roles.each do |r|
@@ -535,7 +526,7 @@ describe 'Search API endpoint', :search do
                                         :body => {'total' => 10}})
             got = parse(response)['rows']
             got_digits = got.map { |o| o['data']['goal'] }.sort
-            got_digits.should == (1..10).to_a
+            got_digits.should == (0..9).to_a
           end # response
 
         end
@@ -560,12 +551,7 @@ describe 'Search API endpoint', :search do
         }
       }
 
-      let(:node_name) {
-        STASH[:node_name] ||= begin
-                                t = Time.now
-                                "pedant-search-target-#{t.to_i}-#{t.nsec}-#{Process.pid}"
-                              end
-      }
+      let(:node_name) { STASH[:node_name] ||= a_search_item.('node') }
 
       let(:a_node) {
         n = new_node(node_name)

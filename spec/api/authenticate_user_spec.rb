@@ -81,7 +81,7 @@ describe "Open source /authenticate_users endpoint", :users => true, :platform =
     end
 
     context 'with a non-existing user' do
-      let(:no_such_user) { Pedant::Utility.with_unique_suffix("no-such-user-") }
+      let(:no_such_user) { "no-such-user-#{unique_suffix}" }
       let(:expected_response) { ok_full_response }
       let(:success_message) do
         {

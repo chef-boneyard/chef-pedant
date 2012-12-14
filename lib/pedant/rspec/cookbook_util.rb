@@ -363,7 +363,7 @@ module Pedant
           if spec.is_a?(String)
             {
               :name => spec,
-              :content => Pedant::Utility.with_unique_suffix("pedant-recipe-content-")
+              :content => "pedant-recipe-content-#{unique_suffix}"
             }
           else
             spec
