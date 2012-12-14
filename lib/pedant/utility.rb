@@ -32,8 +32,15 @@ module Pedant
     # Generates a a string with the given prefix and a unique suffix
     # incorporating seconds (and nanoseconds) from the epoch, along
     # with the current process id
+    #
+    # DEPRECATED: Do not use this within the spec. Use pedant_suffix or unique_suffix instead
+    #
+    # TODO: This should be refactored to merge with the unique_suffix and
+    # platform.pedant_run_timestamp. However, to access this, this module needs
+    # to know the platform. Not sure how to organize this yet.
+    #
     def self.with_unique_suffix(prefix)
-      t = Time.now
+      t = Time.now.utc
       "#{prefix}-#{t.to_i}-#{t.nsec}-#{Process.pid}"
     end
 

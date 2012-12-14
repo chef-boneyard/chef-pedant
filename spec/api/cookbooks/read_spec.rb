@@ -244,7 +244,7 @@ describe "Cookbooks API endpoint", :cookbooks do
     let(:cookbook_name) { "the_cookbook_name" }
     let(:cookbook_version) { "1.2.3" }
     let(:recipe_name) { "test_recipe" }
-    let(:recipe_content) { Pedant::Utility.with_unique_suffix("hello") }
+    let(:recipe_content) { "hello-#{unique_suffix}" }
     let(:recipe_spec) do
         {
           :name => recipe_name,

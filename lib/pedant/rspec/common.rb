@@ -305,22 +305,23 @@ module Pedant
         end
         let(:open_source?) { self.class.open_source? }
 
-        # Append an all-but-certain-to-be-unique suffix to a given string.
-        # Useful for generating names for testing entities that will not
-        # conflict with existing ones (of concern mainly for Open Source
-        # Chef Servers, as tests cannot be sandboxed to a testing
-        # organization.)
+        # Timestamp suffixes
+        # Suffix unique between runs. Timestamp is generated once per pedant run
+        let(:pedant_suffix) { suffix_for_names.(platform.pedant_run_timestamp) }
+
+        # Suffix unique to the example, bound to a let().
+        let(:unique_suffix) { suffix_for_names.(platform.timestamp) }
+        let(:suffix_for_names) {->(t) { "#{t.to_i}-#{t.nsec}-#{Process.pid}" } }
+
+        # The suffix is unique for Pedant runs, but not within each pedant run.
+        # For a unique timestamp within a Pedant run, use platform.timestamp
+        # or unique_suffix
         #
-        # Also prefixes the generated string with "pedant_" to ensure
-        # that test data is always easy to spot, just to be extra
-        # paranoid.
-        #
-        # Note that the suffix is currently time-based, so if you intend to
-        # re-use this name in multiple places in a test, you must set it in
-        # a let block!
+        # - Prefixes "pedant_" for the name
+        # - Appends a suffix unique for the entire Pedant run
+        # - Useful for things like names for roles, nodes, etc.
         def unique_name(name)
-          t = Time.now
-          "pedant_#{name}_#{t.to_i}#{t.nsec}#{Process.pid}"
+          "pedant_#{name}_#{pedant_suffix}"
         end
 
         # Helper method for helper methods; useful for ensuring that
