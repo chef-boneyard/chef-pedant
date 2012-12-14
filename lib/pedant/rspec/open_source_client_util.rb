@@ -97,9 +97,9 @@ module Pedant
       let(:post_named_client_method_not_allowed_response) { incorrect_ruby_named_client_resource_method_not_allowed_response }
 
       let(:expected_public_key) { /^(-----BEGIN RSA PUBLIC KEY-----|-----BEGIN PUBLIC KEY-----)/ }
-      let(:fetch_admin_client_success_response)     { ok_response.with(body_exact: new_client(client_name, true).with('public_key', expected_public_key)) }
-      let(:fetch_validator_client_success_response) { ok_response.with(body_exact: new_client(client_name, false, true).with('public_key', expected_public_key)) }
-      let(:fetch_nonadmin_client_success_response)  { ok_response.with(body_exact: new_client(client_name, false).with('public_key', expected_public_key)) }
+      let(:fetch_admin_client_success_response)     { ok_response.with(body_exact: new_client(client_name, admin: true).with('public_key', expected_public_key)) }
+      let(:fetch_validator_client_success_response) { ok_response.with(body_exact: new_client(client_name, admin: false, validator: true).with('public_key', expected_public_key)) }
+      let(:fetch_nonadmin_client_success_response)  { ok_response.with(body_exact: new_client(client_name, admin: false).with('public_key', expected_public_key)) }
 
       let(:delete_client_success_response) { ok_response.with(body: { 'name' => client_name }) }
       let(:delete_client_as_non_admin_response) { open_source_not_allowed_response }
@@ -154,13 +154,15 @@ module Pedant
       let(:update_client_as_non_admin_response) { open_source_not_allowed_response }
 
 
-      def new_client(name, admin=false, validator=false)
+      def new_client(name, _options = {})
+        _options[:admin] ||= false
+        _options[:validator] ||= false
         {
           "name" => name,
           "chef_type" => "client",
           "json_class" => "Chef::ApiClient",
-          "admin" => admin,
-          "validator" => validator,
+          "admin" => _options[:admin],
+          "validator" => _options[:validator],
         }
       end
 

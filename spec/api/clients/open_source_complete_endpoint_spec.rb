@@ -230,49 +230,60 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
 
     context 'as different kinds of clients', :authorization do
 
-      def self.should_be_able_to_create_client(is_admin=false)
-        context "creating #{is_admin ? 'an admin' : 'a non-admin'} client" do
-          let(:request_payload){{"name" => client_name, "admin" => is_admin}}
-          it "succeeds" do
-            # It should be created
-            should look_like create_client_success_response
+      def self.client_type(_options)
+        case _options[:admin]
+        when true  then "an admin"
+        when false then "a non-admin"
+        else
+          fail "Must declare :admin to either true or false"
+        end
+      end
+
+      def self.should_create_client_when(_options = {})
+        context "when creating #{client_type(_options)} client" do
+          let(:expected_response) { created_response }
+          let(:request_payload) { {"name" => client_name, "admin" => _options[:admin] } }
+          let(:success_message) { new_client(client_name, admin: _options[:admin]).with('public_key', expected_public_key) }
+
+          should_respond_with 201 do
             # The new client can be retrieved (using admin_requestor
             # because validators can't retrieve clients!)
-            get(client_url, admin_requestor).should look_like (is_admin ? fetch_admin_client_success_response : fetch_nonadmin_client_success_response)
+            get(client_url, admin_requestor).should look_like ok_exact_response
           end
         end
       end
 
-      def self.should_not_be_able_to_create_client(is_admin=false)
-        context "creating #{is_admin ? 'an admin' : 'a non-admin'} client" do
-          let(:request_payload){{"name" => client_name, "admin" => is_admin}}
-          it 'fails' do
-            # It should not be created
-            should look_like create_client_as_non_admin_response
+      def self.should_not_create_client_when(_options = {})
+        context "when creating #{client_type(_options)} client" do
+          # This is really a 403 Forbidden
+          let(:expected_response) { open_source_not_allowed_response }
+          let(:request_payload) { { "name" => client_name, "admin" => _options[:admin] } }
+
+          should_respond_with 403 do
             # Nothing new should have been created (using
             # admin_requestor because non-admin clients can't
             # retrieve any client but themselves)
-            get(client_url, admin_requestor).should look_like client_not_found_response
+            get(client_url, admin_requestor).should look_like not_found_response
           end
         end
       end
 
       context 'as an admin client' do
-        let(:requestor){admin_requestor}
-        should_be_able_to_create_client(false)
-        should_be_able_to_create_client(true)
+        let(:requestor) { admin_requestor }
+        should_create_client_when admin: false
+        should_create_client_when admin: true
       end
 
       context 'as a non-admin client' do
-        let(:requestor){normal_requestor}
-        should_not_be_able_to_create_client(false)
-        should_not_be_able_to_create_client(true)
+        let(:requestor) { normal_requestor }
+        should_not_create_client_when admin: false
+        should_not_create_client_when admin: true
       end
 
       context 'as a validator client' do
-        let(:requestor){validator_client}
-        should_be_able_to_create_client(false)
-        should_not_be_able_to_create_client(true)
+        let(:requestor) { validator_client }
+        should_create_client_when     admin: false
+        should_not_create_client_when admin: true
       end
     end
 
