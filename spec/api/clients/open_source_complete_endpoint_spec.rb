@@ -229,21 +229,16 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
     end
 
     context 'as different kinds of clients', :authorization do
-
-      def self.client_type(_options)
-        case _options[:admin]
-        when true  then "an admin"
-        when false then "a non-admin"
-        else
-          fail "Must declare :admin to either true or false"
-        end
-      end
-
       def self.should_create_client_when(_options = {})
         context "when creating #{client_type(_options)} client" do
           let(:expected_response) { created_response }
-          let(:request_payload) { {"name" => client_name, "admin" => _options[:admin] } }
-          let(:success_message) { new_client(client_name, admin: _options[:admin]).with('public_key', expected_public_key) }
+          let(:request_payload) { client_attributes }
+          let(:client_attributes) { {"name" => client_name, "admin" => _options[:admin] || false, 'validator' => _options[:validator] || false} }
+          let(:success_message) do
+            new_client(client_name).
+              merge(client_attributes).
+              with('public_key', expected_public_key)
+          end
 
           should_respond_with 201 do
             # The new client can be retrieved (using admin_requestor
@@ -257,7 +252,7 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
         context "when creating #{client_type(_options)} client" do
           # This is really a 403 Forbidden
           let(:expected_response) { open_source_not_allowed_response }
-          let(:request_payload) { { "name" => client_name, "admin" => _options[:admin] } }
+          let(:request_payload) { { "name" => client_name, "admin" => _options[:admin] || false, 'validator' => _options[:validator] || false } }
 
           should_respond_with 403 do
             # Nothing new should have been created (using
@@ -268,22 +263,52 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
         end
       end
 
+      def self.invalid_client_when(_options = {})
+        context "when creating #{client_type(_options)} client" do
+          let(:expected_response) { bad_request_exact_response }
+          let(:error_message) { [ "Client cannot be both an admin and a validator." ] }
+          let(:request_payload) { { "name" => client_name, "admin" => _options[:admin], 'validator' => _options[:validator] } }
+
+          should_respond_with 400 do
+            # Nothing new should have been created (using
+            # admin_requestor because non-admin clients can't
+            # retrieve any client but themselves)
+            get(client_url, admin_requestor).should look_like not_found_response
+          end
+        end
+      end
+
+      # Admins can create any valid client
       context 'as an admin client' do
         let(:requestor) { admin_requestor }
-        should_create_client_when admin: false
+        should_create_client_when admin: false, validator: false
         should_create_client_when admin: true
+        should_create_client_when validator: true
+
+        # A client that is both an admin and a validator is invalid
+        invalid_client_when admin: true, validator: true
       end
 
+      # Non-admins should not be able to create clients, period
       context 'as a non-admin client' do
         let(:requestor) { normal_requestor }
-        should_not_create_client_when admin: false
+
+        should_not_create_client_when admin: false, validator: false
         should_not_create_client_when admin: true
+        should_not_create_client_when validator: true
+
+        invalid_client_when admin: true, validator: true
       end
 
+      # Validators can only create non-admins
       context 'as a validator client' do
         let(:requestor) { validator_client }
-        should_create_client_when     admin: false
+
+        should_create_client_when     admin: false, validator: false
         should_not_create_client_when admin: true
+        should_not_create_client_when validator: true
+
+        invalid_client_when admin: true, validator: true
       end
     end
 

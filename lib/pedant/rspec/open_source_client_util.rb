@@ -179,6 +179,17 @@ module Pedant
       end
 
       module ClassMethods
+        def client_type(_options)
+          case [_options[:admin] || false, _options[:validator] || false]
+          when [true,  false] then "an admin"
+          when [false, false] then "a non-admin"
+          when [false, true ] then "a validator"
+          when [true,  true ] then "an invalid admin and validator"
+          else
+            fail "Must declare :admin to either true or false"
+          end
+        end
+
         def should_generate_new_keys
           context 'when generating key pairs' do
             let(:updated_private_key) { parsed_response['private_key'] }
