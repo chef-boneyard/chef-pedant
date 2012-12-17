@@ -261,8 +261,10 @@ describe "Depsolver API endpoint", :depsolver do
       it "returns 412 with an existing cookbook filtered out by environment" do
         payload = "{\"run_list\":[\"#{cookbook_name}\"]}"
 
-        error_message = "{\"message\":\"Run list contains invalid items: no such cookbook #{cookbook_name}.\","\
-                        "\"non_existent_cookbooks\":[\"#{cookbook_name}\"],\"cookbooks_with_no_versions\":[]}"
+        error_message = ("{\"message\":\"Run list contains invalid items: " +
+                         "no versions match the constraints on cookbook #{cookbook_name}.\"," +
+                         "\"non_existent_cookbooks\":[]," +
+                         "\"cookbooks_with_no_versions\":[\"#{cookbook_name}\"]}")
         error_hash = {
           "message" => "Unable to satisfy constraints on cookbook #{cookbook_name}, which does not exist.",
           "non_existent_cookbooks" => [cookbook_name],
