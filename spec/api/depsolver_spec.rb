@@ -27,7 +27,7 @@ describe "Depsolver API endpoint", :depsolver do
   # include_context "configuration_check"
 
   let(:env){ "test_depsolver_env"}
-
+  let(:no_cookbooks_env) { "test_depsolver_no_cookbooks_env" }
   let(:cookbook_name){"foo"}
   let(:cookbook_version){"1.2.3"}
   let(:cookbook_name2) {"bar"}
@@ -35,11 +35,27 @@ describe "Depsolver API endpoint", :depsolver do
 
   # We run all the depsolver tests in a newly created environment
   before(:all) {
-    add_environment(admin_user, new_environment(env))
+    # Make sure we are testing an environment that has some
+    # constraints even, if they don't actually constrain.
+    the_env = new_environment(env)
+    the_env['cookbook_versions'] = {
+      'qux' => "> 4.0.0",
+      'foo' => ">= 0.1.0",
+      'bar' => "< 4.0.0"
+    }
+    add_environment(admin_user, the_env)
+
+    no_cb_env = new_environment(no_cookbooks_env)
+    no_cb_env['cookbook_versions'] = {
+      'foo' => '= 400.0.0',
+      'bar' => '> 400.0.0'
+    }
+    add_environment(admin_user, no_cb_env)
   }
 
   after(:all) {
     delete_environment(admin_user, env)
+    delete_environment(admin_user, no_cookbooks_env)
   }
 
   context "POST /environments/:env/cookbook_versions" do
@@ -200,6 +216,27 @@ describe "Depsolver API endpoint", :depsolver do
         end
       end
 
+      it "returns 412 with a non-existent cookbook in _default environment" do
+        not_exist = "this_does_not_exist"
+        payload = "{\"run_list\":[\"#{not_exist}\"]}"
+        error_message = "{\"message\":\"Run list contains invalid items: no such cookbook #{not_exist}.\","\
+                        "\"non_existent_cookbooks\":[\"#{not_exist}\"],\"cookbooks_with_no_versions\":[]}"
+        error_hash = {
+          "message" => "Run list contains invalid items: no such cookbook #{not_exist}.",
+          "non_existent_cookbooks" => [ not_exist ],
+          "cookbooks_with_no_versions" => []
+        }
+        post(api_url("/environments/_default/cookbook_versions"), admin_user,
+             :payload => payload) do |response|
+        response.should look_like({
+                                   :status => 412,
+                                   :body_exact => {
+                                       "error" => [if ruby? then error_message else error_hash end]
+                                   }
+                                  })
+        end
+      end
+
       it "returns 412 with a non-existent cookbook" do
         not_exist = "this_does_not_exist"
         payload = "{\"run_list\":[\"#{not_exist}\"]}"
@@ -211,6 +248,27 @@ describe "Depsolver API endpoint", :depsolver do
           "cookbooks_with_no_versions" => []
         }
         post(api_url("/environments/#{env}/cookbook_versions"), admin_user,
+             :payload => payload) do |response|
+        response.should look_like({
+                                   :status => 412,
+                                   :body_exact => {
+                                       "error" => [if ruby? then error_message else error_hash end]
+                                   }
+                                  })
+        end
+      end
+
+      it "returns 412 with an existing cookbook filtered out by environment" do
+        payload = "{\"run_list\":[\"#{cookbook_name}\"]}"
+
+        error_message = "{\"message\":\"Run list contains invalid items: no such cookbook #{cookbook_name}.\","\
+                        "\"non_existent_cookbooks\":[\"#{cookbook_name}\"],\"cookbooks_with_no_versions\":[]}"
+        error_hash = {
+          "message" => "Unable to satisfy constraints on cookbook foo, which does not exist.",
+          "non_existent_cookbooks" => ["foo"],
+          "most_constrained_cookbooks"=>[]
+        }
+        post(api_url("/environments/#{no_cookbooks_env}/cookbook_versions"), admin_user,
              :payload => payload) do |response|
         response.should look_like({
                                    :status => 412,
@@ -340,7 +398,7 @@ describe "Depsolver API endpoint", :depsolver do
         delete_cookbook(admin_user, cookbook_name2, cookbook_version2)
       }
 
-      it "returns 412 and both entries when there are runlist entries specifying versions that doesn't exist" do
+      it "returns 412 and both entries when there are runlist entries specifying versions that don't exist" do
         make_cookbook(admin_user, cookbook_name, cookbook_version)
         make_cookbook(admin_user, cookbook_name2, cookbook_version2)
         missing_version_payload = "{\"run_list\":[\"#{cookbook_name2}@2.0.0\", \"#{cookbook_name}@3.0.0\"]}"
