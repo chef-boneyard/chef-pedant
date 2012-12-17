@@ -264,8 +264,8 @@ describe "Depsolver API endpoint", :depsolver do
         error_message = "{\"message\":\"Run list contains invalid items: no such cookbook #{cookbook_name}.\","\
                         "\"non_existent_cookbooks\":[\"#{cookbook_name}\"],\"cookbooks_with_no_versions\":[]}"
         error_hash = {
-          "message" => "Unable to satisfy constraints on cookbook foo, which does not exist.",
-          "non_existent_cookbooks" => ["foo"],
+          "message" => "Unable to satisfy constraints on cookbook #{cookbook_name}, which does not exist.",
+          "non_existent_cookbooks" => [cookbook_name],
           "most_constrained_cookbooks"=>[]
         }
         post(api_url("/environments/#{no_cookbooks_env}/cookbook_versions"), admin_user,
