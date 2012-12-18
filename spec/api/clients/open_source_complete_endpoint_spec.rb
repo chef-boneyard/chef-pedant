@@ -266,7 +266,7 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
       def self.invalid_client_when(_options = {})
         context "when creating #{client_type(_options)} client" do
           let(:expected_response) { bad_request_exact_response }
-          let(:error_message) { [ "Client cannot be both an admin and a validator." ] }
+          let(:error_message) { [ "Client can be either an admin or a validator, but not both." ] }
           let(:request_payload) { { "name" => client_name, "admin" => _options[:admin], 'validator' => _options[:validator] } }
 
           should_respond_with 400 do
@@ -435,6 +435,7 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
     let(:persisted_resource_response) { get(resource_url, superuser) }
     let(:default_resource_attributes) { default_client_attributes }
     let(:required_attributes) { default_client_attributes.except('admin').except('private_key') }
+    let(:original_resource_attributes) { default_client_attributes.except('private_key') }
 
     context 'when validating' do
       before(:each) { test_client_response }
@@ -464,51 +465,186 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
       it { should look_like client_not_found_response }
     end
 
-    def self.test_property_change(property, payload_value, client_is_admin)
-      # we'll change the private key, but this is reflected by a changed public key
-      lookup_property = if property == "private_key"
-                          "public_key"
-                        else
-                          property
-                        end
+    def self.with_another_admin_client(&examples)
+      context 'with another admin client' do
+        let(:default_resource_attributes) { default_client_attributes.with('admin', true) }
+        before(:each) { test_client_response }
 
-      context_message = if property == "private_key"
-                          "changing the private key of an #{client_is_admin ? 'an admin' : 'a non-admin'} client"
-                        else
-                          "changing the #{property} property of an #{client_is_admin ? 'an admin' : 'a non-admin'} client to '#{payload_value}'"
-                        end
-
-      context context_message do
-        include_context 'with temporary testing client' do
-          let(:client_admin){client_is_admin}
-        end
-        let(:request_payload) do
-          {property.to_s => payload_value}
-        end
-
-        context 'as an admin client' do
-          let(:requestor){admin_requestor}
-          it 'succeeds' do
-            # Record the initial value before the update
-            initial_value = parse(get(client_url, requestor))[lookup_property]
-
-            # Make the update
-            # TODO: Should we test the body also?
-            should look_like ok_response
-
-            # Ensure that the value to be changed actually was changed
-            final_value = parse(get(client_url, requestor))[lookup_property]
-            initial_value.should_not eq final_value
-          end
-        end # admin client
-        non_admin_clients_cannot_update
+        instance_eval(&examples)
       end
-    end # self.should_change_property
+    end
 
-    test_property_change("admin", true, false)
-    test_property_change("admin", false, true)
-    test_property_change("private_key", true, false)
-    test_property_change("private_key", true, true)
+    def self.with_another_validator_client(&examples)
+      context 'with another validator client' do
+        let(:default_resource_attributes) { default_client_attributes.with('validator', true) }
+        before(:each) { test_client_response }
+
+        instance_eval(&examples)
+      end
+    end
+
+    def self.with_another_normal_client(&examples)
+      context 'with another normal client' do
+        let(:default_resource_attributes) { default_client_attributes.with('validator', true) }
+        before(:each) { test_client_response }
+
+        instance_eval(&examples)
+      end
+    end
+
+    def self.should_update_client_when(_options = {})
+      context "when updating to #{client_type(_options)} client" do
+        let(:expected_response) { ok_response }
+        let(:request_payload) { client_attributes }
+        let(:client_attributes) { {"name" => client_name, "admin" => _options[:admin] || false, 'validator' => _options[:validator] || false} }
+        let(:success_message) do
+          new_client(client_name).
+            merge(client_attributes).
+            with('public_key', expected_public_key)
+        end
+
+        should_respond_with 200 do
+          # The new client can be retrieved (using admin_requestor
+          # because validators can't retrieve clients!)
+          get(client_url, admin_requestor).should look_like ok_exact_response
+        end
+      end
+    end
+
+    def self.forbids_update_when(_options = {})
+      context "when updating to #{client_type(_options)} client" do
+        # This is really a 403 Forbidden
+        let(:expected_response) { forbidden_response }
+        let(:request_payload) { { "name" => client_name, "admin" => _options[:admin] || false, 'validator' => _options[:validator] || false } }
+
+        should_respond_with 403 do
+          # Nothing new should have been created (using
+          # admin_requestor because non-admin clients can't
+          # retrieve any client but themselves)
+          get(client_url, admin_requestor).should look_like original_resource_attributes
+        end
+      end
+    end
+
+    def self.invalid_client_when(_options = {})
+      context "when updating to #{client_type(_options)} client" do
+        let(:expected_response) { bad_request_exact_response }
+        let(:error_message) { [ "Client can be either an admin or a validator, but not both." ] }
+        let(:request_payload) { { "name" => client_name, "admin" => _options[:admin], 'validator' => _options[:validator] } }
+
+        should_respond_with 400 do
+           get(client_url, admin_requestor).should look_like original_resource_attributes
+        end
+      end
+    end
+
+    # Admin users can do anything
+    context 'as an admin user' do
+      let(:requestor) { platform.admin_user }
+
+      pending 'when updating keys'
+      pending 'when updating keys'
+
+      with_another_admin_client do
+        should_update_client_when admin: false
+        should_update_client_when admin: false, validator: true
+        invalid_client_when       admin: true,  validator: true
+      end
+
+      with_another_validator_client do
+        should_update_client_when validator: false
+        should_update_client_when validator: false, admin: true
+        invalid_client_when       admin: true, validator: true
+      end
+
+      with_another_normal_client do
+        should_update_client_when admin: false, validator: false
+        should_update_client_when admin: true
+        should_update_client_when validator: true
+        invalid_client_when       admin: true, validator: true
+      end
+    end
+
+    # Admin clients can do almost anything
+    context 'as an admin client' do
+      let(:requestor) { platform.admin_client }
+
+      pending 'when updating self'
+      pending 'when updating keys'
+
+      with_another_admin_client do
+        should_update_client_when admin: false
+        should_update_client_when admin: false, validator: true
+        invalid_client_when       admin: true,  validator: true
+      end
+
+      with_another_validator_client do
+        should_update_client_when validator: false
+        should_update_client_when validator: false, admin: true
+        invalid_client_when       admin: true, validator: true
+      end
+
+      with_another_normal_client do
+        should_update_client_when admin: false, validator: false
+        should_update_client_when admin: true
+        should_update_client_when validator: true
+        invalid_client_when       admin: true, validator: true
+      end
+    end
+
+    # Validator clients can only create clients or update self
+    pending 'as a validator client' do
+      let(:requestor) { platform.validator_client }
+
+      pending 'when updating self'
+      pending 'when updating keys'
+
+      with_another_admin_client do
+        forbids_update_when admin: false
+        forbids_update_when admin: false, validator: true
+        invalid_client_when admin: true,  validator: true
+      end
+
+      with_another_validator_client do
+        forbids_update_when validator: false
+        forbids_update_when validator: false, admin: true
+        invalid_client_when admin: true, validator: true
+      end
+
+      with_another_normal_client do
+        forbids_update_when admin: false, validator: false
+        forbids_update_when admin: true
+        forbids_update_when validator: true
+        invalid_client_when admin: true, validator: true
+      end
+    end
+
+    # Normal clients can only update self
+    context 'as a normal client' do
+      let(:requestor) { platform.non_admin_client }
+
+      pending 'when updating self'
+      pending 'when updating keys'
+
+      with_another_admin_client do
+        forbids_update_when admin: false
+        forbids_update_when admin: false, validator: true
+        invalid_client_when admin: true,  validator: true
+      end
+
+      with_another_validator_client do
+        forbids_update_when validator: false
+        forbids_update_when validator: false, admin: true
+        invalid_client_when admin: true, validator: true
+      end
+
+      with_another_normal_client do
+        forbids_update_when admin: false, validator: false
+        forbids_update_when admin: true
+        forbids_update_when validator: true
+        invalid_client_when admin: true, validator: true
+      end
+    end
 
     context 'changing the name of a client' do
       include_context 'with temporary testing client'
