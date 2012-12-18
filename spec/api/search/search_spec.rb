@@ -313,9 +313,7 @@ describe 'Search API endpoint', :search do
 
       context 'with no criteria' do
         let(:query_parameters){""}
-        let(:search_result_items) do
-          fetch_clients(['chef-validator', 'pedant_admin_client', 'pedant_client', 'chef-webui'])
-        end
+        let(:search_result_items) { fetch_clients(pedant_clients) }
         performing_a_search 'returns all the clients'
       end
 

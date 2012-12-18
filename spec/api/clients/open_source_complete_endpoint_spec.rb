@@ -76,6 +76,9 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
     let(:request_method) { :GET }
     let(:request_url)    { clients_url }
 
+    let(:clients_collection) { pedant_clients.inject({}, &client_name_to_url) }
+    let(:client_name_to_url) { ->(body, name) { body.with!(name, api_url("/clients/#{name}")) } }
+
     # TODO: Do this when we fix the look_like matcher
     # include_context 'permission checks' do
     #   let(:admin_response){fetch_prepopulated_clients_success_response}
@@ -90,8 +93,11 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
         it { should look_like ok_response }
       end
 
-      it 'should return a list of name/url mappings for all clients' do
-        should look_like(fetch_prepopulated_clients_success_response)
+      context 'with only Pedant-created clients' do
+        let(:expected_response) { ok_exact_response }
+        let(:success_message)   { clients_collection }
+
+        should_respond_with 200, 'and the Pedant-created clients'
       end
     end
   end
@@ -593,7 +599,7 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
     end
 
     # Validator clients can only create clients or update self
-    pending 'as a validator client' do
+    context 'as a validator client' do
       let(:requestor) { platform.validator_client }
 
       pending 'when updating self'

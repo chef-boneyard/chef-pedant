@@ -61,10 +61,20 @@ module Pedant
     end
 
     # Open source clients can have an admin flag set
-    def create_client(name, admin=false)
+    def create_client(name, options = {})
+      fail "Cannot create a client that is both an admin and a validator." if options[:admin] && options[:validator]
+
+      # Explicitly declare this to pass on to the API
+      options[:admin]     ||= false
+      options[:validator] ||= false
+
       clientname = name.to_s
       puts "Creating client #{clientname}..."
-      payload = {"name" => clientname, "admin" => admin}
+      payload = {
+        "name"      => clientname,
+        "admin"     => options[:admin],
+        "validator" => options[:validator]
+      }
 
       r = post(api_url('/clients'), @superuser, :payload => payload)
 
@@ -94,23 +104,24 @@ EOM
       end
 
       private_key = parse(r)["private_key"]
-      Pedant::Client.new(clientname, private_key, platform: self, preexisting: false, admin: admin)
+      Pedant::Client.new(clientname, private_key, platform: self, preexisting: false, admin: options[:admin], validator: options[:validator])
     end
 
     def client_from_config(requestor_spec)
       name = requestor_spec[:name]
       create_me = requestor_spec[:create_me]
       type = requestor_spec[:type]
-      admin = requestor_spec[:admin] || false
+      admin = requestor_spec[:admin]
+      validator = requestor_spec[:validator]
       key_file = requestor_spec[:key_file]
 
       # Extract to after hooks
       if create_me
-        create_client(name, admin).tap do |client|
+        create_client(name, admin: admin, validator: validator).tap do |client|
           client.populate_dot_chef! if requestor_spec[:create_knife]
         end
       else
-        Pedant::Client.new(name, key_file, platform: self, preexisting: true, admin: admin)
+        Pedant::Client.new(name, key_file, platform: self, preexisting: true, admin: admin, validator: validator)
       end
     end
 

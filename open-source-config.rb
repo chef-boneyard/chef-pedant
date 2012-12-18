@@ -78,6 +78,12 @@ requestors({
                  :create_knife => true,
                  :admin => true
                },
+               :validator => {
+                 :name => "pedant_validator_client",
+                 :create_me => true,
+                 :create_knife => true,
+                 :validator => true
+               },
                :non_admin => {
                  :name => 'pedant_client',
                  :create_me => true,

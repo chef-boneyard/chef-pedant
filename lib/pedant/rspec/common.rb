@@ -47,6 +47,10 @@ module Pedant
         let(:request_auth_headers) { nil } # Override for your own headers
         let(:request_query_parameters){ nil } # This should be a string, like "foo=bar"
 
+        # Pedant-created requestors:
+        let(:pedant_clients) { (%w(chef-validator chef-webui) + platform.clients.reject(&:bogus?).map(&:name)).sort }
+        let(:pedant_users)   { (['admin'] + platform.users.map(&:name)).sort }
+
         # TODO: With request query parameters, in order to be completely
         # general, we would first need to differentiate between query
         # parameters intended for the search endpoint and otherwise in

@@ -44,6 +44,7 @@ module Pedant
                     else fail "Unknown key type. Must be String or OpenSSL::PKey::RSA. #{key.inspect}"
                     end
       @preexisting = options[:preexisting]
+      @admin = !!options[:admin]
     end
 
     def bogus?; @bogus; end
@@ -118,10 +119,10 @@ module Pedant
   end
 
   class Client < Requestor
-    attr_reader :admin
+    attr_reader :validator
     def initialize(name, key, options = {})
       super(name, key, options)
-      @admin = !!options[:admin]
+      @validator = !!options[:validator]
     end
 
     def delete!
