@@ -98,5 +98,8 @@ module Pedant
 
     # Error message verification is on by default
     verify_error_messages(true)
+
+    # Emits a console bell when run finishes
+    bell_on_completion(false)
   end
 end

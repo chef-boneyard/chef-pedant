@@ -16,7 +16,7 @@
 require 'optparse'
 
 module Pedant
-  class CommandLine < Struct.new(:junit_file, :config_file, :log_file, :include_internal, :only_internal, :run_all, :verify_error_messages)
+  class CommandLine < Struct.new(:junit_file, :config_file, :log_file, :include_internal, :only_internal, :run_all, :verify_error_messages, :bell_on_completion)
 
     def initialize(argv)
       @argv = argv.dup
@@ -79,6 +79,10 @@ module Pedant
 
       opts.on("--all", "Run all tests.  Supersedes any other filtering-related arguments") do
         self.run_all = true
+      end
+
+      opts.on("--bell", "Emits a console bell after completing tests") do
+        self.bell_on_completion = true
       end
     end
 
