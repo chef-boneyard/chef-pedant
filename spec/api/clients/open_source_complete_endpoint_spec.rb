@@ -375,7 +375,7 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
         end
       end
 
-      context 'fetching a validator client' do
+      context 'fetching a validator client', :focus do
         let(:client_name){open_source_validator_client_name}
         include_context 'permission checks' do
           let(:admin_response){ok_response}
@@ -417,7 +417,7 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
 
     after :each do
       begin
-        delete_client(admin_requestor, client_name)
+        delete_client(platform.admin_user, client_name)
       rescue URI::InvalidURIError
         # ok, since some bad names can result in bad URLs
       end
@@ -438,7 +438,7 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
 
     let(:expected_response) { ok_response }
     let(:resource_url) { client_url }
-    let(:persisted_resource_response) { get(resource_url, superuser) }
+    let(:persisted_resource_response) { get(resource_url, platform.admin_user) }
     let(:default_resource_attributes) { default_client_attributes }
     let(:required_attributes) { default_client_attributes.except('admin').except('private_key') }
     let(:original_resource_attributes) { default_client_attributes.except('private_key') }
@@ -473,7 +473,7 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
 
     def self.with_another_admin_client(&examples)
       context 'with another admin client' do
-        let(:default_resource_attributes) { default_client_attributes.with('admin', true) }
+        let(:default_resource_attributes) { default_client_attributes.with('admin', true).with('validator', false) }
         before(:each) { test_client_response }
 
         instance_eval(&examples)
@@ -482,7 +482,7 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
 
     def self.with_another_validator_client(&examples)
       context 'with another validator client' do
-        let(:default_resource_attributes) { default_client_attributes.with('validator', true) }
+        let(:default_resource_attributes) { default_client_attributes.with('admin', false).with('validator', true) }
         before(:each) { test_client_response }
 
         instance_eval(&examples)
@@ -491,7 +491,7 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
 
     def self.with_another_normal_client(&examples)
       context 'with another normal client' do
-        let(:default_resource_attributes) { default_client_attributes.with('validator', true) }
+        let(:default_resource_attributes) { default_client_attributes.with('admin', false).with('validator', false) }
         before(:each) { test_client_response }
 
         instance_eval(&examples)
@@ -512,7 +512,7 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
         should_respond_with 200 do
           # The new client can be retrieved (using admin_requestor
           # because validators can't retrieve clients!)
-          get(client_url, admin_requestor).should look_like ok_exact_response
+          get(client_url, platform.admin_user).should look_like ok_exact_response
         end
       end
     end
@@ -527,7 +527,7 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
           # Nothing new should have been created (using
           # admin_requestor because non-admin clients can't
           # retrieve any client but themselves)
-          get(client_url, admin_requestor).should look_like original_resource_attributes
+          get(client_url, platform.admin_user).should look_like original_resource_attributes
         end
       end
     end
@@ -548,19 +548,24 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
     context 'as an admin user' do
       let(:requestor) { platform.admin_user }
 
-      pending 'when updating keys'
-      pending 'when updating keys'
+      pending 'when updating self'
 
       with_another_admin_client do
         should_update_client_when admin: false
         should_update_client_when admin: false, validator: true
         invalid_client_when       admin: true,  validator: true
+
+        should_generate_new_keys
+        should_update_public_key
       end
 
       with_another_validator_client do
         should_update_client_when validator: false
         should_update_client_when validator: false, admin: true
         invalid_client_when       admin: true, validator: true
+
+        should_generate_new_keys
+        should_update_public_key
       end
 
       with_another_normal_client do
@@ -568,26 +573,34 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
         should_update_client_when admin: true
         should_update_client_when validator: true
         invalid_client_when       admin: true, validator: true
+
+        should_generate_new_keys
+        should_update_public_key
       end
     end
 
     # Admin clients can do almost anything
-    context 'as an admin client' do
+    context 'as an admin client'  do
       let(:requestor) { platform.admin_client }
 
       pending 'when updating self'
-      pending 'when updating keys'
 
       with_another_admin_client do
         should_update_client_when admin: false
         should_update_client_when admin: false, validator: true
         invalid_client_when       admin: true,  validator: true
+
+        should_generate_new_keys
+        should_update_public_key
       end
 
       with_another_validator_client do
         should_update_client_when validator: false
         should_update_client_when validator: false, admin: true
         invalid_client_when       admin: true, validator: true
+
+        should_generate_new_keys
+        should_update_public_key
       end
 
       with_another_normal_client do
@@ -595,6 +608,9 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
         should_update_client_when admin: true
         should_update_client_when validator: true
         invalid_client_when       admin: true, validator: true
+
+        should_generate_new_keys
+        should_update_public_key
       end
     end
 
