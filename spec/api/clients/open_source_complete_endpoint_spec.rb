@@ -412,53 +412,19 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
     let(:request_url)     { named_client_url }
     let(:request_payload) { default_client_attributes }
 
-    let(:client_url){api_url("/clients/#{client_name}")}
-
-    let(:client_is_admin) { false }
-    let(:default_client_attributes) do
-      {
-        "name" => client_name,
-        "admin" => client_is_admin
-      }
-    end
-
-    after :each do
-      begin
-        delete_client(platform.admin_user, client_name)
-      rescue URI::InvalidURIError
-        # ok, since some bad names can result in bad URLs
-      end
-    end
-
-    let(:client_name) { test_client }
-    let(:test_client) { "pedant_test_#{rand(100000)}" }
-    let(:test_client_response) { create_client admin_requestor, default_resource_attributes }
-    let(:test_client_parsed_response) { parse(test_client_response) }
-    let(:test_client_private_key) { test_client_parsed_response['private_key'] }
-    let(:test_client_public_key) { test_client_parsed_response['public_key'] }
-    let(:test_client_requestor) { Pedant::User.new(test_client, test_client_private_key, platform: platform, preexisting: false) }
-
-
-    # useful for checking the result of a create operation
-    # TODO: Refactor to resource_url
-    let(:client_url) { api_url("/clients/#{client_name}") }
-
-    let(:expected_response) { ok_response }
-    let(:resource_url) { client_url }
-    let(:persisted_resource_response) { get(resource_url, platform.admin_user) }
-    let(:default_resource_attributes) { default_client_attributes }
-    let(:required_attributes) { default_client_attributes.except('admin').except('private_key') }
-    let(:original_resource_attributes) { default_client_attributes.except('private_key') }
+    include_context "with temporary testing client"
+    let(:expected_response)   { ok_response }
+    let(:resource_url)        { client_url }
+    let(:required_attributes) { required_client_attributes }
 
     context 'when validating' do
       before(:each) { test_client_response }
 
       should_generate_new_keys
       should_update_public_key
-
     end
+
     context 'as an admin' do
-      before(:each) { test_client_response }
       let(:requestor) { platform.admin_client }
 
       context 'with admin set to true', :smoke do
@@ -469,40 +435,29 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
     end
 
     context 'modifying a non-existent client' do
-      let(:requestor) {admin_requestor}
-      let(:client_name) {pedant_nonexistent_client_name}
-      let(:request_payload) do
-        {"name" => client_name}
-      end
+      let(:request_url) { api_url "/clients/#{pedant_nonexistent_client_name}" }
+      let(:request_payload) { {"name" => pedant_nonexistent_client_name} }
 
       it { should look_like client_not_found_response }
     end
 
     def self.with_another_admin_client(&examples)
       context 'with another admin client' do
-        let(:default_resource_attributes) { default_client_attributes.with('admin', true).with('validator', false) }
-        before(:each) { test_client_response }
-
+        let(:client_is_admin) { true }
         instance_eval(&examples)
       end
     end
 
     def self.with_another_validator_client(&examples)
       context 'with another validator client' do
-        let(:default_resource_attributes) { default_client_attributes.with('admin', false).with('validator', true) }
-        before(:each) { test_client_response }
+        let(:client_is_validator) { true }
 
         instance_eval(&examples)
       end
     end
 
     def self.with_another_normal_client(&examples)
-      context 'with another normal client' do
-        let(:default_resource_attributes) { default_client_attributes.with('admin', false).with('validator', false) }
-        before(:each) { test_client_response }
-
-        instance_eval(&examples)
-      end
+      context('with another normal client', &examples)
     end
 
     def self.should_update_client_when(_options = {})
@@ -823,7 +778,7 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
     should_have_proper_deletion_behavior(false)
 
     context 'deleting a non-existent client' do
-      let(:requestor) {admin_requestor}
+      let(:requestor) { admin_requestor }
       let(:client_name) {pedant_nonexistent_client_name}
 
       it { should look_like client_not_found_response }
