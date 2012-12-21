@@ -25,23 +25,40 @@ module Pedant
       # When you include this context, 'client_name' is set to the
       # name of the testing client
       shared_context 'with temporary testing client' do
-        let(:client_name){unique_name("temporary_client")}
-        let(:client_admin){false}
-        let(:client_validator){false}
-        let(:client) do
-          {
-            "name" => client_name,
-            "admin" => client_admin,
-            "validator" => client_validator
-          }
-        end
-        before :each do
-          add_client(admin_requestor, client)
+        before(:each) { test_client_response }
+        after :each do
+          begin
+            delete_client(platform.admin_user, client_name)
+          rescue URI::InvalidURIError
+            # ok, since some bad names can result in bad URLs
+          end
         end
 
-        after :each do
-          delete_client(admin_requestor, client_name)
+        let(:client_name)         { unique_name("temporary_client") }
+        let(:client_is_admin)     { false }
+        let(:client_is_validator) { false }
+
+        let(:client) { default_client_attributes } # Compatibility with search tests
+
+        let(:required_client_attributes) { { 'name' => client_name } }
+        let(:default_client_attributes) do
+          required_client_attributes.
+            with('admin',     client_is_admin).
+            with('validator', client_is_validator)
         end
+        let(:original_resource_attributes) { default_client_attributes.except('private_key') }
+
+        let(:test_client) { client_name }
+        let(:test_client_response) { create_client admin_requestor, default_resource_attributes }
+        let(:test_client_parsed_response) { parse(test_client_response) }
+        let(:test_client_private_key) { test_client_parsed_response['private_key'] }
+        let(:test_client_public_key) { test_client_parsed_response['public_key'] }
+        let(:test_client_requestor) { Pedant::User.new(test_client, test_client_private_key, platform: platform, preexisting: false) }
+
+        let(:client_url) { api_url("/clients/#{client_name}") }
+
+        let(:persisted_resource_response) { get(resource_url, platform.admin_user) }
+        let(:default_resource_attributes) { default_client_attributes }
       end # shared context
 
       # TODO: Pull these from pedant config

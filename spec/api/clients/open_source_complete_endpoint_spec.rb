@@ -325,7 +325,7 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
   should_not_allow_method :PUT,    '/clients'
   should_not_allow_method :DELETE, '/clients'
 
-  context 'GET' do
+  context 'GET /clients/<name>' do
     let(:request_method) { :GET }
     let(:request_url)    { named_client_url }
 
@@ -355,45 +355,52 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
     end
 
     context 'as different kinds of clients' do
-      context 'fetching an admin client' do
+      def self.can_fetch_self
+        context 'as self', :authorization do
+          let(:requestor) { test_client_requestor }
+          it { should look_like ok_response }
+        end
+      end
+
+      context 'when fetching an admin client' do
         include_context 'with temporary testing client' do
-          let(:client_is_admin){true}
+          let(:client_is_admin) { true }
         end
+
         include_context 'permission checks' do
-          let(:admin_response){ok_response}
-          let(:non_admin_response){forbidden_response}
+          let(:admin_response) { ok_response }
+          let(:non_admin_response) { forbidden_response }
+
+          can_fetch_self
         end
       end
 
-      context 'fetching a non-admin client' do
+      context 'when fetching a normal client' do
         include_context 'with temporary testing client' do
-          let(:client_is_admin){false}
+          let(:client_is_admin) { false }
         end
+
         include_context 'permission checks' do
-          let(:admin_response){ok_response}
-          let(:non_admin_response){forbidden_response}
+          let(:admin_response) { ok_response }
+          let(:non_admin_response) { forbidden_response }
+
+          can_fetch_self
         end
       end
 
-      context 'fetching a validator client', :focus do
-        let(:client_name){open_source_validator_client_name}
-        include_context 'permission checks' do
-          let(:admin_response){ok_response}
-          let(:non_admin_response){forbidden_response}
+      context 'when fetching a validator client' do
+        include_context 'with temporary testing client' do
+          let(:client_is_validator) { true }
         end
-      end
 
-      context 'fetching yourself as a non-admin' do
-        let(:client_name){pedant_nonadmin_client_name}
-        let(:requestor){normal_requestor}
+        include_context 'permission checks' do
+          let(:admin_response) { ok_response }
+          let(:non_admin_response) { forbidden_response }
 
-        it 'is allowed (and is the only thing non-admin clients are allowed to retrieve)' do
-          client_name.should eq requestor.name
-          should look_like ok_response
+          can_fetch_self
         end
       end
     end
-
   end
 
   should_not_allow_method :POST, '/clients/pedant_test_client'
