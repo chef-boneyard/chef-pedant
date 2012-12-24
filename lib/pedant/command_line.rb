@@ -65,6 +65,14 @@ module Pedant
         self.verify_error_messages = verify_error_messages
       end
 
+      opts.on("--focus", "--focus TAGS,TAGS", "Focus on these tests") do |f|
+        self.foci.concat f.split(/,/)
+      end
+
+      opts.on("--skip", "--skip TAGS,TAGS", "Skip these tests") do |f|
+        self.skip.concat f.split(/,/)
+      end
+
       opts.on("--skip-pedantic", "Skip pedantic tests") do
         self.skip << :pedantic
       end
