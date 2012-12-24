@@ -318,7 +318,7 @@ describe 'Search API endpoint', :search do
       end
 
       context 'searching by name', :smoke do
-        let(:target_name){ admin_requestor.name  }
+        let(:target_name){ admin_client.name }
         let(:request_query_parameters){"q=name:#{target_name}"}
         let(:search_result_items){ [ fetch_client(target_name) ] }
         performing_a_search 'returns the correct client'

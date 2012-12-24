@@ -18,9 +18,11 @@ require 'pedant/platform'
 module Pedant
   class OpenSourcePlatform < Platform
 
-    attr_reader :admin_requestors, :normal_requestors
+    attr_reader :admin_requestors, :normal_requestors, :webui, :webui_key_file
 
     def initialize(server, superuser_key_file, super_user_name='chef-webui')
+      @webui_key_file = Pedant::Config.webui_key || (fail "Missing webui_key in Pedant config.")
+      @webui = Pedant::Requestor.new('chef-webui', superuser_key_file, platform: self)
       super(server, superuser_key_file, super_user_name)
     end
 
