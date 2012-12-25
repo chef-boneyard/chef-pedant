@@ -491,6 +491,70 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
       end
     end
 
+    def self.forbids_renaming
+      context 'when renaming client' do
+        let(:request_payload) { { 'name' => new_name } }
+        let(:persisted_renamed_client_response) { get renamed_client_url, admin_user }
+        let(:original_client_response) { persisted_resource_response }
+        let(:renamed_client_url) { api_url "/clients/#{new_name}" }
+        let(:renamed_client_attributes) { original_resource_attributes.with('name', new_name) }
+
+        context 'to an unclaimed name' do
+          let(:expected_response) { forbidden_response }
+          #TODO: Test the exact response body
+
+          let(:new_name) { "#{client_name}_new" }
+
+          should_respond_with 403, 'and does not rename the client' do
+            original_client_response.should look_like ok_response
+          end
+        end
+
+        context 'to an existing name' do
+          let(:expected_response) { forbidden_response }
+          let(:new_name) { normal_client.name }
+
+          should_respond_with 403, 'and does not rename the client' do
+            original_client_response.should look_like ok_response
+          end
+        end
+      end # when renaming client
+    end # should rename client
+
+    def self.should_rename_client
+      context 'when renaming client' do
+        let(:request_payload) { { 'name' => new_name } }
+        let(:persisted_renamed_client_response) { get renamed_client_url, admin_user }
+        let(:original_client_response) { persisted_resource_response }
+        let(:renamed_client_url) { api_url "/clients/#{new_name}" }
+        let(:renamed_client_attributes) { original_resource_attributes.with('name', new_name) }
+
+        # TODO: This test will probably break legacy code that uses couchdb
+
+        context 'to an unclaimed name' do
+          let(:expected_response) { created_response } # Not sure why renames create a new resource
+          #TODO: Test the exact response body
+
+          after(:each) { delete_client admin_user, new_name }
+          let(:new_name) { "#{client_name}_new" }
+
+          should_respond_with 201, 'and rename the client' do
+            original_client_response.should look_like not_found_response
+            persisted_renamed_client_response.should look_like ok_response.with('body_exact', renamed_client_attributes)
+          end
+        end
+
+        context 'to an existing name', pending: (ruby? ? 'Ruby OSC responds with 200 instead of 409' : false) do
+          let(:expected_response) { conflict_response }
+          let(:new_name) { normal_client.name }
+
+          should_respond_with 409, 'and does not rename the client' do
+            original_client_response.should look_like ok_response
+          end
+        end
+      end # when renaming client
+    end # should rename client
+
     def self.invalid_client_when(_options = {})
       context "when updating to #{client_type(_options)} client" do
         let(:expected_response) { bad_request_exact_response }
@@ -512,6 +576,7 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
         should_update_client_when admin: false, validator: true
         invalid_client_when       admin: true,  validator: true
 
+        should_rename_client
         should_generate_new_keys
         should_update_public_key
       end
@@ -521,6 +586,7 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
         should_update_client_when validator: false, admin: true
         invalid_client_when       admin: true, validator: true
 
+        should_rename_client
         should_generate_new_keys
         should_update_public_key
       end
@@ -531,6 +597,7 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
         should_update_client_when validator: true
         invalid_client_when       admin: true, validator: true
 
+        should_rename_client
         should_generate_new_keys
         should_update_public_key
       end
@@ -551,12 +618,16 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
         forbids_update_when admin: false
         forbids_update_when admin: false, validator: true
         invalid_client_when admin: true,  validator: true
+
+        forbids_renaming
       end
 
       with_another_validator_client do
         forbids_update_when validator: false
         forbids_update_when validator: false, admin: true
         invalid_client_when admin: true, validator: true
+
+        forbids_renaming
       end
 
       with_another_normal_client do
@@ -564,6 +635,8 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
         forbids_update_when admin: true
         forbids_update_when validator: true
         invalid_client_when admin: true, validator: true
+
+        forbids_renaming
       end
     end
 
@@ -578,12 +651,16 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
         forbids_update_when admin: false
         forbids_update_when admin: false, validator: true
         invalid_client_when admin: true,  validator: true
+
+        forbids_renaming
       end
 
       with_another_validator_client do
         forbids_update_when validator: false
         forbids_update_when validator: false, admin: true
         invalid_client_when admin: true, validator: true
+
+        forbids_renaming
       end
 
       with_another_normal_client do
@@ -591,127 +668,12 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
         forbids_update_when admin: true
         forbids_update_when validator: true
         invalid_client_when admin: true, validator: true
+
+        forbids_renaming
       end
-    end
-
-    context 'changing the name of a client' do
-      include_context 'with temporary testing client'
-      let(:request_payload) do
-        {"name" => new_name}
-      end
-
-      context 'to an unclaimed name' do
-        let(:new_name){unique_name("unclaimed_client")}
-        before :each do
-          # Ensures that no other client with this name exists
-          get(api_url("/clients/#{new_name}"), admin_requestor).should look_like resource_not_found_response
-        end
-        after :each do
-          delete_client(admin_requestor, new_name)
-        end
-
-        context 'as an admin client' do
-          let(:requestor){admin_requestor}
-          # Ruby Open Source is a bit broken in this respect; only
-          # test with new Erchef hotness
-          it 'can rename the client', :pending => ruby? do
-
-            # Record the state of the client before making the change
-            pre_change = parse(get(request_url, requestor))
-            pre_change['name'].should eq client_name
-            pre_change.delete 'name'
-            pre_change.should_not have_key 'name'
-
-            # Perform the update
-
-            # we should not be able to find the client under the
-            # original name
-            should look_like({:status => 201})
-
-            get(request_url, requestor).should look_like resource_not_found_response
-
-            # we should be able to find the client under the new name
-            post_change = parse(get(api_url("/clients/#{new_name}"), requestor))
-            post_change['name'].should eq new_name
-            post_change.delete 'name'
-            post_change.should_not have_key 'name'
-
-            # the new client should be the same as the old one, but with a different name
-            post_change.should eq pre_change
-          end
-        end
-        non_admin_clients_cannot_update
-      end # to an unclaimed name
-
-      context 'to the name of an existing client' do
-        let(:preexisting_client_name){"preexisting_client"}
-
-        before :each do
-          add_client(admin_requestor, {'name' => preexisting_client_name, 'admin' => false})
-        end
-        after :each do
-          delete_client(admin_requestor, preexisting_client_name)
-        end
-
-        let(:new_name){preexisting_client_name}
-
-        # TODO: REMOVE THIS ON ERCHEF; WE DON'T USE COUCHDB
-        def remove_couchdb_cruft(hash)
-          hash.delete '_rev'
-        end
-
-        context 'as an admin client' do
-          # Ruby Open Source returns a 200 instead of a 409 for the put operation, but doesn't actually make a change
-          it 'raises a conflict', :pending => ruby? do
-            # Record what the preexisting client looks like
-            pre_change_preexisting = parse(get(api_url("/clients/#{preexisting_client_name}"), requestor))
-            pre_change_preexisting['name'].should eq preexisting_client_name
-
-            # Record what the testing client looks like
-            pre_change_testing = parse(get(request_url, requestor))
-            pre_change_testing['name'].should eq client_name
-
-            # Make the update
-            # TODO: Update this 'conflict response' with a more complete response once we're on Erchef
-            # (Also, remove the pp call)
-            should look_like conflict_response
-
-            # Ensure the preexisting client remains unchanged
-            post_change_preexisting = parse(get(api_url("/clients/#{preexisting_client_name}"), requestor))
-
-            # TODO: REMOVE THESE ON ERCHEF; WE DON'T USE COUCHDB
-            remove_couchdb_cruft pre_change_preexisting
-            remove_couchdb_cruft post_change_preexisting
-
-            post_change_preexisting.should eq pre_change_preexisting
-
-            # Ensure the testing client remains unchanged
-            post_change_testing = parse(get(request_url, requestor))
-
-            # TODO: REMOVE THESE ON ERCHEF; WE DON'T USE COUCHDB
-            remove_couchdb_cruft pre_change_testing
-            remove_couchdb_cruft post_change_testing
-
-            post_change_testing.should eq pre_change_testing
-          end
-        end # as an admin client
-
-        non_admin_clients_cannot_update
-
-      end # to the name of an existing client
-    end #changing the name of a client
-
-    context "changing a client's own name", :pending do
-    end
-
-    context 'promoting oneself to admin', :pending do
-    end
-
-    context 'promoting oneself to validator', :pending do
     end
 
     respects_maximum_payload_size
-
   end
 
   context 'DELETE /clients/<name>' do
