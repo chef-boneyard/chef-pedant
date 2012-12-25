@@ -515,6 +515,26 @@ module Pedant
         shared(:bogus_key) { platform.bogus_key }
         shared(:invalid_user) { Pedant::Requestor.new('invalid', bogus_key, bogus: true) }
 
+        # Use this when both admin user and admin client have the same behavior
+        def self.as_an_admin_requestor(&examples)
+          [:user, :client].each do |_requestor|
+            context "as an admin #{_requestor}" do
+              let(:requestor) { send "admin_#{_requestor}" }
+              instance_eval(&examples)
+            end
+          end
+        end
+
+        # Use this when both admin user and admin client have the same behavior
+        def self.as_a_normal_requestor(&examples)
+          [:user, :client].each do |_requestor|
+            context "as a normal #{_requestor}" do
+              let(:requestor) { send "normal_#{_requestor}" }
+              instance_eval(&examples)
+            end
+          end
+        end
+
         ################################################################################
         # Test Context Helpers
         ################################################################################

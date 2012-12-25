@@ -285,8 +285,7 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
       end
 
       # Admins can create any valid client
-      context 'as an admin client' do
-        let(:requestor) { admin_requestor }
+      as_an_admin_requestor do
         should_create_client_when admin: false, validator: false
         should_create_client_when admin: true
         should_create_client_when validator: true
@@ -296,9 +295,7 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
       end
 
       # Non-admins should not be able to create clients, period
-      context 'as a non-admin client' do
-        let(:requestor) { normal_requestor }
-
+      as_a_normal_requestor do
         should_not_create_client_when admin: false, validator: false
         should_not_create_client_when admin: true
         should_not_create_client_when validator: true
@@ -506,10 +503,8 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
       end
     end
 
-    # Admin users can do anything
-    context 'as an admin user' do
-      let(:requestor) { platform.admin_user }
-
+    # Admins can do anything
+    as_an_admin_requestor do
       pending 'when updating self'
 
       with_another_admin_client do
@@ -541,39 +536,8 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
       end
     end
 
-    # Admin clients can do almost anything
-    context 'as an admin client'  do
-      let(:requestor) { platform.admin_client }
-
+    context 'as an admin client' do
       pending 'when updating self'
-
-      with_another_admin_client do
-        should_update_client_when admin: false
-        should_update_client_when admin: false, validator: true
-        invalid_client_when       admin: true,  validator: true
-
-        should_generate_new_keys
-        should_update_public_key
-      end
-
-      with_another_validator_client do
-        should_update_client_when validator: false
-        should_update_client_when validator: false, admin: true
-        invalid_client_when       admin: true, validator: true
-
-        should_generate_new_keys
-        should_update_public_key
-      end
-
-      with_another_normal_client do
-        should_update_client_when admin: false, validator: false
-        should_update_client_when admin: true
-        should_update_client_when validator: true
-        invalid_client_when       admin: true, validator: true
-
-        should_generate_new_keys
-        should_update_public_key
-      end
     end
 
     # Validator clients can only create clients or update self
