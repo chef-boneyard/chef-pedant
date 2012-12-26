@@ -53,7 +53,7 @@ module Pedant
         let(:test_client_parsed_response) { parse(test_client_response) }
         let(:test_client_private_key) { test_client_parsed_response['private_key'] }
         let(:test_client_public_key) { test_client_parsed_response['public_key'] }
-        let(:test_client_requestor) { Pedant::User.new(test_client, test_client_private_key, platform: platform, preexisting: false) }
+        let(:test_client_requestor) { Pedant::Client.new(test_client, test_client_private_key, platform: platform, preexisting: false) }
 
         let(:client_url) { api_url("/clients/#{client_name}") }
 

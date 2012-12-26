@@ -414,13 +414,7 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
     let(:resource_url)        { client_url }
     let(:required_attributes) { required_client_attributes }
 
-    context 'when validating' do
-      before(:each) { test_client_response }
-
-      should_generate_new_keys
-      should_update_public_key
-    end
-
+    # Smoke test
     context 'as an admin' do
       let(:requestor) { platform.admin_client }
 
@@ -448,6 +442,14 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
     def self.with_another_validator_client(&examples)
       context 'with another validator client' do
         let(:client_is_validator) { true }
+
+        instance_eval(&examples)
+      end
+    end
+
+    def self.with_self(&examples)
+      context 'with self' do
+        let(:requestor) { test_client_requestor }
 
         instance_eval(&examples)
       end
@@ -569,10 +571,9 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
 
     # Admins can do anything
     as_an_admin_requestor do
-      pending 'when updating self'
-
       with_another_admin_client do
         should_update_client_when admin: false
+        should_update_client_when admin: true
         should_update_client_when admin: false, validator: true
         invalid_client_when       admin: true,  validator: true
 
@@ -583,6 +584,7 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
 
       with_another_validator_client do
         should_update_client_when validator: false
+        should_update_client_when validator: true
         should_update_client_when validator: false, admin: true
         invalid_client_when       admin: true, validator: true
 
@@ -604,15 +606,25 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
     end
 
     context 'as an admin client' do
-      pending 'when updating self'
+      let(:requestor) { admin_client }
+
+      with_self do
+        let(:client_is_admin) { true } # Self is an admin
+
+        should_update_client_when admin: false
+        should_update_client_when admin: true
+        should_update_client_when admin: false, validator: true
+        invalid_client_when       admin: true,  validator: true
+
+        should_rename_client
+        should_generate_new_keys
+        should_update_public_key
+      end
     end
 
     # Validator clients can only create clients or update self
     context 'as a validator client' do
-      let(:requestor) { platform.validator_client }
-
-      pending 'when updating self'
-      pending 'when updating keys'
+      let(:requestor) { validator_client }
 
       with_another_admin_client do
         forbids_update_when admin: false
@@ -637,15 +649,31 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
         invalid_client_when admin: true, validator: true
 
         forbids_renaming
+      end
+
+      with_self do
+        let(:client_is_validator) { true } # Self is a validator
+
+        # Validator can say it is a validator
+        should_update_client_when validator: true
+
+        # Validator can downgrade to a normal client
+        should_update_client_when validator: false
+
+        # Validators cannot upgrade themselves to an admin
+        forbids_update_when validator: false, admin: true
+        invalid_client_when admin: true, validator: true
+
+        # Otherwise, validators can update themselves
+        should_rename_client
+        should_generate_new_keys
+        should_update_public_key
       end
     end
 
     # Normal clients can only update self
     context 'as a normal client' do
-      let(:requestor) { platform.non_admin_client }
-
-      pending 'when updating self'
-      pending 'when updating keys'
+      let(:requestor) { normal_client }
 
       with_another_admin_client do
         forbids_update_when admin: false
@@ -671,6 +699,27 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
 
         forbids_renaming
       end
+
+      with_self do
+        # Self is normal
+        let(:client_is_admin)     { false }
+        let(:client_is_validator) { false }
+
+        # Normal users can say they are not an admin or validator
+        should_update_client_when admin: false, validator: false
+
+        # Normal users cannot upgrade themselves
+        forbids_update_when admin: true
+        forbids_update_when validator: true
+        invalid_client_when admin: true, validator: true
+
+        # Otherwise, normal users can update themselves
+        should_rename_client
+        should_generate_new_keys
+        should_update_public_key
+      end
+
+      pending "with a normal user of the same name as the client"
     end
 
     respects_maximum_payload_size
