@@ -326,76 +326,81 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
     let(:request_method) { :GET }
     let(:request_url)    { named_client_url }
 
-    context 'an admin client' do
-      let(:client_name){pedant_admin_client_name}
-      it 'returns the client', :smoke do
-        should look_like fetch_admin_client_success_response
+    context 'with Pedant-created clients' do
+      context 'the Pedant admin client', :smoke  do
+        let(:client_name) { pedant_admin_client_name }
+        it { should look_like fetch_admin_client_success_response }
       end
-    end
-    context 'a non-admin client' do
-      let(:client_name){pedant_nonadmin_client_name}
-      it 'returns a non-admin client', :smoke do
-        should look_like fetch_nonadmin_client_success_response
+      context 'the Pedant non-admin client', :smoke do
+        let(:client_name) { pedant_nonadmin_client_name }
+        it { should look_like fetch_nonadmin_client_success_response }
       end
-    end
-    context 'a validator client' do
-      let(:client_name){open_source_validator_client_name}
-      it 'returns a validator client (which has validator=true)' do
-        should look_like fetch_validator_client_success_response
-      end
-    end
-    context 'a non-existent client' do
-      let(:client_name){pedant_nonexistent_client_name}
-      it 'returns a 404 not found' do
-        should look_like client_not_found_response
+
+      context 'the Pedant validator client' do
+        let(:client_name) { open_source_validator_client_name }
+        it { should look_like fetch_validator_client_success_response }
       end
     end
 
-    context 'as different kinds of clients' do
-      def self.can_fetch_self
-        context 'as self', :authorization do
-          let(:requestor) { test_client_requestor }
-          it { should look_like ok_response }
-        end
+    context 'without an existing client' do
+      let(:request_url) { api_url "/clients/#{pedant_nonexistent_client_name}" }
+      it { should look_like not_found_response }
+    end
+
+    context 'with an existing client' do
+      include_context 'with temporary testing client'
+
+      def self.should_fetch_client
+        it { should look_like ok_response.with(body: { 'name' => client_name }) }
       end
 
-      context 'when fetching an admin client' do
-        include_context 'with temporary testing client' do
+      def self.forbids_fetching
+        it { should look_like forbidden_response }
+      end
+
+      # Admins can fetch anyone
+      as_an_admin_requestor do
+        with_another_admin_client     { should_fetch_client }
+        with_another_validator_client { should_fetch_client }
+        with_another_normal_client    { should_fetch_client }
+
+        with_self do
           let(:client_is_admin) { true }
-        end
-
-        include_context 'permission checks' do
-          let(:admin_response) { ok_response }
-          let(:non_admin_response) { forbidden_response }
-
-          can_fetch_self
+          should_fetch_client
         end
       end
 
-      context 'when fetching a normal client' do
-        include_context 'with temporary testing client' do
-          let(:client_is_admin) { false }
-        end
+      # Validator clients can only fetch themselves
+      context 'as a validator client' do
+        let(:requestor) { validator_client}
 
-        include_context 'permission checks' do
-          let(:admin_response) { ok_response }
-          let(:non_admin_response) { forbidden_response }
+        with_another_admin_client     { forbids_fetching }
+        with_another_validator_client { forbids_fetching }
+        with_another_normal_client    { forbids_fetching }
 
-          can_fetch_self
-        end
-      end
-
-      context 'when fetching a validator client' do
-        include_context 'with temporary testing client' do
+        with_self do
           let(:client_is_validator) { true }
+          should_fetch_client
         end
+      end
 
-        include_context 'permission checks' do
-          let(:admin_response) { ok_response }
-          let(:non_admin_response) { forbidden_response }
+      # Normal clients can only fetch themselves
+      context 'as a normal client' do
+        let(:requestor) { normal_client }
 
-          can_fetch_self
-        end
+        with_another_admin_client     { forbids_fetching }
+        with_another_validator_client { forbids_fetching }
+        with_another_normal_client    { forbids_fetching }
+        with_self                     { should_fetch_client }
+      end
+
+      # Normal users cannot fetch any clients
+      context 'as a normal user' do
+        let(:requestor) { normal_user }
+
+        with_another_admin_client     { forbids_fetching }
+        with_another_validator_client { forbids_fetching }
+        with_another_normal_client    { forbids_fetching }
       end
     end
   end
