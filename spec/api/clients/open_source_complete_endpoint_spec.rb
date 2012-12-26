@@ -432,33 +432,6 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
       it { should look_like client_not_found_response }
     end
 
-    def self.with_another_admin_client(&examples)
-      context 'with another admin client' do
-        let(:client_is_admin) { true }
-        instance_eval(&examples)
-      end
-    end
-
-    def self.with_another_validator_client(&examples)
-      context 'with another validator client' do
-        let(:client_is_validator) { true }
-
-        instance_eval(&examples)
-      end
-    end
-
-    def self.with_self(&examples)
-      context 'with self' do
-        let(:requestor) { test_client_requestor }
-
-        instance_eval(&examples)
-      end
-    end
-
-    def self.with_another_normal_client(&examples)
-      context('with another normal client', &examples)
-    end
-
     def self.should_update_client_when(_options = {})
       context "when updating to #{client_type(_options)} client" do
         let(:expected_response) { ok_response }
@@ -719,7 +692,26 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
         should_update_public_key
       end
 
-      pending "with a normal user of the same name as the client"
+      # This give back 401 Unauthorized
+      pending "with a normal user of the same name as the client" do
+        let(:requestor) { user_requestor }
+        after(:each)  { delete api_url("/users/#{client_name}"), admin_user }
+
+        let(:user_requestor) { Pedant::User.new(client_name, user_private_key, platform: platform, preexisting: false) }
+        let(:user_response) { post api_url('/users'), superuser, payload: user_attributes }
+        let(:user_parsed_response) { parse(user_response).tap { |x| puts x } }
+        let(:user_private_key) { user_parsed_response['private_key'] }
+        let(:user_attributes) do
+          {
+            "name" => client_name,
+            "password" => SecureRandom.hex(32),
+            "admin" => false
+          }
+        end
+
+        forbids_renaming
+      end
+
     end
 
     respects_maximum_payload_size
@@ -729,42 +721,57 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
     let(:request_method)  { :DELETE }
     let(:request_url)     { named_client_url }
 
-    def self.should_have_proper_deletion_behavior(deleted_client_is_admin=false)
-      context "deleting #{deleted_client_is_admin ? 'an admin' : 'a non-admin'} client" do
-        include_context 'with temporary testing client' do
-          let(:client_is_admin){deleted_client_is_admin}
-        end
+    include_context 'with temporary testing client'
 
-        context 'as admin client' do
-          let(:requestor){admin_requestor}
-          context 'with an existing client', :smoke do
-            # Admins should be able to delete a client whether it is admin or not
-            it { should look_like delete_client_success_response }
-          end
-
-          # TODO: Does not test for the edge case of deleting the last admin client
-          # TODO: Does not test for an admin deleting itself
-        end
-        non_admin_clients_cannot_delete
-      end
+    def self.should_delete_client
+      it { should look_like ok_response.with(body: { 'name' => client_name }) }
     end
 
-    should_have_proper_deletion_behavior(true)
-    should_have_proper_deletion_behavior(false)
+    def self.forbids_deletion
+      it { should look_like forbidden_response }
+    end
 
-    context 'deleting a non-existent client' do
+    context 'without an existing client' do
       let(:requestor) { admin_requestor }
-      let(:client_name) {pedant_nonexistent_client_name}
+      let(:request_url) { api_url "/clients/#{pedant_nonexistent_client_name}" }
 
       it { should look_like client_not_found_response }
     end
 
-    context 'deleting a validator' do
-      include_context 'with temporary testing client' do
-        let(:client_validator) { true }
+    # Admins can delete any client
+    as_an_admin_requestor do
+      with_another_admin_client     { should_delete_client }
+      with_another_validator_client { should_delete_client }
+      with_another_normal_client    { should_delete_client }
+
+      with_self do
+        let(:client_is_admin) { true }
+        should_delete_client
       end
-      it { should look_like delete_client_success_response }
     end
 
+    # Validators can only delete itself
+    context 'as a validator client' do
+      let(:requestor) { validator_client }
+
+      with_another_admin_client     { forbids_deletion }
+      with_another_validator_client { forbids_deletion }
+      with_another_normal_client    { forbids_deletion }
+
+      with_self do
+        let(:client_is_validator) { true }
+        should_delete_client
+      end
+    end
+
+    # Normal clients can only delete itself
+    context 'as a normal client' do
+      let(:requestor) { normal_client }
+
+      with_another_admin_client     { forbids_deletion }
+      with_another_validator_client { forbids_deletion }
+      with_another_normal_client    { forbids_deletion }
+      with_self                     { should_delete_client }
+    end
   end
 end

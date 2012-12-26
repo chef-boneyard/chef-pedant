@@ -196,6 +196,32 @@ module Pedant
       end
 
       module ClassMethods
+
+        def with_another_admin_client(&examples)
+          context 'with another admin client' do
+            let(:client_is_admin) { true }
+            instance_eval(&examples)
+          end
+        end
+
+        def with_another_validator_client(&examples)
+          context 'with another validator client' do
+            let(:client_is_validator) { true }
+            instance_eval(&examples)
+          end
+        end
+
+        def with_self(&examples)
+          context 'with self' do
+            let(:requestor) { test_client_requestor }
+            instance_eval(&examples)
+          end
+        end
+
+        def with_another_normal_client(&examples)
+          context('with another normal client', &examples)
+        end
+
         def client_type(_options)
           case [_options[:admin] || false, _options[:validator] || false]
           when [true,  false] then "an admin"
