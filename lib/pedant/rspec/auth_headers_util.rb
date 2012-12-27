@@ -275,11 +275,10 @@ module Pedant
         end
 
         # X-Ops-Request-Source
-        if (defined?(Pedant::Config.webui_key) != nil)
-          # If no webui_key defined (i.e., in pushy pedant) skip
-          # these tests
-
-          context 'when X-Ops-Request-Source is web' do
+        context 'when X-Ops-Request-Source is web' do
+          if (defined?(Pedant::Config.webui_key) != nil)
+            # If no webui_key defined (i.e., in pushy pedant) skip
+            # these tests
 
             let(:auth_headers) do
               manufacture_signed_headers(user, method, url, body).
@@ -299,9 +298,10 @@ module Pedant
                 response.should look_like failure_user_impersonation_response
               end
             end
-          end
-        else
-          context 'when X-Ops-Request-Source is web' do
+          else
+            # But make sure to include pending tests, in case webui_key
+            # missing is accidental
+
             context 'impersonating successful user' do
               it 'succeeds',
                 :pending => 'no webui_key defined in pedant config' do
