@@ -300,6 +300,22 @@ module Pedant
               end
             end
           end
+        else
+          context 'when X-Ops-Request-Source is web' do
+            context 'impersonating successful user' do
+              it 'succeeds',
+                :pending => 'no webui_key defined in pedant config' do
+                ;
+              end
+            end
+
+            context 'impersonating failed user', :authentication do
+              it 'fails',
+                :pending => 'no webui_key defined in pedant config' do
+                ;
+              end
+            end
+          end
         end
 
         # X-Ops-Webkey-Tag
