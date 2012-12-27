@@ -275,22 +275,29 @@ module Pedant
         end
 
         # X-Ops-Request-Source
-        context 'when X-Ops-Request-Source is web' do
-          let(:auth_headers) do
-            manufacture_signed_headers(user, method, url, body).
-              merge({ 'X-Ops-Request-Source' => 'web' })
-          end
+        if (defined?(Pedant::Config.webui_key) != nil)
+          # If no webui_key defined (i.e., in pushy pedant) skip
+          # these tests
 
-          context 'impersonating successful user' do
-            let(:user) { impersonate(success_user) }
-            it 'succeeds' do
-              response_should_be_successful
+          context 'when X-Ops-Request-Source is web' do
+
+            let(:auth_headers) do
+              manufacture_signed_headers(user, method, url, body).
+                merge({ 'X-Ops-Request-Source' => 'web' })
             end
-          end
-          context 'impersonating failed user', :authentication do
-            let(:user) { impersonate(failure_user) }
-            it 'fails' do
-              response.should look_like failure_user_impersonation_response
+
+            context 'impersonating successful user' do
+              let(:user) { impersonate(success_user) }
+              it 'succeeds' do
+                response_should_be_successful
+              end
+            end
+
+            context 'impersonating failed user', :authentication do
+              let(:user) { impersonate(failure_user) }
+              it 'fails' do
+                response.should look_like failure_user_impersonation_response
+              end
             end
           end
         end
