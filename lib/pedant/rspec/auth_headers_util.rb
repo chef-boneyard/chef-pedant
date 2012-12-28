@@ -170,9 +170,9 @@ module Pedant
 
           # X-Ops-Timestamp
           with_modified_auth_headers('missing X-Ops-Timestamp', 400, :timestamp => nil)
-          with_modified_auth_headers('empty X-Ops-Timestamp', ruby? ? 401 : 400,
+          with_modified_auth_headers('empty X-Ops-Timestamp', 401,
                                      :timestamp => '')
-          with_modified_auth_headers('malformed X-Ops-Timestamp', ruby? ? 401 : 400,
+          with_modified_auth_headers('malformed X-Ops-Timestamp', 401,
                                      :timestamp => 'xxx')
           with_modified_auth_headers('old X-Ops-Timestamp', 401,
                                      :timestamp => (Time.now.utc - 60*60).iso8601)
