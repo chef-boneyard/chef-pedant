@@ -146,6 +146,15 @@ module Pedant
           let(:node_run_list)  { random_array.(random_max.()) }
         end
       end
+
+      module Role
+        extend Pedant::Concern
+
+        included do
+          let(:role_name) { "pedant_#{rand(1000000)}" }
+          let(:role_description) { SecureRandom.uuid }
+        end
+      end # Role
     end # KnifeUtil
   end # RSpec
 end # Pedant
