@@ -46,6 +46,8 @@ module Pedant
         let(:random_hash) { ->(m) { (1..m).to_a.inject({}, &with_random_key_and_value) } }
         let(:random_array) { ->(m) { (1..m).map { SecureRandom.uuid } } }
 
+        let(:random_max)     { ->() { rand(7) + 3 } }
+
         # Override
         let(:fixture_file_path)    { fail "Define :fixture_file_path" }
         let(:fixture_file_content) { fail "Define :fixture_file_content" }
@@ -138,7 +140,6 @@ module Pedant
             }
           end
 
-          let(:random_max)     { ->() { rand(7) + 3 } }
           let(:node_override)  { random_hash.(random_max.()) }
           let(:node_normal)    { random_hash.(random_max.()) }
           let(:node_default)   { random_hash.(random_max.()) }
@@ -153,6 +154,27 @@ module Pedant
         included do
           let(:role_name) { "pedant_#{rand(1000000)}" }
           let(:role_description) { SecureRandom.uuid }
+
+          let(:fixture_file_path) { "#{role_data_dir}/#{role_name}.json" }
+          let(:fixture_file_content) { ::JSON.generate(role_data) }
+          let(:role_data_dir) { knife_fixture "roles" }
+
+          let(:role_data) do
+            {
+              'name' => role_name,
+              'description' => role_description,
+              'default_attributes' => role_default,
+              'override_attributes' => role_override,
+              'run_list' => role_run_list,
+            }
+          end
+
+          let(:role_override)  { random_hash.(random_max.()) }
+          let(:role_default)   { random_hash.(random_max.()) }
+          let(:role_run_list)  { random_array.(random_max.()) }
+
+          # TODO: Make fake env_run_list data
+          #let(:role_env_run_lists)  { random_array.(random_max.()) }
         end
       end # Role
     end # KnifeUtil
