@@ -47,6 +47,11 @@ module Pedant
         let(:request_auth_headers) { nil } # Override for your own headers
         let(:request_query_parameters){ nil } # This should be a string, like "foo=bar"
 
+        # Pedant-created requestors:
+        let(:pedant_clients) { (%w(chef-validator chef-webui) + pedant_created_clients).sort }
+        let(:pedant_created_clients) { platform.clients.reject(&:bogus?).map(&:name).sort }
+        let(:pedant_users)   { (['admin'] + platform.users.map(&:name)).sort }
+
         # TODO: With request query parameters, in order to be completely
         # general, we would first need to differentiate between query
         # parameters intended for the search endpoint and otherwise in
@@ -474,85 +479,23 @@ module Pedant
         # Users, Clients, and Organizations
         ################################################################################
 
-        # Given a requestor, create a new one with the same name, but
-        # with the web UI's private key for 'impersonation' tests
-        def impersonate(requestor_to_impersonate)
-          key = Pedant::Config.webui_key || (fail "Missing webui_key in Pedant config!")
-          Pedant::Requestor.new(requestor_to_impersonate.name, key)
-        end
-
         # If these are referenced in before(:all) blocks, use shared() instead of let()
-        shared(:admin_user) do
-          case platform
-          when Pedant::OpenSourcePlatform
-            platform.admin_client
-          when Pedant::MultiTenantPlatform
-            platform.admin_user
-          end
-        end
+        shared(:admin_user)       { platform.admin_user }
+        shared(:normal_user)      { platform.non_admin_user }
+        shared(:outside_user)     { platform.bad_client }
 
-        shared(:normal_user) do
-          case platform
-          when Pedant::OpenSourcePlatform
-            platform.non_admin_client
-          when Pedant::MultiTenantPlatform
-            platform.non_admin_user
-          end
-        end
+        shared(:admin_client)     { platform.admin_client }
+        shared(:normal_client)    { platform.non_admin_client }
+        shared(:outside_client)   { platform.bad_client }
+        shared(:validator_client) { platform.validator_client }
 
-        shared(:outside_user) do
-          case platform
-          when Pedant::OpenSourcePlatform
-            platform.bad_client
-          when Pedant::MultiTenantPlatform
-            platform.bad_user
-          end
-        end
-
-        # # TODO: Refactor this pair to be a little more sane.  +org+ came first,
-        # # and is just the name of the organization, while +organization+ is
-        # # a later arrival, and is a Pedant::Organization object.
-        # shared(:organization) { platform.test_org }
-        # shared(:org){ organization.name }
-
-        shared(:knife_admin)        { admin_user }
-        shared(:knife_user)         { normal_user }
-
-
-        # Need a well-formed yet invalid key for a requestor to test authentiction
-
-          shared(:bogus_key) { <<-BOGUS_PRIVATE_KEY }
------BEGIN RSA PRIVATE KEY-----
-MIIEogIBAAKCAQEA7TfhToresZudM5gaBfzM/eHrGuJtN8uMaG51fLk9rNVwOxIw
-eb9AmWJSQgftRj4AJSnt8Jv+QyAafjg79rEmCpd2K+toN1fXiVsf/ld/VdMI5vCd
-usJc8aC4OFIVrLetm9eq+joXiCSLfEYP1w4d1gc9wqr54rnGVgQdWv31NhqXX7Tl
-2bHRoEsfIFM7Vr5zC9Rv6XEtrwezSpzQ+ru707UOCOHNnH1TDxNDz+L71xJnGXD6
-uh596hVm2GiXJ8lyCVJTs/RZ+HKtRuxYOJztdCQAXbd6DDjTBax/cCEzzoxK/LMc
-1K/zWCKN8yM/XpiFqNuBB0yrqS5Y4zlROY0ssQIDAQABAoIBAQDmC1HYvD1YGePq
-O+/IrK8S6jr4WGq4OBIS2EPhTzbrXBU5g9s0xe7ckIfa9xr4CnpTkATqWCzMZd6r
-Vtd31bVhgh6cWu829F3WG2O8YJfg4AX7B46+pWxC+qyMGbZhR8L5pb1ualWVtnL6
-cms8D7mJbH5NQUeRwrz/f4AEVNGuw165PhglXnRq3zxs97jdNH6av0na1VLAmUeR
-vmYToLoIsK5yLeNzMfRRrQkq4ndUvad2ahqsz+p/xUjfYneBz4uujE/PcCgi423Q
-FMH1NtPpzmuZuABU53wUMW4BXsSGv+34UMhRTazcBPRBYjKT6l6F7Tt9wPFxrtVn
-KYI9dI0tAoGBAPzBwLsUuyEJtSd2zW63f7EhhG/2rSBm1g9Bcs1sHZtXIX3JN51X
-hd+ckXQcLgQYn8syGW1+WcuaHGyp7v3G0yr6b38FWwEnmD85Mq5da1dyio2udBdK
-Xm8MfY94yP8qSH3bUDKEl+cV9X5rtzbQAorMXb/Qkc4vErWfABVBKeLPAoGBAPBD
-FjGxER9YU4hFV2vn5qElfxa799Vl0uSvao0lSkTpA/sHFxAkRQc/mo1PBClaH0ba
-Hqr141o5pGUDgLqpO3kEY5vYBOaFXLFdFCcL+1YUR6t0bX+WCHuq21Cs6Gu4+qNA
-D4dpsSPDXfatyXWM5PF2d4FwO2XnL25Yt+rg6dh/AoGAbEfk9UCQWjr6bImswH3E
-KnIddonK6VKk6aw0LmTe2imdo3GMbc+M/prohUF9RSv3aOlxk0LJ3TuMadDzHa0L
-0iGvmk8FCZ2Yz50FZUWIMtJTIRdXjJLDmfdT4x7vnMDUhXZrCPlcyhbSMPKcbtL2
-A9hBYWdMz3PDJCOVuYVNGGkCgYEAhSxKUwTYfs1Qj8oPqOoDdfL4vLs3pfsoqEVr
-BA1VW1jlMfE+IV5ZPKlOm2De56TijT09nnloqYwlyS/l3JENPAjoxWs5XCUzucPj
-9bi4eYAIMcr5Hq0kypdrtQ4CTiNcGbzaXq6A11fk72RotFWCWSzXFNIGuncoXTuj
-xfcg5zUCf3TQrwpcBB1Hf9hm6lUVpptvUZJAQtkWoaWXUPRY0CjcVdDc5ak4xqL2
-FcAuJwV95b3qLyPESJ8zUBLOg3DcT1X9mrvRuKgC/Ie6k4R+oxU/nXi4vsPXlvg4
-yap6MUYSjPOa7eCrhg2zFZiqO6VLEogPc1nsjb9Zl2UWLLYyCVz=
------END RSA PRIVATE KEY-----
-BOGUS_PRIVATE_KEY
-
-        #  shared(:outside_user) { platform.bad_client }
-        shared(:invalid_user) { Pedant::Requestor.new('invalid', bogus_key, bogus: true) }
+        # TODO: Pedant is currently configured to use the admin for the pedant_admin
+        # Since we run smoke tests against production systems, we don't actually want
+        # to create knife files against that. The solution is to make admin the superuser
+        # again and have a dedicated pedant_admin. This way, we can test knife against
+        # user credentials rather than client credentials.
+        shared(:knife_admin)      { admin_client }
+        shared(:knife_user)       { normal_user }
 
         # TODO: Ultimately, I'd like to see all access to the superuser go
         # away, and all tasks that require its use become methods on the
@@ -560,6 +503,37 @@ BOGUS_PRIVATE_KEY
 
         shared(:superuser) { platform.superuser }
         shared(:superuser_key_file) { platform.superuser_key_file }
+        shared(:webui_key_file) { Pedant::Config.webui_key || (fail "Missing webui_key in Pedant config!") }
+
+        # Given a requestor, create a new one with the same name, but
+        # with the web UI's private key for 'impersonation' tests
+        def impersonate(requestor_to_impersonate)
+          Pedant::Requestor.new(requestor_to_impersonate.name, webui_key_file)
+        end
+
+        # Need a well-formed yet invalid key for a requestor to test authentiction
+        shared(:bogus_key) { platform.bogus_key }
+        shared(:invalid_user) { Pedant::Requestor.new('invalid', bogus_key, bogus: true) }
+
+        # Use this when both admin user and admin client have the same behavior
+        def self.as_an_admin_requestor(&examples)
+          [:user, :client].each do |_requestor|
+            context "as an admin #{_requestor}" do
+              let(:requestor) { send "admin_#{_requestor}" }
+              instance_eval(&examples)
+            end
+          end
+        end
+
+        # Use this when both admin user and admin client have the same behavior
+        def self.as_a_normal_requestor(&examples)
+          [:user, :client].each do |_requestor|
+            context "as a normal #{_requestor}" do
+              let(:requestor) { send "normal_#{_requestor}" }
+              instance_eval(&examples)
+            end
+          end
+        end
 
         ################################################################################
         # Test Context Helpers
@@ -578,7 +552,6 @@ BOGUS_PRIVATE_KEY
         def delete_chef_object(container_name, requestor, object_name)
           delete(api_url("/#{container_name}/#{object_name}"), requestor)
         end
-
 
         # DSL helpers
         def instance_eval_if_proc(object)

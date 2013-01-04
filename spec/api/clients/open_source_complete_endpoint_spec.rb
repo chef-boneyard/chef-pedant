@@ -76,6 +76,9 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
     let(:request_method) { :GET }
     let(:request_url)    { clients_url }
 
+    let(:clients_collection) { pedant_clients.inject({}, &client_name_to_url) }
+    let(:client_name_to_url) { ->(body, name) { body.with!(name, api_url("/clients/#{name}")) } }
+
     # TODO: Do this when we fix the look_like matcher
     # include_context 'permission checks' do
     #   let(:admin_response){fetch_prepopulated_clients_success_response}
@@ -90,8 +93,11 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
         it { should look_like ok_response }
       end
 
-      it 'should return a list of name/url mappings for all clients' do
-        should look_like(fetch_prepopulated_clients_success_response)
+      context 'with only Pedant-created clients' do
+        let(:expected_response) { ok_exact_response }
+        let(:success_message)   { clients_collection }
+
+        should_respond_with 200, 'and the Pedant-created clients'
       end
     end
   end
@@ -229,50 +235,83 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
     end
 
     context 'as different kinds of clients', :authorization do
+      def self.should_create_client_when(_options = {})
+        context "when creating #{client_type(_options)} client" do
+          let(:expected_response) { created_response }
+          let(:request_payload) { client_attributes }
+          let(:client_attributes) { {"name" => client_name, "admin" => _options[:admin] || false, 'validator' => _options[:validator] || false} }
+          let(:success_message) do
+            new_client(client_name).
+              merge(client_attributes).
+              with('public_key', expected_public_key)
+          end
 
-      def self.should_be_able_to_create_client(is_admin=false)
-        context "creating #{is_admin ? 'an admin' : 'a non-admin'} client" do
-          let(:request_payload){{"name" => client_name, "admin" => is_admin}}
-          it "succeeds" do
-            # It should be created
-            should look_like create_client_success_response
+          should_respond_with 201 do
             # The new client can be retrieved (using admin_requestor
             # because validators can't retrieve clients!)
-            get(client_url, admin_requestor).should look_like (is_admin ? fetch_admin_client_success_response : fetch_nonadmin_client_success_response)
+            get(client_url, admin_requestor).should look_like ok_exact_response
           end
         end
       end
 
-      def self.should_not_be_able_to_create_client(is_admin=false)
-        context "creating #{is_admin ? 'an admin' : 'a non-admin'} client" do
-          let(:request_payload){{"name" => client_name, "admin" => is_admin}}
-          it 'fails' do
-            # It should not be created
-            should look_like create_client_as_non_admin_response
+      def self.should_not_create_client_when(_options = {})
+        context "when creating #{client_type(_options)} client" do
+          # This is really a 403 Forbidden
+          let(:expected_response) { open_source_not_allowed_response }
+          let(:request_payload) { { "name" => client_name, "admin" => _options[:admin] || false, 'validator' => _options[:validator] || false } }
+
+          should_respond_with 403 do
             # Nothing new should have been created (using
             # admin_requestor because non-admin clients can't
             # retrieve any client but themselves)
-            get(client_url, admin_requestor).should look_like client_not_found_response
+            get(client_url, admin_requestor).should look_like not_found_response
           end
         end
       end
 
-      context 'as an admin client' do
-        let(:requestor){admin_requestor}
-        should_be_able_to_create_client(false)
-        should_be_able_to_create_client(true)
+      def self.invalid_client_when(_options = {})
+        context "when creating #{client_type(_options)} client" do
+          let(:expected_response) { bad_request_exact_response }
+          let(:error_message) { [ "Client can be either an admin or a validator, but not both." ] }
+          let(:request_payload) { { "name" => client_name, "admin" => _options[:admin], 'validator' => _options[:validator] } }
+
+          should_respond_with 400 do
+            # Nothing new should have been created (using
+            # admin_requestor because non-admin clients can't
+            # retrieve any client but themselves)
+            get(client_url, admin_requestor).should look_like not_found_response
+          end
+        end
       end
 
-      context 'as a non-admin client' do
-        let(:requestor){normal_requestor}
-        should_not_be_able_to_create_client(false)
-        should_not_be_able_to_create_client(true)
+      # Admins can create any valid client
+      as_an_admin_requestor do
+        should_create_client_when admin: false, validator: false
+        should_create_client_when admin: true
+        should_create_client_when validator: true
+
+        # A client that is both an admin and a validator is invalid
+        invalid_client_when admin: true, validator: true
       end
 
+      # Non-admins should not be able to create clients, period
+      as_a_normal_requestor do
+        should_not_create_client_when admin: false, validator: false
+        should_not_create_client_when admin: true
+        should_not_create_client_when validator: true
+
+        invalid_client_when admin: true, validator: true
+      end
+
+      # Validators can only create non-admins
       context 'as a validator client' do
-        let(:requestor){validator_client}
-        should_be_able_to_create_client(false)
-        should_not_be_able_to_create_client(true)
+        let(:requestor) { validator_client }
+
+        should_create_client_when     admin: false, validator: false
+        should_not_create_client_when admin: true
+        should_not_create_client_when validator: true
+
+        invalid_client_when admin: true, validator: true
       end
     end
 
@@ -283,75 +322,87 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
   should_not_allow_method :PUT,    '/clients'
   should_not_allow_method :DELETE, '/clients'
 
-  context 'GET' do
+  context 'GET /clients/<name>' do
     let(:request_method) { :GET }
     let(:request_url)    { named_client_url }
 
-    context 'an admin client' do
-      let(:client_name){pedant_admin_client_name}
-      it 'returns the client', :smoke do
-        should look_like fetch_admin_client_success_response
+    context 'with Pedant-created clients' do
+      context 'the Pedant admin client', :smoke  do
+        let(:client_name) { pedant_admin_client_name }
+        it { should look_like fetch_admin_client_success_response }
       end
-    end
-    context 'a non-admin client' do
-      let(:client_name){pedant_nonadmin_client_name}
-      it 'returns a non-admin client', :smoke do
-        should look_like fetch_nonadmin_client_success_response
+      context 'the Pedant non-admin client', :smoke do
+        let(:client_name) { pedant_nonadmin_client_name }
+        it { should look_like fetch_nonadmin_client_success_response }
       end
-    end
-    context 'a validator client' do
-      let(:client_name){open_source_validator_client_name}
-      it 'returns a validator client (which has validator=true)' do
-        should look_like fetch_validator_client_success_response
-      end
-    end
-    context 'a non-existent client' do
-      let(:client_name){pedant_nonexistent_client_name}
-      it 'returns a 404 not found' do
-        should look_like client_not_found_response
+
+      context 'the Pedant validator client' do
+        let(:client_name) { open_source_validator_client_name }
+        it { should look_like fetch_validator_client_success_response }
       end
     end
 
-    context 'as different kinds of clients' do
-      context 'fetching an admin client' do
-        include_context 'with temporary testing client' do
-          let(:client_is_admin){true}
-        end
-        include_context 'permission checks' do
-          let(:admin_response){ok_response}
-          let(:non_admin_response){forbidden_response}
-        end
-      end
-
-      context 'fetching a non-admin client' do
-        include_context 'with temporary testing client' do
-          let(:client_is_admin){false}
-        end
-        include_context 'permission checks' do
-          let(:admin_response){ok_response}
-          let(:non_admin_response){forbidden_response}
-        end
-      end
-
-      context 'fetching a validator client' do
-        let(:client_name){open_source_validator_client_name}
-        include_context 'permission checks' do
-          let(:admin_response){ok_response}
-          let(:non_admin_response){forbidden_response}
-        end
-      end
-
-      context 'fetching yourself as a non-admin' do
-        let(:client_name){pedant_nonadmin_client_name}
-        let(:requestor){normal_requestor}
-
-        it 'is allowed (and is the only thing non-admin clients are allowed to retrieve)' do
-          client_name.should eq requestor.name
-          should look_like ok_response
-        end
-      end
+    context 'without an existing client' do
+      let(:request_url) { api_url "/clients/#{pedant_nonexistent_client_name}" }
+      it { should look_like not_found_response }
     end
 
+    context 'with an existing client' do
+      include_context 'with temporary testing client'
+
+      def self.should_fetch_client
+        it { should look_like ok_response.with(body: { 'name' => client_name }) }
+      end
+
+      def self.forbids_fetching
+        it { should look_like forbidden_response }
+      end
+
+      # Admins can fetch anyone
+      as_an_admin_requestor do
+        with_another_admin_client     { should_fetch_client }
+        with_another_validator_client { should_fetch_client }
+        with_another_normal_client    { should_fetch_client }
+
+        with_self do
+          let(:client_is_admin) { true }
+          should_fetch_client
+        end
+      end
+
+      # Validator clients can only fetch themselves
+      context 'as a validator client' do
+        let(:requestor) { validator_client}
+
+        with_another_admin_client     { forbids_fetching }
+        with_another_validator_client { forbids_fetching }
+        with_another_normal_client    { forbids_fetching }
+
+        with_self do
+          let(:client_is_validator) { true }
+          should_fetch_client
+        end
+      end
+
+      # Normal clients can only fetch themselves
+      context 'as a normal client' do
+        let(:requestor) { normal_client }
+
+        with_another_admin_client     { forbids_fetching }
+        with_another_validator_client { forbids_fetching }
+        with_another_normal_client    { forbids_fetching }
+        with_self                     { should_fetch_client }
+      end
+
+      # Normal users cannot fetch any clients
+      context 'as a normal user' do
+        let(:requestor) { normal_user }
+
+        with_another_admin_client     { forbids_fetching }
+        with_another_validator_client { forbids_fetching }
+        with_another_normal_client    { forbids_fetching }
+      end
+    end
   end
 
   should_not_allow_method :POST, '/clients/pedant_test_client'
@@ -363,52 +414,13 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
     let(:request_url)     { named_client_url }
     let(:request_payload) { default_client_attributes }
 
-    let(:client_url){api_url("/clients/#{client_name}")}
+    include_context "with temporary testing client"
+    let(:expected_response)   { ok_response }
+    let(:resource_url)        { client_url }
+    let(:required_attributes) { required_client_attributes }
 
-    let(:client_is_admin) { false }
-    let(:default_client_attributes) do
-      {
-        "name" => client_name,
-        "admin" => client_is_admin
-      }
-    end
-
-    after :each do
-      begin
-        delete_client(admin_requestor, client_name)
-      rescue URI::InvalidURIError
-        # ok, since some bad names can result in bad URLs
-      end
-    end
-
-    let(:client_name) { test_client }
-    let(:test_client) { "pedant_test_#{rand(100000)}" }
-    let(:test_client_response) { create_client admin_requestor, default_resource_attributes }
-    let(:test_client_parsed_response) { parse(test_client_response) }
-    let(:test_client_private_key) { test_client_parsed_response['private_key'] }
-    let(:test_client_public_key) { test_client_parsed_response['public_key'] }
-    let(:test_client_requestor) { Pedant::User.new(test_client, test_client_private_key, platform: platform, preexisting: false) }
-
-
-    # useful for checking the result of a create operation
-    # TODO: Refactor to resource_url
-    let(:client_url) { api_url("/clients/#{client_name}") }
-
-    let(:expected_response) { ok_response }
-    let(:resource_url) { client_url }
-    let(:persisted_resource_response) { get(resource_url, superuser) }
-    let(:default_resource_attributes) { default_client_attributes }
-    let(:required_attributes) { default_client_attributes.except('admin').except('private_key') }
-
-    context 'when validating' do
-      before(:each) { test_client_response }
-
-      should_generate_new_keys
-      should_update_public_key
-
-    end
+    # Smoke test
     context 'as an admin' do
-      before(:each) { test_client_response }
       let(:requestor) { platform.admin_client }
 
       context 'with admin set to true', :smoke do
@@ -419,221 +431,361 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
     end
 
     context 'modifying a non-existent client' do
-      let(:requestor) {admin_requestor}
-      let(:client_name) {pedant_nonexistent_client_name}
-      let(:request_payload) do
-        {"name" => client_name}
-      end
+      let(:request_url) { api_url "/clients/#{pedant_nonexistent_client_name}" }
+      let(:request_payload) { {"name" => pedant_nonexistent_client_name} }
 
       it { should look_like client_not_found_response }
     end
 
-    def self.test_property_change(property, payload_value, client_is_admin)
-      # we'll change the private key, but this is reflected by a changed public key
-      lookup_property = if property == "private_key"
-                          "public_key"
-                        else
-                          property
-                        end
+    def self.should_update_client_when(_options = {})
+      context "when updating to #{client_type(_options)} client" do
+        let(:expected_response) { ok_response }
+        let(:request_payload) { client_attributes }
 
-      context_message = if property == "private_key"
-                          "changing the private key of an #{client_is_admin ? 'an admin' : 'a non-admin'} client"
-                        else
-                          "changing the #{property} property of an #{client_is_admin ? 'an admin' : 'a non-admin'} client to '#{payload_value}'"
-                        end
-
-      context context_message do
-        include_context 'with temporary testing client' do
-          let(:client_admin){client_is_admin}
-        end
-        let(:request_payload) do
-          {property.to_s => payload_value}
-        end
-
-        context 'as an admin client' do
-          let(:requestor){admin_requestor}
-          it 'succeeds' do
-            # Record the initial value before the update
-            initial_value = parse(get(client_url, requestor))[lookup_property]
-
-            # Make the update
-            # TODO: Should we test the body also?
-            should look_like ok_response
-
-            # Ensure that the value to be changed actually was changed
-            final_value = parse(get(client_url, requestor))[lookup_property]
-            initial_value.should_not eq final_value
+        #let(:client_attributes) { {"name" => client_name, "admin" => _options[:admin] || false, 'validator' => _options[:validator] || false} }
+        # Test default values
+        let(:client_attributes) do
+          {"name" => client_name }.tap do |h|
+            h['admin']     = _options[:admin]     unless _options[:admin].nil?
+            h['validator'] = _options[:validator] unless _options[:validator].nil?
           end
-        end # admin client
-        non_admin_clients_cannot_update
+        end
+
+        let(:success_message) do
+          new_client(client_name).
+            merge(client_attributes).
+            with('public_key', expected_public_key)
+        end
+
+        should_respond_with 200 do
+          # The new client can be retrieved (using admin_requestor
+          # because validators can't retrieve clients!)
+          get(client_url, platform.admin_user).should look_like ok_exact_response
+        end
       end
-    end # self.should_change_property
-
-    test_property_change("admin", true, false)
-    test_property_change("admin", false, true)
-    test_property_change("private_key", true, false)
-    test_property_change("private_key", true, true)
-
-    context 'changing the name of a client' do
-      include_context 'with temporary testing client'
-      let(:request_payload) do
-        {"name" => new_name}
-      end
-
-      context 'to an unclaimed name' do
-        let(:new_name){unique_name("unclaimed_client")}
-        before :each do
-          # Ensures that no other client with this name exists
-          get(api_url("/clients/#{new_name}"), admin_requestor).should look_like resource_not_found_response
-        end
-        after :each do
-          delete_client(admin_requestor, new_name)
-        end
-
-        context 'as an admin client' do
-          let(:requestor){admin_requestor}
-          # Ruby Open Source is a bit broken in this respect; only
-          # test with new Erchef hotness
-          it 'can rename the client', :pending => ruby? do
-
-            # Record the state of the client before making the change
-            pre_change = parse(get(request_url, requestor))
-            pre_change['name'].should eq client_name
-            pre_change.delete 'name'
-            pre_change.should_not have_key 'name'
-
-            # Perform the update
-
-            # we should not be able to find the client under the
-            # original name
-            should look_like({:status => 201})
-
-            get(request_url, requestor).should look_like resource_not_found_response
-
-            # we should be able to find the client under the new name
-            post_change = parse(get(api_url("/clients/#{new_name}"), requestor))
-            post_change['name'].should eq new_name
-            post_change.delete 'name'
-            post_change.should_not have_key 'name'
-
-            # the new client should be the same as the old one, but with a different name
-            post_change.should eq pre_change
-          end
-        end
-        non_admin_clients_cannot_update
-      end # to an unclaimed name
-
-      context 'to the name of an existing client' do
-        let(:preexisting_client_name){"preexisting_client"}
-
-        before :each do
-          add_client(admin_requestor, {'name' => preexisting_client_name, 'admin' => false})
-        end
-        after :each do
-          delete_client(admin_requestor, preexisting_client_name)
-        end
-
-        let(:new_name){preexisting_client_name}
-
-        # TODO: REMOVE THIS ON ERCHEF; WE DON'T USE COUCHDB
-        def remove_couchdb_cruft(hash)
-          hash.delete '_rev'
-        end
-
-        context 'as an admin client' do
-          # Ruby Open Source returns a 200 instead of a 409 for the put operation, but doesn't actually make a change
-          it 'raises a conflict', :pending => ruby? do
-            # Record what the preexisting client looks like
-            pre_change_preexisting = parse(get(api_url("/clients/#{preexisting_client_name}"), requestor))
-            pre_change_preexisting['name'].should eq preexisting_client_name
-
-            # Record what the testing client looks like
-            pre_change_testing = parse(get(request_url, requestor))
-            pre_change_testing['name'].should eq client_name
-
-            # Make the update
-            # TODO: Update this 'conflict response' with a more complete response once we're on Erchef
-            # (Also, remove the pp call)
-            should look_like conflict_response
-
-            # Ensure the preexisting client remains unchanged
-            post_change_preexisting = parse(get(api_url("/clients/#{preexisting_client_name}"), requestor))
-
-            # TODO: REMOVE THESE ON ERCHEF; WE DON'T USE COUCHDB
-            remove_couchdb_cruft pre_change_preexisting
-            remove_couchdb_cruft post_change_preexisting
-
-            post_change_preexisting.should eq pre_change_preexisting
-
-            # Ensure the testing client remains unchanged
-            post_change_testing = parse(get(request_url, requestor))
-
-            # TODO: REMOVE THESE ON ERCHEF; WE DON'T USE COUCHDB
-            remove_couchdb_cruft pre_change_testing
-            remove_couchdb_cruft post_change_testing
-
-            post_change_testing.should eq pre_change_testing
-          end
-        end # as an admin client
-
-        non_admin_clients_cannot_update
-
-      end # to the name of an existing client
-    end #changing the name of a client
-
-    context "changing a client's own name", :pending do
     end
 
-    context 'promoting oneself to admin', :pending do
+    def self.forbids_update_when(_options = {})
+      context "when updating to #{client_type(_options)} client" do
+        # This is really a 403 Forbidden
+        let(:expected_response) { forbidden_response }
+        let(:request_payload) { { "name" => client_name, "admin" => _options[:admin] || false, 'validator' => _options[:validator] || false } }
+
+        should_respond_with 403 do
+          # Nothing new should have been created (using
+          # admin_requestor because non-admin clients can't
+          # retrieve any client but themselves)
+          get(client_url, platform.admin_user).should look_like original_resource_attributes
+        end
+      end
     end
 
-    context 'promoting oneself to validator', :pending do
+    def self.forbids_renaming
+      context 'when renaming client' do
+        let(:request_payload) { { 'name' => new_name } }
+        let(:persisted_renamed_client_response) { get renamed_client_url, admin_user }
+        let(:original_client_response) { persisted_resource_response }
+        let(:renamed_client_url) { api_url "/clients/#{new_name}" }
+        let(:renamed_client_attributes) { original_resource_attributes.with('name', new_name) }
+
+        context 'to an unclaimed name' do
+          let(:expected_response) { forbidden_response }
+          #TODO: Test the exact response body
+
+          let(:new_name) { "#{client_name}_new" }
+
+          should_respond_with 403, 'and does not rename the client' do
+            original_client_response.should look_like ok_response
+          end
+        end
+
+        context 'to an existing name' do
+          let(:expected_response) { forbidden_response }
+          let(:new_name) { normal_client.name }
+
+          should_respond_with 403, 'and does not rename the client' do
+            original_client_response.should look_like ok_response
+          end
+        end
+      end # when renaming client
+    end # should rename client
+
+    def self.should_rename_client
+      context 'when renaming client' do
+        let(:request_payload) { { 'name' => new_name } }
+        let(:persisted_renamed_client_response) { get renamed_client_url, admin_user }
+        let(:original_client_response) { persisted_resource_response }
+        let(:renamed_client_url) { api_url "/clients/#{new_name}" }
+        let(:renamed_client_attributes) { original_resource_attributes.with('name', new_name) }
+
+        # TODO: This test will probably break legacy code that uses couchdb
+
+        context 'to an unclaimed name' do
+          let(:expected_response) { created_response } # Not sure why renames create a new resource
+          #TODO: Test the exact response body
+
+          after(:each) { delete_client admin_user, new_name }
+          let(:new_name) { "#{client_name}_new" }
+
+          should_respond_with 201, 'and rename the client' do
+            original_client_response.should look_like not_found_response
+            persisted_renamed_client_response.should look_like ok_response.with('body_exact', renamed_client_attributes)
+          end
+        end
+
+        context 'to an existing name', pending: (ruby? ? 'Ruby OSC responds with 200 instead of 409' : false) do
+          let(:expected_response) { conflict_response }
+          let(:new_name) { normal_client.name }
+
+          should_respond_with 409, 'and does not rename the client' do
+            original_client_response.should look_like ok_response
+          end
+        end
+      end # when renaming client
+    end # should rename client
+
+    def self.invalid_client_when(_options = {})
+      context "when updating to #{client_type(_options)} client" do
+        let(:expected_response) { bad_request_exact_response }
+        let(:error_message) { [ "Client can be either an admin or a validator, but not both." ] }
+        let(:request_payload) { { "name" => client_name, "admin" => _options[:admin], 'validator' => _options[:validator] } }
+
+        should_respond_with 400 do
+           get(client_url, admin_requestor).should look_like original_resource_attributes
+        end
+      end
+    end
+
+    # Admins can do anything
+    as_an_admin_requestor do
+      with_another_admin_client do
+        should_update_client_when admin: false
+        should_update_client_when admin: true
+        should_update_client_when admin: false, validator: true
+        invalid_client_when       admin: true,  validator: true
+
+        should_rename_client
+        should_generate_new_keys
+        should_update_public_key
+      end
+
+      with_another_validator_client do
+        should_update_client_when validator: false
+        should_update_client_when validator: true
+        should_update_client_when validator: false, admin: true
+        invalid_client_when       admin: true, validator: true
+
+        should_rename_client
+        should_generate_new_keys
+        should_update_public_key
+      end
+
+      with_another_normal_client do
+        should_update_client_when admin: false, validator: false
+        should_update_client_when admin: true
+        should_update_client_when validator: true
+        invalid_client_when       admin: true, validator: true
+
+        should_rename_client
+        should_generate_new_keys
+        should_update_public_key
+      end
+    end
+
+    context 'as an admin client' do
+      let(:requestor) { admin_client }
+
+      with_self do
+        let(:client_is_admin) { true } # Self is an admin
+
+        should_update_client_when admin: false
+        should_update_client_when admin: true
+        should_update_client_when admin: false, validator: true
+        invalid_client_when       admin: true,  validator: true
+
+        should_rename_client
+        should_generate_new_keys
+        should_update_public_key
+      end
+    end
+
+    # Validator clients can only create clients or update self
+    context 'as a validator client' do
+      let(:requestor) { validator_client }
+
+      with_another_admin_client do
+        forbids_update_when admin: false
+        forbids_update_when admin: false, validator: true
+        invalid_client_when admin: true,  validator: true
+
+        forbids_renaming
+      end
+
+      with_another_validator_client do
+        forbids_update_when validator: false
+        forbids_update_when validator: false, admin: true
+        invalid_client_when admin: true, validator: true
+
+        forbids_renaming
+      end
+
+      with_another_normal_client do
+        forbids_update_when admin: false, validator: false
+        forbids_update_when admin: true
+        forbids_update_when validator: true
+        invalid_client_when admin: true, validator: true
+
+        forbids_renaming
+      end
+
+      with_self do
+        let(:client_is_validator) { true } # Self is a validator
+
+        # Validator can say it is a validator
+        should_update_client_when validator: true
+
+        # Validator can downgrade to a normal client
+        should_update_client_when validator: false
+
+        # Validators cannot upgrade themselves to an admin
+        forbids_update_when validator: false, admin: true
+        invalid_client_when admin: true, validator: true
+
+        # Otherwise, validators can update themselves
+        should_rename_client
+        should_generate_new_keys
+        should_update_public_key
+      end
+    end
+
+    # Normal clients can only update self
+    context 'as a normal client' do
+      let(:requestor) { normal_client }
+
+      with_another_admin_client do
+        forbids_update_when admin: false
+        forbids_update_when admin: false, validator: true
+        invalid_client_when admin: true,  validator: true
+
+        forbids_renaming
+      end
+
+      with_another_validator_client do
+        forbids_update_when validator: false
+        forbids_update_when validator: false, admin: true
+        invalid_client_when admin: true, validator: true
+
+        forbids_renaming
+      end
+
+      with_another_normal_client do
+        forbids_update_when admin: false, validator: false
+        forbids_update_when admin: true
+        forbids_update_when validator: true
+        invalid_client_when admin: true, validator: true
+
+        forbids_renaming
+      end
+
+      with_self do
+        # Self is normal
+        let(:client_is_admin)     { false }
+        let(:client_is_validator) { false }
+
+        # Normal users can say they are not an admin or validator
+        should_update_client_when admin: false, validator: false
+
+        # Normal users cannot upgrade themselves
+        forbids_update_when admin: true
+        forbids_update_when validator: true
+        invalid_client_when admin: true, validator: true
+
+        # Otherwise, normal users can update themselves
+        should_rename_client
+        should_generate_new_keys
+        should_update_public_key
+      end
+
+      # This give back 401 Unauthorized
+      pending "with a normal user of the same name as the client" do
+        let(:requestor) { user_requestor }
+        after(:each)  { delete api_url("/users/#{client_name}"), admin_user }
+
+        let(:user_requestor) { Pedant::User.new(client_name, user_private_key, platform: platform, preexisting: false) }
+        let(:user_response) { post api_url('/users'), superuser, payload: user_attributes }
+        let(:user_parsed_response) { parse(user_response).tap { |x| puts x } }
+        let(:user_private_key) { user_parsed_response['private_key'] }
+        let(:user_attributes) do
+          {
+            "name" => client_name,
+            "password" => SecureRandom.hex(32),
+            "admin" => false
+          }
+        end
+
+        forbids_renaming
+      end
+
     end
 
     respects_maximum_payload_size
-
   end
 
   context 'DELETE /clients/<name>' do
     let(:request_method)  { :DELETE }
     let(:request_url)     { named_client_url }
 
-    def self.should_have_proper_deletion_behavior(deleted_client_is_admin=false)
-      context "deleting #{deleted_client_is_admin ? 'an admin' : 'a non-admin'} client" do
-        include_context 'with temporary testing client' do
-          let(:client_is_admin){deleted_client_is_admin}
-        end
+    include_context 'with temporary testing client'
 
-        context 'as admin client' do
-          let(:requestor){admin_requestor}
-          context 'with an existing client', :smoke do
-            # Admins should be able to delete a client whether it is admin or not
-            it { should look_like delete_client_success_response }
-          end
-
-          # TODO: Does not test for the edge case of deleting the last admin client
-          # TODO: Does not test for an admin deleting itself
-        end
-        non_admin_clients_cannot_delete
-      end
+    def self.should_delete_client
+      it { should look_like ok_response.with(body: { 'name' => client_name }) }
     end
 
-    should_have_proper_deletion_behavior(true)
-    should_have_proper_deletion_behavior(false)
+    def self.forbids_deletion
+      it { should look_like forbidden_response }
+    end
 
-    context 'deleting a non-existent client' do
-      let(:requestor) {admin_requestor}
-      let(:client_name) {pedant_nonexistent_client_name}
+    context 'without an existing client' do
+      let(:requestor) { admin_requestor }
+      let(:request_url) { api_url "/clients/#{pedant_nonexistent_client_name}" }
 
       it { should look_like client_not_found_response }
     end
 
-    context 'deleting a validator' do
-      include_context 'with temporary testing client' do
-        let(:client_validator) { true }
+    # Admins can delete any client
+    as_an_admin_requestor do
+      with_another_admin_client     { should_delete_client }
+      with_another_validator_client { should_delete_client }
+      with_another_normal_client    { should_delete_client }
+
+      with_self do
+        let(:client_is_admin) { true }
+        should_delete_client
       end
-      it { should look_like delete_client_success_response }
     end
 
+    # Validators can only delete itself
+    context 'as a validator client' do
+      let(:requestor) { validator_client }
+
+      with_another_admin_client     { forbids_deletion }
+      with_another_validator_client { forbids_deletion }
+      with_another_normal_client    { forbids_deletion }
+
+      with_self do
+        let(:client_is_validator) { true }
+        should_delete_client
+      end
+    end
+
+    # Normal clients can only delete itself
+    context 'as a normal client' do
+      let(:requestor) { normal_client }
+
+      with_another_admin_client     { forbids_deletion }
+      with_another_validator_client { forbids_deletion }
+      with_another_normal_client    { forbids_deletion }
+      with_self                     { should_delete_client }
+    end
   end
 end

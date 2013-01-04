@@ -25,9 +25,8 @@ describe "Open Source /users endpoint", :users => true, :platform => :open_sourc
   # Ideally, all tests should run with both clients and users as requestors.
   let(:real_admin_user) { platform.admin_user }
 
-  let(:users_collection) { ->(names) { names.inject({}, &user_name_to_url) } }
+  let(:users_collection) { pedant_users.inject({}, &user_name_to_url) }
   let(:user_name_to_url) { ->(body, name) { body.with!(name, api_url("/users/#{name}")) } }
-  let(:pedant_users) { (['admin'] + platform.users.map(&:name)).sort }
 
   context 'GET /users' do
     let(:request_method) { :GET }
@@ -44,7 +43,7 @@ describe "Open Source /users endpoint", :users => true, :platform => :open_sourc
 
     context 'with only Pedant-created users' do
       let(:expected_response) { ok_exact_response }
-      let(:success_message)   { users_collection.(pedant_users) }
+      let(:success_message)   { users_collection }
 
       should_respond_with 200, 'and the Pedant-created users'
     end
