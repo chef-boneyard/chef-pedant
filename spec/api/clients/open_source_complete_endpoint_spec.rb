@@ -441,7 +441,16 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
       context "when updating to #{client_type(_options)} client" do
         let(:expected_response) { ok_response }
         let(:request_payload) { client_attributes }
-        let(:client_attributes) { {"name" => client_name, "admin" => _options[:admin] || false, 'validator' => _options[:validator] || false} }
+
+        #let(:client_attributes) { {"name" => client_name, "admin" => _options[:admin] || false, 'validator' => _options[:validator] || false} }
+        # Test default values
+        let(:client_attributes) do
+          {"name" => client_name }.tap do |h|
+            h['admin']     = _options[:admin]     unless _options[:admin].nil?
+            h['validator'] = _options[:validator] unless _options[:validator].nil?
+          end
+        end
+
         let(:success_message) do
           new_client(client_name).
             merge(client_attributes).
