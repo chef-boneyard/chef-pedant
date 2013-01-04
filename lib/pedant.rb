@@ -104,6 +104,7 @@ module Pedant
 
       c.after(:suite) do
         platform.cleanup
+        print "\a" if Pedant.config.bell_on_completion
       end
 
     end

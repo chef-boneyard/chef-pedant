@@ -25,23 +25,40 @@ module Pedant
       # When you include this context, 'client_name' is set to the
       # name of the testing client
       shared_context 'with temporary testing client' do
-        let(:client_name){unique_name("temporary_client")}
-        let(:client_admin){false}
-        let(:client_validator){false}
-        let(:client) do
-          {
-            "name" => client_name,
-            "admin" => client_admin,
-            "validator" => client_validator
-          }
-        end
-        before :each do
-          add_client(admin_requestor, client)
+        before(:each) { test_client_response }
+        after :each do
+          begin
+            delete_client(platform.admin_user, client_name)
+          rescue URI::InvalidURIError
+            # ok, since some bad names can result in bad URLs
+          end
         end
 
-        after :each do
-          delete_client(admin_requestor, client_name)
+        let(:client_name)         { unique_name("temporary_client") }
+        let(:client_is_admin)     { false }
+        let(:client_is_validator) { false }
+
+        let(:client) { default_client_attributes } # Compatibility with search tests
+
+        let(:required_client_attributes) { { 'name' => client_name } }
+        let(:default_client_attributes) do
+          required_client_attributes.
+            with('admin',     client_is_admin).
+            with('validator', client_is_validator)
         end
+        let(:original_resource_attributes) { default_client_attributes.except('private_key') }
+
+        let(:test_client) { client_name }
+        let(:test_client_response) { create_client admin_requestor, default_resource_attributes }
+        let(:test_client_parsed_response) { parse(test_client_response) }
+        let(:test_client_private_key) { test_client_parsed_response['private_key'] }
+        let(:test_client_public_key) { test_client_parsed_response['public_key'] }
+        let(:test_client_requestor) { Pedant::Client.new(test_client, test_client_private_key, platform: platform, preexisting: false) }
+
+        let(:client_url) { api_url("/clients/#{client_name}") }
+
+        let(:persisted_resource_response) { get(resource_url, platform.admin_user) }
+        let(:default_resource_attributes) { default_client_attributes }
       end # shared context
 
       # TODO: Pull these from pedant config
@@ -97,9 +114,9 @@ module Pedant
       let(:post_named_client_method_not_allowed_response) { incorrect_ruby_named_client_resource_method_not_allowed_response }
 
       let(:expected_public_key) { /^(-----BEGIN RSA PUBLIC KEY-----|-----BEGIN PUBLIC KEY-----)/ }
-      let(:fetch_admin_client_success_response)     { ok_response.with(body_exact: new_client(client_name, true).with('public_key', expected_public_key)) }
-      let(:fetch_validator_client_success_response) { ok_response.with(body_exact: new_client(client_name, false, true).with('public_key', expected_public_key)) }
-      let(:fetch_nonadmin_client_success_response)  { ok_response.with(body_exact: new_client(client_name, false).with('public_key', expected_public_key)) }
+      let(:fetch_admin_client_success_response)     { ok_response.with(body_exact: new_client(client_name, admin: true).with('public_key', expected_public_key)) }
+      let(:fetch_validator_client_success_response) { ok_response.with(body_exact: new_client(client_name, admin: false, validator: true).with('public_key', expected_public_key)) }
+      let(:fetch_nonadmin_client_success_response)  { ok_response.with(body_exact: new_client(client_name, admin: false).with('public_key', expected_public_key)) }
 
       let(:delete_client_success_response) { ok_response.with(body: { 'name' => client_name }) }
       let(:delete_client_as_non_admin_response) { open_source_not_allowed_response }
@@ -154,13 +171,15 @@ module Pedant
       let(:update_client_as_non_admin_response) { open_source_not_allowed_response }
 
 
-      def new_client(name, admin=false, validator=false)
+      def new_client(name, _options = {})
+        _options[:admin] ||= false
+        _options[:validator] ||= false
         {
           "name" => name,
           "chef_type" => "client",
           "json_class" => "Chef::ApiClient",
-          "admin" => admin,
-          "validator" => validator,
+          "admin" => _options[:admin],
+          "validator" => _options[:validator],
         }
       end
 
@@ -177,6 +196,43 @@ module Pedant
       end
 
       module ClassMethods
+
+        def with_another_admin_client(&examples)
+          context 'with another admin client' do
+            let(:client_is_admin) { true }
+            instance_eval(&examples)
+          end
+        end
+
+        def with_another_validator_client(&examples)
+          context 'with another validator client' do
+            let(:client_is_validator) { true }
+            instance_eval(&examples)
+          end
+        end
+
+        def with_self(&examples)
+          context 'with self' do
+            let(:requestor) { test_client_requestor }
+            instance_eval(&examples)
+          end
+        end
+
+        def with_another_normal_client(&examples)
+          context('with another normal client', &examples)
+        end
+
+        def client_type(_options)
+          case [_options[:admin] || false, _options[:validator] || false]
+          when [true,  false] then "an admin"
+          when [false, false] then "a non-admin"
+          when [false, true ] then "a validator"
+          when [true,  true ] then "an invalid admin and validator"
+          else
+            fail "Must declare :admin to either true or false"
+          end
+        end
+
         def should_generate_new_keys
           context 'when generating key pairs' do
             let(:updated_private_key) { parsed_response['private_key'] }

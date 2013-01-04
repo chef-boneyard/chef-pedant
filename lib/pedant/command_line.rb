@@ -16,7 +16,7 @@
 require 'optparse'
 
 module Pedant
-  class CommandLine < Struct.new(:junit_file, :config_file, :log_file, :include_internal, :only_internal, :run_all, :verify_error_messages)
+  class CommandLine < Struct.new(:junit_file, :config_file, :log_file, :include_internal, :only_internal, :run_all, :verify_error_messages, :bell_on_completion)
 
     def initialize(argv)
       @argv = argv.dup
@@ -65,6 +65,14 @@ module Pedant
         self.verify_error_messages = verify_error_messages
       end
 
+      opts.on("--focus", "--focus TAGS,TAGS", "Focus on these tests") do |f|
+        self.foci.concat f.split(/,/)
+      end
+
+      opts.on("--skip", "--skip TAGS,TAGS", "Skip these tests") do |f|
+        self.skip.concat f.split(/,/)
+      end
+
       opts.on("--skip-pedantic", "Skip pedantic tests") do
         self.skip << :pedantic
       end
@@ -79,6 +87,10 @@ module Pedant
 
       opts.on("--all", "Run all tests.  Supersedes any other filtering-related arguments") do
         self.run_all = true
+      end
+
+      opts.on("--bell", "Emits a console bell after completing tests") do
+        self.bell_on_completion = true
       end
     end
 

@@ -102,11 +102,10 @@ module Pedant
       requestor_cache.values.select { |r| Pedant::Client === r }
     end
 
-    def dummy_client(h)
-      name = h[:name]
-
-      # Well-formed key, but not actually associated with the server
-      bogus_key = "-----BEGIN RSA PRIVATE KEY-----
+    # Well-formed key, but not actually associated with the server
+    def bogus_key
+      @_bogus_key ||=
+"-----BEGIN RSA PRIVATE KEY-----
 MIIEogIBAAKCAQEA7TfhToresZudM5gaBfzM/eHrGuJtN8uMaG51fLk9rNVwOxIw
 eb9AmWJSQgftRj4AJSnt8Jv+QyAafjg79rEmCpd2K+toN1fXiVsf/ld/VdMI5vCd
 usJc8aC4OFIVrLetm9eq+joXiCSLfEYP1w4d1gc9wqr54rnGVgQdWv31NhqXX7Tl
@@ -133,8 +132,10 @@ xfcg5zUCf3TQrwpcBB1Hf9hm6lUVpptvUZJAQtkWoaWXUPRY0CjcVdDc5ak4xqL2
 FcAuJwV95b3qLyPESJ8zUBLOg3DcT1X9mrvRuKgC/Ie6k4R+oxU/nXi4vsPXlvg4
 yap6MUYSjPOa7eCrhg2zFZiqO6VLEogPc1nsjb9Zl2UWLLYyCVz=
 -----END RSA PRIVATE KEY-----"
+    end
 
-      Pedant::Client.new(name, bogus_key, platform: self, preexisting: false, bogus: true)
+    def dummy_client(h)
+      Pedant::Client.new(h[:name], bogus_key, platform: self, preexisting: false, bogus: true)
     end
 
     # Normalize timestamps used in Pedant
