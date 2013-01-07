@@ -75,6 +75,11 @@ module Pedant
       # Load up the failures file if we're re-running
       if rerun
         args.concat(%W[-O #{::RSpec::Rerun::Formatters::FailuresFormatter::FILENAME}])
+      else
+        # Remove the failures file if we aren't running with --rerun;
+        # otherwise, if it exists, we would only ever run those tests,
+        # even if they all pass!
+        FileUtils.rm(::RSpec::Rerun::Formatters::FailuresFormatter::FILENAME, :force => true)
       end
 
       _test_dirs = test_directories
