@@ -43,7 +43,7 @@ EOM
                     "Accuracy Over Tact"
 
                   === Testing Environment ===
-                 Config File: #{Pedant.config.config_file}
+                 Config File: #{File.absolute_path(Pedant.config.config_file)}
        #{Pedant.config.log_file ? "HTTP Traffic Log File: " + File.absolute_path(Pedant.config.log_file) + "\n" : ""}
 EOM
     end
