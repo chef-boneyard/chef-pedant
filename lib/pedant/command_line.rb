@@ -16,7 +16,8 @@
 require 'optparse'
 
 module Pedant
-  class CommandLine < Struct.new(:junit_file, :config_file, :log_file, :include_internal, :only_internal, :run_all, :verify_error_messages, :bell_on_completion)
+
+  class CommandLine < Struct.new(:junit_file, :config_file, :log_file, :include_internal, :only_internal, :run_all, :verify_error_messages, :bell_on_completion, :rerun)
 
     def initialize(argv)
       @argv = argv.dup
@@ -91,6 +92,10 @@ module Pedant
 
       opts.on("--bell", "Emits a console bell after completing tests") do
         self.bell_on_completion = true
+      end
+
+      opts.on("--rerun", "Run tests that failed the last time") do
+        self.rerun = true
       end
     end
 

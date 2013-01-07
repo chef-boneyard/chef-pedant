@@ -17,6 +17,8 @@ require 'mixlib/config'
 require 'pedant/command_line'
 require 'pedant/gem'
 
+require 'rspec-rerun/formatters/failures_formatter'
+
 module Pedant
   class Config
     extend Mixlib::Config
@@ -65,6 +67,19 @@ module Pedant
         args.concat(%W[-r rspec_junit_formatter -f RspecJunitFormatter -o #{junit_file} -f documentation])
       else
         args.concat(%w[ --color -f documentation ])
+      end
+      
+      # Always use the failures formatter, in case we want to rerun failures
+      args.concat(%W[-f #{::RSpec::Rerun::Formatters::FailuresFormatter}])
+      
+      # Load up the failures file if we're re-running
+      if rerun
+        args.concat(%W[-O #{::RSpec::Rerun::Formatters::FailuresFormatter::FILENAME}])
+      else
+        # Remove the failures file if we aren't running with --rerun;
+        # otherwise, if it exists, we would only ever run those tests,
+        # even if they all pass!
+        FileUtils.rm(::RSpec::Rerun::Formatters::FailuresFormatter::FILENAME, :force => true)
       end
 
       _test_dirs = test_directories
