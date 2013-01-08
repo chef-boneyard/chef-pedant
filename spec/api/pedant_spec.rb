@@ -86,4 +86,40 @@ describe 'Pedant Self-Diagnostic', :pedantic do
     should_be_sharing :outside_user
     should_be_sharing :superuser
   end
+
+  context 'Matchers' do
+    describe 'have_entry' do
+      let(:value) { 1 }
+
+      it 'should accept an integer' do
+        { a: 1, b: 1 }.should have_entry [ :a, 1 ]
+      end
+
+      it 'should accept a String' do
+        { a: 'Foo', b: 'Bar' }.should have_entry [ :a, 'Foo' ]
+      end
+
+
+      it 'should accept an Array' do
+        { a: [1,2,3] }.should have_entry [ :a, [2,3,1] ]
+      end
+
+      it 'should accept an Array of Hashes' do
+        { a: [{b: 2}, {c: 3}] }.should have_entry [ :a, [{c: 3}, {b:2}] ]
+      end
+
+      it 'should accept a Hash' do
+        { a: { b: 3 } }.should have_entry [ :a, {b: 3} ]
+      end
+
+      it 'should accept a Proc' do
+        { a: 1 }.should have_entry [ :a, ->(a) { a == 1 } ]
+        { a: 1 }.should_not have_entry [ :a, ->(a) { a == 2 } ]
+      end
+
+      it 'should accept a closure' do
+        { a: value }.should have_entry [ :a, ->(a) { a == value } ]
+      end
+    end
+  end
 end

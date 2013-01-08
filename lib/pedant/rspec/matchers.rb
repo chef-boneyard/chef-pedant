@@ -37,9 +37,10 @@ module RSpec
 
         @actual = @target[@k]
 
-        if @v.class == Regexp
+        case @v
+        when Regexp then
           @actual =~ @v
-        elsif @v.class == Array
+        when Array then
           # We don't really care about the order, just the contents
           begin
             @actual.sort == @v.sort
@@ -60,18 +61,18 @@ module RSpec
             # might have recieved back nil as the result
             # need to cut short the rest of the logic to provide a
             # better message
-            if @actual.nil?
-              return false
-            end
+            return false if @actual.nil?
 
             size_is_same = (@actual.size == @v.size)
             all_items_included = @v.all? { |item| @actual.include?(item) }
             size_is_same && all_items_included
           end
-        elsif @v.class == Hash
-          @v.reduce(true){|val, kv|
+        when Hash then
+          @v.reduce(true) do |val, kv|
             val && PedanticMapEntryEquals.new(kv).matches?(@actual)
-          }
+          end
+        when Proc then
+          @v.call(@actual)
         else
           @actual == @v
         end
