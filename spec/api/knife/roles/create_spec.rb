@@ -15,7 +15,7 @@
 
 require 'pedant/rspec/knife_util'
 
-describe 'knife', :knife do
+describe 'knife', knife: true, pending: !open_source? do
   context 'role' do
     context 'create [ROLE]' do
       include Pedant::RSpec::KnifeUtil

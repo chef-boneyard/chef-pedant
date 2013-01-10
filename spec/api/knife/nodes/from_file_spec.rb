@@ -16,7 +16,7 @@
 require 'pedant/rspec/knife_util'
 require 'securerandom'
 
-describe 'knife', :knife do
+describe 'knife', knife: true, pending: !open_source? do
   context 'node' do
     context 'from file NODE', pending: "OC-3957: Write specs for `knife node from file`" do
       include Pedant::RSpec::KnifeUtil

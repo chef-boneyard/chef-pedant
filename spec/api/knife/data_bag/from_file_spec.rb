@@ -16,7 +16,7 @@
 require 'pedant/rspec/knife_util'
 require 'securerandom'
 
-describe 'knife', :knife do
+describe 'knife', knife: true, pending: !open_source? do
   context 'data bag' do
     context 'from file' do
       include Pedant::RSpec::KnifeUtil

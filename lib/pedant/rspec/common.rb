@@ -19,6 +19,11 @@ require 'pedant/request'
 require 'pedant/rspec/common_responses'
 require 'pedant/rspec/http_status_codes'
 
+# Temporary, until knife tests are activated for non-open-source platforms
+def open_source?
+  Pedant::Config.pedant_platform.class == Pedant::OpenSourcePlatform
+end
+
 module Pedant
   module RSpec
     module Common
@@ -305,10 +310,11 @@ module Pedant
           not ruby?
         end
 
-        def self.open_source?
-          Pedant::Config.pedant_platform.class == Pedant::OpenSourcePlatform
-        end
-        let(:open_source?) { self.class.open_source? }
+        # Temporary until knife tests for non-open-source platforms are fixed
+        #def self.open_source?
+        #  Pedant::Config.pedant_platform.class == Pedant::OpenSourcePlatform
+        #end
+        #let(:open_source?) { self.class.open_source? }
 
         # Timestamp suffixes
         # Suffix unique between runs. Timestamp is generated once per pedant run
