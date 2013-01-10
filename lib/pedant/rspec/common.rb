@@ -482,6 +482,9 @@ module Pedant
         # If these are referenced in before(:all) blocks, use shared() instead of let()
         shared(:admin_user)       { platform.admin_user }
         shared(:normal_user)      { platform.non_admin_user }
+
+        # OSC FIXME: platform.bad_user is breaking OSC tests for some reason
+        # This is set to bad_client for now
         shared(:outside_user)     { platform.bad_client }
 
         shared(:admin_client)     { platform.admin_client }
