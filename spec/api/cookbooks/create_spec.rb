@@ -39,8 +39,11 @@ describe "Cookbooks API endpoint", :cookbooks do
       let(:cookbook_name) { "pedant_basic" }
       let(:cookbook_version) { "1.0.0" }
       let(:created_resource) { default_resource_attributes }
-
-      it { should look_like created_exact_response }
+      if ruby?
+        it { should look_like http_200_response }
+      else
+        it { should look_like created_exact_response }
+      end
     end
 
     # Start using the new validation macros
