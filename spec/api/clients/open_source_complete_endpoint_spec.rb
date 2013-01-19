@@ -355,7 +355,7 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
       end
 
       def self.forbids_fetching
-        it { should look_like forbidden_response }
+        it('forbids fetching', :authorization) { should look_like forbidden_response }
       end
 
       # Admins can fetch anyone
@@ -742,7 +742,7 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
     end
 
     def self.forbids_deletion
-      it { should look_like forbidden_response }
+      it('forbids deletion', :authorization) { should look_like forbidden_response }
     end
 
     context 'without an existing client' do
