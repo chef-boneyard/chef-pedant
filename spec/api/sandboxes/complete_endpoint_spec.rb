@@ -268,7 +268,7 @@ describe "Sandboxes API Endpoint", :sandboxes do
       end
 
       # YYYY-MM-DDT00:00:00+00:00, but we'll constraint it to at least today's date
-      let(:timestamp_regexp) { Regexp.new "#{platform.now.strftime('%Y-%m-%d')}T\\d\\d:\\d\\d:\\d\\d\\+\\d\\d:\\d\\d" }
+      let(:timestamp_regexp) { Regexp.new "#{platform.now.strftime('%Y-%m-%d')}T\\d\\d:\\d\\d:\\d\\d\[\\+\\-\]\\d\\d:\\d\\d" }
 
       it 'should respond with 200 OK', :smoke do
         # Upload and check files
