@@ -648,6 +648,70 @@ describe "Cookbooks API endpoint", :cookbooks do
                              })
         end
       end # it changing to invalid checksums should fail
+
+      # Coverge for CHEF-3716
+      #
+      # The ultimate problem was that we were inadvertently deleting some files
+      # from S3 / Bookshelf on cookbook updates. When a file was no longer
+      # referenced by that cookbook version, we would delete it without first
+      # checking that it wasn't being referenced by any other cookbooks. The
+      # database was internally consistent (modulo some "garbage" checksums
+      # remaining), but it was inconsistent with S3 / Bookshelf, which resulted
+      # in the 404 errors when trying to download.
+      context "CHEF-3716 coverage" do
+        let(:cookbook_version2) { "11.2.4" }
+
+        after(:each) {
+          delete_cookbook(admin_user, cookbook_name, cookbook_version2)
+        }
+
+        it "it does not delete checksums in use by another version" do
+
+          # Create two cookbook versions that share a single file
+          payload1 = new_cookbook(cookbook_name, cookbook_version)
+          payload1["files"] = [{"name" => "name1", "path" => "path/name1",
+                                "checksum" => checksums[0],
+                                "specificity" => "default"},
+                              {"name" => "name2", "path" => "path/name2",
+                                "checksum" => checksums[1],
+                                "specificity" => "default"}]
+          payload2 = new_cookbook(cookbook_name, cookbook_version2)
+          payload2["files"] = [{"name" => "name1", "path" => "path/name1",
+                                "checksum" => checksums[0],
+                                "specificity" => "default"},
+                              {"name" => "name2", "path" => "path/name2",
+                                "checksum" => checksums[2],
+                                "specificity" => "default"}]
+          upload_cookbook(admin_user, cookbook_name, cookbook_version, payload1)
+          upload_cookbook(admin_user, cookbook_name, cookbook_version2, payload2)
+
+          # compute an intersection and difference
+          cbv_1_checksums = checksums_for_segment_type(:files, cookbook_version)
+          cbv_2_checksums = checksums_for_segment_type(:files, cookbook_version2)
+          intersection_checksums = cbv_1_checksums.keys & cbv_2_checksums.keys
+          cbv_2_difference_checksums = cbv_2_checksums.keys - cbv_1_checksums.keys
+
+          # Make changes to the files in cookbook version 2. This effectively
+          # deletes all the old files.
+          payload2["files"] = [{"name" => "name5", "path" => "path/name5",
+                                "checksum" => checksums[3],
+                                "specificity" => "default"}]
+          upload_cookbook(admin_user, cookbook_name, cookbook_version2, payload2)
+
+          # Checksums unique to first iteration of cookbook version 2 should
+          # have been deleted
+          cbv_2_difference_checksums.each do |checksum|
+            verify_checksum_url(cbv_2_checksums[checksum], 404)
+          end
+
+          # Checksums shared between the original iterations of the cookbook
+          # versions should still exist
+          intersection_checksums.each do |checksum|
+            verify_checksum_url(cbv_2_checksums[checksum], 200)
+          end
+        end
+      end
+
     end # context for checksums
 
     context "for frozen?" do
