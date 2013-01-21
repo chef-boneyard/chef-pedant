@@ -190,23 +190,26 @@ module Pedant
         # If any of these checks fail we *may* be experiencing eventual
         # consistency.  Consider adding an evil sleep.
         deletions.each do |checksum|
-          uri = URI.parse(existing_checksums[checksum])
-          http = Net::HTTP.new(uri.host, uri.port)
-          if uri.scheme == 'https'
-            http.use_ssl = true
-            http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-          end
+          verify_checksum_url(existing_checksums[checksum], 404)
+        end
+      end
 
-          response = http.get(uri.request_uri, {})
+      def verify_checksum_url(url, expected_reponse_code)
+        uri = URI.parse(url)
+        http = Net::HTTP.new(uri.host, uri.port)
+        if uri.scheme == 'https'
+          http.use_ssl = true
+          http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+        end
 
-          begin
-            response.code.should eq "404"
-          rescue => e # let's rescue and raise with a useful error message
-            raise e, "Checksum [#{checksum}] was not removed from S3 (Bookshelf)."\
-              << " Expected a 404 when performing a GET to [#{existing_checksums[checksum]}]"\
-              << " but received a #{response.code}."
+        response = http.get(uri.request_uri, {})
 
-          end
+        begin
+          response.code.should eq expected_reponse_code.to_s
+        rescue => e # let's rescue and raise with a useful error message
+          raise e, " Expected a #{expected_reponse_code} when performing a GET to "\
+            << " [#{url}] but received a #{response.code}."
+
         end
       end
 
@@ -447,8 +450,8 @@ module Pedant
       #     "https://...",
       #   }
       #
-      def checksums_for_segment_type(segment_type)
-        get(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
+      def checksums_for_segment_type(segment_type, cb_version=cookbook_version)
+        get(api_url("/cookbooks/#{cookbook_name}/#{cb_version}"),
           admin_user) do |response|
           segment_contents = parse(response)[segment_type.to_s] || []
           segment_contents.inject({}) do |return_hash, segment_member|
