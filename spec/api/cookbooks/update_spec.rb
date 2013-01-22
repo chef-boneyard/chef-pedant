@@ -667,6 +667,10 @@ describe "Cookbooks API endpoint", :cookbooks do
 
         it "it does not delete checksums in use by another version" do
 
+          # Might be a little paranoid, but lets ensure the version strings
+          # versions are indeed different since the whole test hinges on this.
+          cookbook_version.should_not eq cookbook_version2
+
           # Create two cookbook versions that share a single file
           payload1 = new_cookbook(cookbook_name, cookbook_version)
           payload1["files"] = [{"name" => "name1", "path" => "path/name1",
