@@ -68,6 +68,7 @@ module Pedant
     raise "Must specify an implementation class of Pedant::Platform!  Use the `platform_class` key in your Pedant config file" unless platform_class
 
     config.pedant_platform = platform_class.new(config.chef_server,
+                                                config.internal_server,
                                                 config.superuser_key,
                                                 config.superuser_name)
   end

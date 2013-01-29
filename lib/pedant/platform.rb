@@ -19,14 +19,15 @@ module Pedant
   class Platform
     include Pedant::Request
 
-    attr_reader :server, :superuser, :superuser_key_file
+    attr_reader :server, :internal_server, :superuser, :superuser_key_file
 
     # Create a Platform object for a given server (specified by
     # protocol, hostname, and port ONLY).  You must supply the
     # superuser's key file, which can either be the path to the file,
     # or the contents of the file.
-    def initialize(server, superuser_key_file, superuser_name)
+    def initialize(server, internal_server, superuser_key_file, superuser_name)
       @server = server
+      @internal_server = internal_server
       @superuser_key_file = superuser_key_file
       @superuser = Pedant::Requestor.new(superuser_name, superuser_key_file, platform: self)
       self.pedant_run_timestamp # Cache the global timestamp at initialization
@@ -37,6 +38,10 @@ module Pedant
       raise "Must override with an appropriate url generation method!"
     end
 
+    def internal_api_url(url_path)
+      raise "Must override with an appropriate private url generation method!"
+    end
+    
     def setup
       raise "Must override with an appropriate setup method!"
     end

@@ -20,15 +20,19 @@ module Pedant
 
     attr_reader :admin_requestors, :normal_requestors, :webui, :webui_key_file
 
-    def initialize(server, superuser_key_file, super_user_name='chef-webui')
+    def initialize(server, internal_server, superuser_key_file, super_user_name='chef-webui')
       @webui_key_file = Pedant::Config.webui_key || (fail "Missing webui_key in Pedant config.")
       @webui = Pedant::Requestor.new('chef-webui', superuser_key_file, platform: self)
-      super(server, superuser_key_file, super_user_name)
+      super(server, internal_server, superuser_key_file, super_user_name)
     end
 
     def api_url(path_fragment = '')
       slash = path_fragment.start_with?('/') ? '' : '/'
       "#{@server}#{slash}#{path_fragment}"
+    end
+    
+    def internal_api_url(path_fragment = '') 
+      api_url(path_fragment)
     end
 
     def setup(requestors=Pedant::Config.requestors)
