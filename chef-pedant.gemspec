@@ -21,6 +21,5 @@ Gem::Specification.new do |s|
   s.add_dependency('rspec_junit_formatter', '~> 0.1.1')
   s.add_dependency('net-http-spy', '~> 0.2.1')
   s.add_dependency('erubis', '~> 2.7.0')
-  s.add_dependency('chef', '~> 10.12.0') # Just to get 'knife' for some tests
   s.add_dependency('rspec-rerun', '= 0.1.1')
 end
