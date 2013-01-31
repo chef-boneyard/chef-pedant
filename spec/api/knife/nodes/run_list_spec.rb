@@ -78,9 +78,7 @@ describe 'knife', knife: true, pending: !open_source? do
               knife "node run_list add #{node_name} app,web -c #{knife_config}"
 
               # Adds run_list item
-              # TODO: For some reason, the run list is wrapped with [], but when we use
-              # `knife node run_list add` it is not
-              should have_outcome :status => 0, :stdout => /run_list:\s+\[recipe\[web\]\]/
+              should have_outcome :status => 0, :stdout => /run_list:\s+recipe\[web\]/
             end
           end
         end

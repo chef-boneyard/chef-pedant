@@ -13,8 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-require 'chef/version'
-
 module Pedant
 
   ################################################################################
@@ -22,7 +20,24 @@ module Pedant
   ################################################################################
   module Request
     require 'rest_client'
+    require 'mixlib/shellout'
     include Pedant::JSON
+
+    # Grab the the version of Chef / Knife that's on the box in order
+    # to properly set the X-Chef-Version header
+    KNIFE_VERSION = begin
+                      # Don't want Bundler to poison the shelling out :(
+                      cmd = Mixlib::ShellOut.new("knife --version", :environment => {
+                                                   'BUNDLE_GEMFILE' => nil,
+                                                   'BUNDLE_BIN_PATH' => nil,
+                                                   'GEM_PATH' => nil,
+                                                   'GEM_HOME' => nil,
+                                                   'RUBYOPT' => nil
+                                                 })
+                      cmd.run_command
+                      cmd.stdout =~ /^Chef: (.*)$/
+                      $1 || raise("Cannot determine Chef version from output of `knife --version`: #{cmd.stdout}")
+                    end
 
     # Headers that are added to all requests
     def standard_headers
@@ -30,7 +45,7 @@ module Pedant
         'Accept' => 'application/json',
         'Content-Type' => 'application/json',
         'User-Agent' => 'chef-pedant rspec tests',
-        'X-Chef-Version' => Chef::VERSION
+        'X-Chef-Version' => KNIFE_VERSION
       }
     end
 
