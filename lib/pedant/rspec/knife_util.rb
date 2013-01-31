@@ -73,7 +73,17 @@ module Pedant
         # Convenience method for creating a Mixlib::ShellOut representation
         # of a knife command in our test repository
         def shell_out(command_line)
-          Mixlib::ShellOut.new(command_line, {'cwd' => cwd})
+          # All the environment variable munging is so Bundler doesn't
+          # poison things, since we don't include a Chef gem
+          Mixlib::ShellOut.new(command_line, {
+                                 'cwd' => cwd,
+                                 'env' => {
+                                   'BUNDLE_GEMFILE' => nil,
+                                   'BUNDLE_BIN_PATH' => nil,
+                                   'GEM_PATH' => nil,
+                                   'GEM_HOME' => nil,
+                                   'RUBYOPT' => nil
+                                 }})
         end
 
         # Convenience method for actually running a knife command in our
