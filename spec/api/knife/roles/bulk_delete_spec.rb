@@ -16,11 +16,17 @@
 require 'pedant/rspec/knife_util'
 require 'securerandom'
 
+# Bulk role deletion currently uses search under the hood; we're
+# including the search_util to access the 'force_solr_commit' helper
+# method
+require 'pedant/rspec/search_util'
+
 describe 'knife', knife: true, pending: !open_source? do
   context 'role' do
     context 'bulk delete REGEX' do
       include Pedant::RSpec::KnifeUtil
       include Pedant::RSpec::KnifeUtil::Role
+      include Pedant::RSpec::SearchUtil
 
       let(:command) { "knife role bulk delete '^pedant-role-' -c #{knife_config} --yes" }
       let(:roles)   { %w(pedant-role-0 pedant-role-1 pedant-master) }
@@ -33,12 +39,16 @@ describe 'knife', knife: true, pending: !open_source? do
         let(:requestor) { knife_admin }
 
         it 'should succeed' do
-          pending "Roles are not being bulk deleted for some reason, despite having been created" do
-            roles.each(&create_role!)
+          # Create all the testing roles
+          roles.each(&create_role!)
 
-            # Runs knife role list
-            should have_outcome :status => 0, :stdout => /Deleted role pedant-role-0\s+Deleted role pedant-role-1/
-          end
+          # Since knife currently uses search to get the roles, we
+          # need to force a commit to Solr to ensure that these new
+          # roles will be found.
+          force_solr_commit
+
+          # Runs knife role list
+          should have_outcome :status => 0, :stdout => /Deleted role pedant-role-0\s+Deleted role pedant-role-1/
         end
       end
 
