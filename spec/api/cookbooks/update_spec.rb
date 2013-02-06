@@ -43,7 +43,7 @@ describe "Cookbooks API endpoint", :cookbooks do
     let(:request_url) { named_cookbook_url }
     let(:cookbook_name) { "cookbook-to-be-modified" }
     let(:cookbook_version) { self.class.cookbook_version }
-    let(:fetched_cookbook) { new_cookbook(cookbook_name, cookbook_version) }
+    let(:fetched_cookbook) { retrieved_cookbook(cookbook_name, cookbook_version) }
     let(:original_cookbook) { new_cookbook(cookbook_name, cookbook_version) }
 
     # This requires deep dup
@@ -1095,7 +1095,11 @@ describe "Cookbooks API endpoint", :cookbooks do
 
       context "for long description" do
         should_change_metadata('long_description', 'longer description')
-        should_change_metadata('long_description', :delete)
+
+        # Deleting the long description results in it being "reset" to
+        # the empty string
+        should_change_metadata('long_description', :delete, "")
+
         if (ruby?)
           should_change_metadata('long_description', false)
         else
@@ -1207,7 +1211,16 @@ describe "Cookbooks API endpoint", :cookbooks do
               should_fail_to_change_metadata(type, [], 400, json_error)
             end
             should_change_metadata(type, {})
-            should_change_metadata(type, :delete)
+
+            if type == "dependencies"
+              # Attempting to delete dependencies will result in it
+              # getting set to an empty hash, since we need to have
+              # something present for that key
+              should_change_metadata(type, :delete, {})
+            else
+               should_change_metadata(type, :delete)
+            end
+
             if (ruby?)
               update_metadata_should_crash_server(type, "foo")
               should_not_change_metadata(type, ["foo"], {"foo" => []})

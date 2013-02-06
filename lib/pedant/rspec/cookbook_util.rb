@@ -246,13 +246,20 @@ module Pedant
         {
           "name" => "#{name}-#{version}",
           "version" => version,
-            "cookbook_name" => name,
-            "json_class" => "Chef::CookbookVersion",
-            "chef_type" => "cookbook_version",
-            "frozen?" => false,
-            "metadata" => {
+          "cookbook_name" => name,
+          "json_class" => "Chef::CookbookVersion",
+          "chef_type" => "cookbook_version",
+          "frozen?" => false,
+          "recipes" => [],
+          "metadata" => {
             "version" => version,
-            "name" => name
+            "name" => name,
+            "maintainer"=>"YOUR_COMPANY_NAME",
+            "maintainer_email"=>"YOUR_EMAIL",
+            "description"=>"A fabulous new cookbook",
+            "license"=>"none",
+            "recipes"=>{},
+            "dependencies"=>{}
           }
         }
       end
@@ -306,9 +313,10 @@ module Pedant
             "long_description" => opts[:long_description] || default_long_description,
             "license" => opts[:license] || default_license,
             "dependencies" => opts[:dependencies] || {},
+            "attributes" => opts[:attributes] || {},
             # this recipies list is not the same as the top level list
             # this is a list of recipes and their descriptions
-            "recipes" => opts[:meta_recipes] || {},
+            "recipes" => opts[:meta_recipes] || {}
           }
         }
       end
@@ -347,6 +355,33 @@ module Pedant
             "version" => version
           },
             "frozen?" => opts[:frozen] || false
+        }
+      end
+
+      # We don't return all the metadata when fetching a cookbook via
+      # the API because it's not used by the client and wastes
+      # bandwidth
+      def retrieved_cookbook(name, version, opts = {})
+        {
+          "name" => "#{name}-#{version}",
+          "cookbook_name" => name,
+          "version" => version,
+          "json_class" => "Chef::CookbookVersion",
+          "chef_type" => "cookbook_version",
+          "recipes" => opts[:recipes] || [],
+          "metadata" => {
+            "name" => name,
+            "description" => opts[:description] || default_description,
+            "long_description" => opts[:long_description] || default_long_description,
+            "maintainer" => opts[:maintainer] || default_maintainer,
+            "maintainer_email" => opts[:maintainer_email] || default_maintainer_email,
+            "license" => opts[:license] || default_license,
+            "dependencies" => {},
+            "attributes" => {},
+            "recipes" => opts[:meta_recipes] || {},
+            "version" => version
+          },
+          "frozen?" => opts[:frozen] || false
         }
       end
 
@@ -652,44 +687,45 @@ module Pedant
         # should_mot_change_metadata instead
         def should_change_metadata(key, value, new_value = nil)
           it "#{key} = #{value} returns 200" do
-            payload = new_cookbook(cookbook_name, cookbook_version)
-            metadata = payload["metadata"]
-            if (value == :delete)
-              metadata.delete(key)
-            else
-              metadata[key] = value
-            end
-            payload["metadata"] = metadata
-            put(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
-                admin_user, :payload => payload) do |response|
-                  if (ruby?)
-                    # Ruby endpoint produces this, erlang should not
-                    payload["_rev"] = /.*/
-                  end
-                  if (new_value)
-                    metadata = payload["metadata"]
-                    metadata[key] = new_value
-                    payload["metadata"] = metadata
-                  end
-                  response.
-                    should look_like({
-                    :status => 200,
-                    :body_exact => payload
-                  })
-                end
 
-                # Verified change (or creation) happened
-                get(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
-                    admin_user) do |response|
-                      if (ruby?)
-                        payload.delete("_rev")
-                      end
-                      response.
-                        should look_like({
-                        :status => 200,
-                        :body_exact => payload
-                      })
-                    end
+            cookbook = new_cookbook(cookbook_name, cookbook_version)
+
+            put_payload = cookbook.dup
+            put_metadata = put_payload["metadata"]
+            if (value == :delete)
+              put_metadata.delete(key)
+            else
+              put_metadata[key] = value
+            end
+            put_payload["metadata"] = put_metadata
+
+            put(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"), admin_user, :payload => put_payload) do |response|
+              if (ruby?)
+                # Ruby endpoint produces this, erlang should not
+                put_payload["_rev"] = /.*/
+              end
+
+              # The PUT response returns the payload exactly as it was sent
+              response.should look_like({:status => 200, :body_exact => put_payload})
+            end
+
+            # Verified change (or creation) happened
+            get(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"), admin_user) do |response|
+              # When you retrieve the cookbook, changes will be reflected
+              # if (ruby?)
+              #   payload.delete("_rev")
+              # end
+
+              get_response = cookbook.dup
+              if (new_value)
+                get_metadata = get_response["metadata"]
+                get_metadata[key] = new_value
+                get_response["metadata"] = get_metadata
+              end
+
+              response.should look_like({:status => 200, :body_exact => get_response})
+            end
+
           end
         end
 

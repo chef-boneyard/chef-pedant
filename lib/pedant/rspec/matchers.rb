@@ -68,7 +68,8 @@ module RSpec
             size_is_same && all_items_included
           end
         when Hash then
-          @v.reduce(true) do |val, kv|
+          @v.keys.sort == @actual.keys.sort &&
+            @v.reduce(true) do |val, kv|
             val && PedanticMapEntryEquals.new(kv).matches?(@actual)
           end
         when Proc then
