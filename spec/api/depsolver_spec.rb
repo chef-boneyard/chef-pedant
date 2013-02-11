@@ -512,6 +512,38 @@ describe "Depsolver API endpoint", :depsolver do
         end
       end
 
+      context "CHEF-3813: Return cookbook dependency metadata when a cookbook has dependencies" do
+
+        before :all do
+          make_cookbook(admin_user, "foo", "1.0.0")
+          make_cookbook(admin_user, "bar", "2.0.0", {:dependencies => {"foo" => "> 0.0.0"}})
+          make_cookbook(admin_user, "baz", "3.0.0")
+          make_cookbook(admin_user, "quux", "4.0.0", {:dependencies => {"bar" => "= 2.0.0", "baz" => "= 3.0.0"}})
+        end
+
+        after :all do
+          delete_cookbook(admin_user, "foo", "1.0.0")
+          delete_cookbook(admin_user, "bar", "2.0.0")
+          delete_cookbook(admin_user, "baz", "3.0.0")
+          delete_cookbook(admin_user, "quux", "4.0.0")
+        end
+
+        it "returns dependencies" do
+          post(api_url("/environments/_default/cookbook_versions"), normal_user,
+               :payload => {"run_list" => ["quux"]}) do |response|
+
+            response.should have_status_code 200
+
+            json = parse(response)
+
+            json["foo"]["metadata"]["dependencies"].should eq({})
+            json["bar"]["metadata"]["dependencies"].should eq({"foo" => "> 0.0.0"})
+            json["baz"]["metadata"]["dependencies"].should eq({})
+            json["quux"]["metadata"]["dependencies"].should eq({"bar" => "= 2.0.0", "baz" => "= 3.0.0"})
+          end
+        end
+      end
+
       # TODO: Check with a cookbook that has some files in segments since we also get
       # back URLs
     end # success cases context

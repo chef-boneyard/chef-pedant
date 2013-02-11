@@ -77,10 +77,10 @@ describe "Cookbooks API endpoint", :cookbooks do
     end # without existing cookbooks
 
     context "with existing cookbooks and multiple versions" do
-      let(:expected_response) { fetch_cookbook_success_exact_response }
+      let(:expected_response) { fetch_cookbook_collection_success_exact_response }
       let(:request_url) { api_url("/cookbooks?num_versions=#{num_versions}") }
 
-      let(:fetched_cookbook) { cookbook_collection }
+      let(:fetched_cookbooks) { cookbook_collection }
 
       let(:cookbook_name) { "cookbook_name" }
       let(:cookbook_name2) { "cookbook_name2" }
@@ -99,11 +99,11 @@ describe "Cookbooks API endpoint", :cookbooks do
         }
       end
 
-      before(:all) do
+      before(:each) do
         setup_cookbooks(cookbooks)
       end
 
-      after(:all) do
+      after(:each) do
         remove_cookbooks(cookbooks)
       end
 
@@ -111,8 +111,8 @@ describe "Cookbooks API endpoint", :cookbooks do
         let(:num_versions) { 0 }
         let(:cookbook_collection) do
           {
-            cookbook_name  => { "url" => cookbook_url(cookbook_name) },
-            cookbook_name2 => { "url" => cookbook_url(cookbook_name2) }
+            cookbook_name  => { "url" => cookbook_url(cookbook_name), "versions" => [] },
+            cookbook_name2 => { "url" => cookbook_url(cookbook_name2), "versions" => [] }
           }
         end
 
@@ -265,10 +265,21 @@ describe "Cookbooks API endpoint", :cookbooks do
 
     let(:fetched_cookbook) do
       # NOTE: the cookbook returned will actually have some recipe
-      # data. We aren't checking for that here, because we don't have
-      # a nice way to do the required soft verification for the URL
-      # and checksum.
-      minimal_cookbook(cookbook_name, cookbook_version)
+      # data. We don't yet have a nice way to do the required soft
+      # verification for the URL and checksum.
+      #
+      # To get around this, we'll just pass in a proc that asserts
+      # that the "recipes" key is an array of hashes with the correct
+      # keys.
+      retrieved_cookbook(cookbook_name,
+                         cookbook_version,
+                         :recipes => lambda{|recipes|
+                           recipes.is_a?(Array) &&
+                           recipes.all?{|recipe|
+                             recipe.is_a?(Hash) &&
+                             recipe.keys.sort == ["name", "path", "checksum", "specificity", "url"].sort
+                           }
+                         })
     end
 
     context 'as a normal user' do

@@ -265,7 +265,7 @@ describe "Cookbooks API endpoint", :cookbooks do
           response.
             should look_like({
                                :status => ruby? ? 200 : 201,
-                               :body => full_cookbook(cookbook_name, cookbook_version,
+                               :body => retrieved_cookbook(cookbook_name, cookbook_version,
                                                       opts)
                              })
         end

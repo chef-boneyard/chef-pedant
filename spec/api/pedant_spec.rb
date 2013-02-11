@@ -88,38 +88,142 @@ describe 'Pedant Self-Diagnostic', :pedantic do
   end
 
   context 'Matchers' do
-    describe 'have_entry' do
-      let(:value) { 1 }
 
-      it 'should accept an integer' do
-        { a: 1, b: 1 }.should have_entry [ :a, 1 ]
+    describe 'strictly_match' do
+      it "works with plain hashes" do
+        # Positive case
+        {:a => 1, :b => 2}.should strictly_match({:b => 2, :a => 1})
+
+        # Negative case
+        {:a => 1, :b => 2}.should_not strictly_match({:b => 2, :a => 3})
       end
 
-      it 'should accept a String' do
-        { a: 'Foo', b: 'Bar' }.should have_entry [ :a, 'Foo' ]
+      it "works with regex keys" do
+        # Positive case
+        {:x => "bigfoot"}.should strictly_match({:x => /.*foo.*/})
+
+        # Negative case
+        {:x => "bigfoot"}.should_not strictly_match({:x => /.*bar.*/})
       end
 
+      it "works with arrays of scalars, treating them as sets" do
+        # Positive case
+        {:x => "foo", :y => [3,2,1]}.should strictly_match({:x => "foo", :y => [1,2,3]})
 
-      it 'should accept an Array' do
-        { a: [1,2,3] }.should have_entry [ :a, [2,3,1] ]
+        # Negative case
+        {:x => "foo", :y => [3,2,1]}.should_not strictly_match({:x => "foo", :y => [1,2,3,3,3]})
       end
 
-      it 'should accept an Array of Hashes' do
-        { a: [{b: 2}, {c: 3}] }.should have_entry [ :a, [{c: 3}, {b:2}] ]
+      it "works with hash values" do
+        # Positive case
+        {
+          :x => "foo",
+          :y => {:foo => 1, :bar => 2}
+        }.should strictly_match({
+                                  :x => "foo",
+                                  :y => {:foo => 1, :bar => 2}
+                                })
+
+        # Negative case
+        {
+          :x => "foo",
+          :y => {:foo => 1, :bar => 2}
+        }.should_not strictly_match({
+                                      :x => "foo",
+                                      :y => {:foo => 42, :bar => 2}
+                                    })
       end
 
-      it 'should accept a Hash' do
-        { a: { b: 3 } }.should have_entry [ :a, {b: 3} ]
-      end
+      it "should work with nested hashes of specs" do
+        # Positive case
+        {
+          :x => 123,
+          :y => {:foo => "bigfoot", :bar => [3,2,1]}
+        }.should strictly_match({
+                                  :x => 123,
+                                  :y => {
+                                    :foo => /.*foo.*/,
+                                    :bar => [1,2,3]
+                                  }
+                                })
 
-      it 'should accept a Proc' do
-        { a: 1 }.should have_entry [ :a, ->(a) { a == 1 } ]
-        { a: 1 }.should_not have_entry [ :a, ->(a) { a == 2 } ]
-      end
+        # Negative case
+        {:x => 123,
+          :y => {:foo => "bigfoot", :bar => [3,2,1]}
+        }.should_not strictly_match({
+                                      :x => 123,
+                                      :y => {
+                                        :foo => /.*bar.*/,
+                                        :bar => [1,2,3]
+                                      }})
 
-      it 'should accept a closure' do
-        { a: value }.should have_entry [ :a, ->(a) { a == value } ]
       end
     end
+
+    describe 'loosely_match' do
+      it "works with plain hashes" do
+        # Positive case
+        {:a => 1, :b => 2}.should loosely_match({:a => 1})
+
+        # Negative case
+        {:a => 1, :b => 2}.should_not loosely_match({:a => 3})
+      end
+
+      it "works with regex keys" do
+        # Positive case
+        {:y => 123, :x => "bigfoot"}.should loosely_match({:x => /.*foo.*/})
+
+        # Negative case
+        {:y => 123, :x => "bigfoot"}.should_not loosely_match({:x => /.*bar.*/})
+      end
+
+      it "works with arrays of scalars, treating them as sets" do
+        # Positive case
+        {:x => "foo", :y => [3,2,1]}.should loosely_match({:y => [1,2,3]})
+
+        # Negative case
+        {:x => "foo", :y => [3,2,1]}.should_not loosely_match({:y => [1,2,3,3,3]})
+      end
+
+      it "works with hash values" do
+        # Positive case
+        {
+          :x => "foo",
+          :y => {:foo => 1, :bar => 2}
+        }.should loosely_match({
+                                 :y => {:foo => 1, :bar => 2}
+                               })
+
+        # Negative case
+        {
+          :x => "foo",
+          :y => {:foo => 1, :bar => 2}
+        }.should_not loosely_match({
+                                     :y => {:foo => 42, :bar => 2}
+                                   })
+      end
+
+      it "should work with nested hashes of specs" do
+        # Positive case
+        {
+          :x => 123,
+          :y => {:foo => "bigfoot", :bar => [3,2,1]}
+        }.should loosely_match({
+                                 :y => {
+                                   :foo => /.*foo.*/
+                                 }
+                               })
+
+        # Negative case
+        {:x => 123,
+          :y => {:foo => "bigfoot", :bar => [3,2,1]}
+        }.should_not loosely_match({
+                                     :y => {
+                                       :foo => /.*bar.*/
+                                     }})
+
+      end
+    end
+
   end
 end
