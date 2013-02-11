@@ -433,6 +433,12 @@ module Pedant
           platform.api_url(path_fragment)
         end
 
+        # As api_url, but reference the internal server address.  Currently
+        # only applicable for multi-tentant platforms.
+        def internal_api_url(path_fragment)
+          platform.internal_api_url(path_fragment)
+        end
+
         # Given a response object, verify the HTTP status is in the
         # 200-ish success range and raise an error if it is not. This
         # is intended to be used in helper/util modules where we want
