@@ -33,7 +33,7 @@ describe "Cookbook Versions API endpoint, GET", :cookbooks do
   let(:fetch_cookbook_version_success_exact_response) do
     {
       :status => 200,
-      :body_exact => full_cookbook(cookbook_name, cookbook_version)
+      :body_exact => retrieved_cookbook(cookbook_name, cookbook_version)
     }
   end
   let(:cookbook_version_not_found_exact_response) do

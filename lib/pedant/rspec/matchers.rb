@@ -16,78 +16,129 @@
 module RSpec
   module Matchers
 
-    # Determines if a given [key, value] array matches a map.
-    # Processing is different depending on the class of the value.
-    # Used in the `look_like` matcher; see documentation of that for
-    # more.
-    def have_entry(expected)
-      PedanticMapEntryEquals.new(expected)
+    def strictly_match(expected)
+      PedantHashComparator.new(expected, :strict)
     end
 
-    class PedanticMapEntryEquals
-      def initialize(expectation)
-        @expectation = expectation
+    def loosely_match(expected)
+      PedantHashComparator.new(expected, :loose)
+    end
+
+    class PedantHashComparator
+      def initialize(expected, mode=:strict)
+
+        @expected = expected
+        @mode = mode
       end
 
-      def matches?(target)
-        @target = target
+      attr_reader :expected
 
-        @k = @expectation[0]
-        @v = @expectation[1]
+      def strict?
+        @mode == :strict
+      end
 
-        @actual = @target[@k]
+      def matches?(actual)
 
-        case @v
-        when Regexp then
-          @actual =~ @v
-        when Array then
-          # We don't really care about the order, just the contents
-          begin
-            @actual.sort == @v.sort
-          rescue
-            # If the items cannot be sorted (e.g. Hashes), look for
-            # them one by one.  This requires you to specify the EXACT
-            # item!
-            #
-            # So far, this appears to be mainly of use for verifying
-            # search results.
-            #
-            # NOTE: If the items are Hashes, they must be exact matches!
-            #
-            # TODO: If we start testing against very large search
-            # results, this should be revisited, as this becomes very
-            # inefficient.
+        @actual = actual
 
-            # might have recieved back nil as the result
-            # need to cut short the rest of the logic to provide a
-            # better message
-            return false if @actual.nil?
+        return false unless actual.is_a? Hash
 
-            size_is_same = (@actual.size == @v.size)
-            all_items_included = @v.all? { |item| @actual.include?(item) }
-            size_is_same && all_items_included
+        if strict?
+          keys_match = (expected.keys.sort == actual.keys.sort)
+
+          # if they keys don't match, we can short-circuit here
+          return false unless keys_match
+        end
+
+        @expected.keys.all? do |key|
+          spec = @expected[key]
+          value = actual[key]
+
+          case spec
+          when Regexp
+            spec =~ value
+          when Array
+            # we care about contents, not order; i.e., treat them
+            # (kind of) like sets
+            begin
+              spec.sort == value.sort
+            rescue
+              # If the items cannot be sorted (e.g. Hashes), look for
+              # them one by one.  This requires you to specify the EXACT
+              # item!
+              #
+              # So far, this appears to be mainly of use for verifying
+              # search results.
+              #
+              # NOTE: If the items are Hashes, they must be exact matches!
+              #
+              # TODO: If we start testing against very large search
+              # results, this should be revisited, as this becomes very
+              # inefficient.
+
+              # might have recieved back nil as the result
+              # need to cut short the rest of the logic to provide a
+              # better message
+              return false if @actual.nil?
+
+              size_is_same = (spec.size == value.size)
+              all_items_included = spec.all? { |item| value.include?(item) }
+              size_is_same && all_items_included
+            end
+          when Hash
+            PedantHashComparator.new(spec, @mode).matches?(value)
+          when Proc then
+            spec.call(value)
+          else
+            spec == value
           end
-        when Hash then
-          @v.reduce(true) do |val, kv|
-            val && PedanticMapEntryEquals.new(kv).matches?(@actual)
-          end
-        when Proc then
-          @v.call(@actual)
+        end
+      end # matches?
+
+      def description
+        if strict?
+          "respond with all keys matching"
         else
-          @actual == @v
+          "respond with all specified keys matching"
         end
       end
 
-      def description
-        "respond with exact keys"
+      def failure_message_for_should
+        """
+Expected a #{strict? ? "full" : "partial"} match of the result
+
+  #{PP.pp(@actual, "")}
+
+to the spec
+
+  #{PP.pp(@expected, "")}
+
+to succeed, but it didn't!
+"""
       end
 
-      def failure_message_for_should
-        "'#{@k}' should match '#{@v}', but we got '#{@actual}' instead."
+      def failure_message_for_should_not
+        """
+Expected a #{strict? ? "full" : "partial"} match of the result
+
+  #{PP.pp(@actual, "")}
+
+to the spec
+
+  #{PP.pp(@expected, "")}
+
+to fail, but it succeeded!
+"""
       end
+
+
+
+
     end
   end
-end
+end # PedantHashComparator
+
+
 
 
 RSpec::Matchers.define :have_status_code do |code|
@@ -218,13 +269,10 @@ RSpec::Matchers.define :look_like do |expected_response_spec|
           # :body_exact implies that there should be no keys that are
           # untested, i.e., you test everything that's there
           if expected_body_spec.is_a?(Hash)
-            parsed_json.class.should == Hash
             if expected_response_spec[:body_exact]
-              parsed_json.keys.sort.should == expected_body_spec.keys.sort
-            end
-
-            expected_body_spec.each do |kv|
-              parsed_json.should have_entry kv
+              parsed_json.should strictly_match expected_body_spec
+            else # just a body spec (looser)
+              parsed_json.should loosely_match expected_body_spec
             end
           else
             parsed_json.should == expected_body_spec
