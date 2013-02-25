@@ -245,15 +245,20 @@ describe "Cookbooks API endpoint", :cookbooks do
         respects_maximum_payload_size
       end
 
-      it "allows creation of a minimal cookbook with no data" do
-        payload = minimal_cookbook(cookbook_name, cookbook_version)
+      it "allows creation of a minimal cookbook with no data", :focus do
+
+        # Since PUT returns the same thing it was given, we'll just
+        # define the input in terms of the response, since we use that
+        # elsewhere in the test suite.
+        payload = retrieved_cookbook(cookbook_name, cookbook_version)
+
         put(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
             admin_user,
             :payload => payload) do |response|
           response.
             should look_like({
                                :status => ruby? ? 200 : 201,
-                               :body => minimal_response(cookbook_name, cookbook_version)
+                               :body => payload
                              })
         end
       end # it allows creation of a minimal cookbook with no data
@@ -309,7 +314,7 @@ describe "Cookbooks API endpoint", :cookbooks do
         admin_user) do |response|
         response.should look_like({
                                    :status => 200,
-                                   :body_exact => payload
+                                   :body_exact => retrieved_cookbook(cookbook_name, cookbook_version1)
                                   })
       end
 
@@ -317,7 +322,7 @@ describe "Cookbooks API endpoint", :cookbooks do
         admin_user) do |response|
         response.should look_like({
                                    :status => 200,
-                                   :body_exact => payload2
+                                   :body_exact => retrieved_cookbook(cookbook_name, cookbook_version2)
                                   })
       end
     end # it allows us to create 2 versions of the same cookbook

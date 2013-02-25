@@ -501,13 +501,24 @@ describe "Depsolver API endpoint", :depsolver do
       }
 
       it "returns 200 with a minimal good cookbook", :smoke do
+
+        cb = retrieved_cookbook(cookbook_name, cookbook_version)
+
+        # We filter out some additional metadata fields for the depsolver endpoint
+        unless(ruby?)
+          meta = cb["metadata"]
+          meta.delete("attributes")
+          meta.delete("long_description")
+          cb["metadata"] = meta
+        end
+
         post(api_url("/environments/#{env}/cookbook_versions"), normal_user,
-            :payload => payload) do |response|
+             :payload => payload) do |response|
           response.should look_like({
-                                     :status => 200,
-                                     :body_exact => {
-                                         cookbook_name => minimal_cookbook(cookbook_name, cookbook_version)
-                                     }
+                                      :status => 200,
+                                      :body_exact => {
+                                        cookbook_name => cb
+                                      }
                                     })
         end
       end
