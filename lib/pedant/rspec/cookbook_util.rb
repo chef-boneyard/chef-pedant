@@ -231,68 +231,9 @@ module Pedant
         upload_cookbook(requestor, name, version, payload)
       end
 
-      def make_minimal_cookbook(requestor, name, version)
-        upload_cookbook(requestor, name, version,
-                        minimal_cookbook(name, version))
-      end
-
       def upload_cookbook(requestor, name, version, payload)
         put(api_url("/cookbooks/#{name}/#{version}"),
             requestor, :payload => payload)
-      end
-
-      # The smallest known working cookbook
-      def minimal_cookbook(name, version)
-        {
-          "name" => "#{name}-#{version}",
-          "version" => version,
-          "cookbook_name" => name,
-          "json_class" => "Chef::CookbookVersion",
-          "chef_type" => "cookbook_version",
-          "frozen?" => false,
-          "recipes" => [],
-          "metadata" => {
-            "version" => version,
-            "name" => name,
-            "maintainer"=>"YOUR_COMPANY_NAME",
-            "maintainer_email"=>"YOUR_EMAIL",
-            "description"=>"A fabulous new cookbook",
-            "license"=>"none",
-            "recipes"=>{},
-            "dependencies"=>{}
-          }
-        }
-      end
-
-      def minimal_response(name, version)
-        if (ruby?)
-          {
-            "name" => "#{name}-#{version}",
-            "cookbook_name" => name,
-              "json_class" => "Chef::CookbookVersion",
-              "chef_type" => "cookbook_version",
-              "metadata" => {
-              "description" => default_description,
-              "long_description" => default_long_description,
-              "maintainer" => default_maintainer,
-              "maintainer_email" => default_maintainer_email,
-              "license" => default_license,
-              "platforms" => {},
-              "dependencies" => {},
-              "recommendations" => {},
-              "suggestions" => {},
-              "conflicting" => {},
-              "providing" => {},
-              "replacing" => {},
-              "attributes" => {},
-              "groupings" => {},
-              "recipes" => {},
-              "version" => version
-            }
-          }
-        else
-          minimal_cookbook(name, version)
-        end
       end
 
       def new_cookbook(name, version, opts = {})
@@ -362,27 +303,55 @@ module Pedant
       # the API because it's not used by the client and wastes
       # bandwidth
       def retrieved_cookbook(name, version, opts = {})
-        {
+        cookbook = {
           "name" => "#{name}-#{version}",
-          "cookbook_name" => name,
           "version" => version,
+          "cookbook_name" => name,
           "json_class" => "Chef::CookbookVersion",
           "chef_type" => "cookbook_version",
-          "recipes" => opts[:recipes] || [],
-          "metadata" => {
-            "name" => name,
-            "description" => opts[:description] || default_description,
-            "long_description" => opts[:long_description] || default_long_description,
-            "maintainer" => opts[:maintainer] || default_maintainer,
-            "maintainer_email" => opts[:maintainer_email] || default_maintainer_email,
-            "license" => opts[:license] || default_license,
-            "dependencies" => {},
-            "attributes" => {},
-            "recipes" => opts[:meta_recipes] || {},
-            "version" => version
-          },
-          "frozen?" => opts[:frozen] || false
+          "frozen?" => opts[:frozen] || false,
+          "recipes" => opts[:recipes] || []
         }
+
+        all_metadata = {
+          "attributes" => {},
+          "conflicting" => {},
+          "dependencies" => {},
+          "description" => opts[:description] || default_description,
+          "groupings" => {},
+          "license" => opts[:license] || default_license,
+          "long_description" => opts[:long_description] || default_long_description,
+          "maintainer" => opts[:maintainer] || default_maintainer,
+          "maintainer_email" =>  opts[:maintainer_email] || default_maintainer_email,
+          "name" => name,
+          "platforms" => {},
+          "providing" => {},
+          "recipes" => opts[:meta_recipes] || {},
+          "recommendations" => {},
+          "replacing" => {},
+          "suggestions" => {},
+          "version" => version
+        }
+
+        # These are fields that Ruby endpoint responses keep in the
+        # metadata, but that the Erlang response filters out.
+        extra_fields = ["conflicting",
+                        "groupings",
+                        "platforms",
+                        "providing",
+                        "recommendations",
+                        "replacing",
+                        "suggestions"]
+
+        metadata = if(ruby?)
+                     all_metadata
+                   else
+                     all_metadata.reject!{|k| extra_fields.include?(k)}
+                   end
+
+        cookbook["metadata"] = metadata
+
+        cookbook
       end
 
       # Create a dummy recipe for a cookbook recipe manifest.  The
