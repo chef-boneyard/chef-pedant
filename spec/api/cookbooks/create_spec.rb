@@ -245,7 +245,7 @@ describe "Cookbooks API endpoint", :cookbooks do
         respects_maximum_payload_size
       end
 
-      it "allows creation of a minimal cookbook with no data", :focus do
+      it "allows creation of a minimal cookbook with no data" do
 
         # Since PUT returns the same thing it was given, we'll just
         # define the input in terms of the response, since we use that
