@@ -44,7 +44,7 @@ describe "/environments/ENVIRONMENT/recipes API endpoint", :environments do
   def self.should_respond_with_success(message)
     it ["should respond with 200 OK", message].compact.join(' ') do
       should have_status_code 200
-      parsed_response.should eq expected_recipes
+      parsed_response.should =~ expected_recipes
     end
   end
 

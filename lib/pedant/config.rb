@@ -66,7 +66,7 @@ module Pedant
       if junit_file
         args.concat(%W[-r rspec_junit_formatter -f RspecJunitFormatter -o #{junit_file} -f documentation])
       else
-        args.concat(%w[ --color -f documentation ])
+        args.concat(%w[ --color -f documentation --tty])
       end
       
       # Always use the failures formatter, in case we want to rerun failures
