@@ -45,9 +45,40 @@ module Pedant
         'Accept' => 'application/json',
         'Content-Type' => 'application/json',
         'User-Agent' => 'chef-pedant rspec tests',
-        'X-Chef-Version' => KNIFE_VERSION
+        'X-Chef-Version' => KNIFE_VERSION,
+        'X-Ops-Darklaunch' => x_darklaunch_header
       }
     end
+
+    def x_darklaunch_header
+      @_x_darklaunch_header ||= x_darklaunch_features.to_a.map { |k,v| "#{k}=#{v}" }.join(';')
+    end
+
+    X_DARKLAUNCH_ALL_ERLANG =
+      { couchdb_checksums:    false,
+        couchdb_clients:      false,
+        couchdb_cookbooks:    false,
+        couchdb_environments: false,
+        couchdb_roles:        false,
+        couchdb_data:         false  }
+
+    X_DARKLAUNCH_ALL_RUBY =
+      { couchdb_checksums:    true,
+        couchdb_clients:      true,
+        couchdb_cookbooks:    true,
+        couchdb_environments: true,
+        couchdb_roles:        true,
+        couchdb_data:         true   }
+
+    # If it is set to nil, then do not explicitly set darklaunch headers
+    def x_darklaunch_features
+      case Pedant::Config.couchdb
+      when true  then X_DARKLAUNCH_ALL_RUBY
+      when false then X_DARKLAUNCH_ALL_ERLANG
+      else {}
+      end
+    end
+
 
     # Execute an authenticated request against a Chef Server
     #

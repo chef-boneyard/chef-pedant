@@ -17,7 +17,7 @@ require 'optparse'
 
 module Pedant
 
-  class CommandLine < Struct.new(:junit_file, :config_file, :log_file, :include_internal, :only_internal, :run_all, :verify_error_messages, :bell_on_completion, :rerun)
+  class CommandLine < Struct.new(:junit_file, :config_file, :log_file, :include_internal, :only_internal, :run_all, :verify_error_messages, :bell_on_completion, :rerun, :couchdb)
 
     def initialize(argv)
       @argv = argv.dup
@@ -96,6 +96,14 @@ module Pedant
 
       opts.on("--rerun", "Run tests that failed the last time") do
         self.rerun = true
+      end
+
+      opts.on("--sql", "Run in SQL/Erchef mode with explicit X-Ops-Darklaunch headers") do
+        self.couchdb = false
+      end
+
+      opts.on("--couchdb", "Run in SQL/Erchef mode with explicit X-Ops-Darklaunch headers") do
+        self.couchdb = true
       end
     end
 

@@ -42,6 +42,15 @@ module Pedant
       # values set in the default Pedant::Config class OR user provided config
       # file
       non_nil_cli_options = cli_options.to_hash.delete_if{|key, value| value.nil? }
+
+      # If --sql or --couchdb is specified, then we override config
+      # If the value is nil, then it is not specified on the commandline. So we
+      # use a case statement here instead of an if.
+      unless non_nil_cli_options[:couchdb].nil?
+        _is_couchdb = non_nil_cli_options[:couchdb]
+        %w(search role sandbox node environment data cookbook client).inject(non_nil_cli_options) { |h,k| h[:"ruby_#{k}_endpoint?"] = _is_couchdb; h }
+      end
+
       merge!(non_nil_cli_options)
     end
 
