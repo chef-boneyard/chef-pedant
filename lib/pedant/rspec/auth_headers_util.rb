@@ -110,6 +110,10 @@ module Pedant
         # - Empty value
         # - Malformed value
         # - Well-formed but incorrect value
+        #
+        # Note that leading and trailing white space is not included
+        # in header values by RFC2616. So the behavior of an empty
+        # header value should match that of a missing header value.
 
         # Everything correct
         let(:response) do
@@ -153,7 +157,8 @@ module Pedant
           # X-Ops-Userid
           with_modified_auth_headers('missing X-Ops-Userid', 400, :user_id => nil,
                                      :pending => true)
-          with_modified_auth_headers('empty X-Ops-Userid', 401, :user_id => '',
+          # an empty header should be treated as missing by the server
+          with_modified_auth_headers('empty X-Ops-Userid', 400, :user_id => '',
                                      :pending => true)
           with_modified_auth_headers('nonexistent username in X-Ops-Userid', 401,
                                      :user_id => 'nowaythisexists')
@@ -170,8 +175,10 @@ module Pedant
 
           # X-Ops-Timestamp
           with_modified_auth_headers('missing X-Ops-Timestamp', 400, :timestamp => nil)
-          with_modified_auth_headers('empty X-Ops-Timestamp', 401,
-                                     :timestamp => '')
+          # empty should behave just like missing
+          with_modified_auth_headers('empty X-Ops-Timestamp', 400,
+                                     :timestamp => '',
+                                     :pending => ruby?)
           with_modified_auth_headers('malformed X-Ops-Timestamp', 401,
                                      :timestamp => 'xxx')
           with_modified_auth_headers('old X-Ops-Timestamp', 401,
@@ -195,7 +202,7 @@ module Pedant
 
           # X-Ops-Content-Hash: hashed body of request
           with_modified_auth_headers('missing X-Ops-Content-Hash', 400, :hashed_body => nil)
-          with_modified_auth_headers('empty X-Ops-Content-Hash', 401, :hashed_body => '')
+          with_modified_auth_headers('empty X-Ops-Content-Hash', 400, :hashed_body => '', :pending => ruby?)
           with_modified_auth_headers('malformed X-Ops-Content-Hash', 401, :hashed_body => 'xxx')
           with_modified_auth_headers('when body does not match X-Ops-Content-Hash and signature', 401,
                                      :hashed_body => digester.hash_string('{thisisnotevenjson}'))
@@ -212,6 +219,9 @@ module Pedant
           # X-Ops-Authorization-\d+: 1-n lines of signature
           with_modified_auth_headers('missing signature in X-Ops-Authorization-', 401, :signature => nil)
           with_modified_auth_headers('malformed signature in X-Ops-Authorization-', 401, :signature => 'xxx')
+          # Note that an empty signature doesn't really end up empty
+          # in the request. This actually results in the empty string
+          # being signed and base 64 encoded.
           with_modified_auth_headers('empty signature in X-Ops-Authorization-', 401, :signature => '')
           context 'missing line 1 in signature in X-Ops-Authorization-', :authentication do
             let(:auth_headers) do
