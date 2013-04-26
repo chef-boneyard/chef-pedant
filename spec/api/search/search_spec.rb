@@ -379,6 +379,31 @@ describe 'Search API endpoint', :search do
 
 #        perform_a_search_that_returns_no_results
 
+        # Fix for http://tickets.opscode.com/browse/CHEF-3975
+        context "with nested keys (CHEF-3975)" do
+          let(:items) { [ alice, bob, carol ] }
+          let(:alice) { { 'id' => "alice", 'ssh' => { 'public_key' => "---RSA Public Key--- Alice", 'private_key' => "---RSA Private Key-- Alice" } } }
+          let(:bob)   { { 'id' => "bob",   'ssh' => { 'public_key' => "---RSA Public Key--- Bob",   'private_key' => "---RSA Private Key-- Bob" } } }
+          let(:carol) { { 'id' => "carol", 'ssh' => { 'noise' => "6b6e0824d5b85a3cd209b279bba3d5ea9df6aae891eab056521953ecb36466c8" } } }
+
+          context "when searching a nested key", :smoke do
+            let(:request_query_parameters) {"q=ssh_public_key:*"}
+            let(:search_result_items) do
+              [ search_result_databag_item(data_bag_name, 'alice', alice),
+                search_result_databag_item(data_bag_name, 'bob',   bob) ]
+            end
+
+            performing_a_search 'should succeed'
+          end
+
+          context "when searching a nested key prefixed by raw_data_" do
+            let(:request_query_parameters) {"q=raw_data_ssh_public_key:*"}
+            let(:search_result_items) { [] } # We should not get anything back
+
+            performing_a_search 'should return no results'
+          end
+        end
+
       end #existing data bag
     end # GET
 
@@ -404,6 +429,37 @@ describe 'Search API endpoint', :search do
                                        }
                                      }]}
           performing_a_search "should succeed"
+        end
+
+        # Fix for http://tickets.opscode.com/browse/CHEF-3975
+        context "with nested keys (CHEF-3975)" do
+          let(:items) { [ alice, carol ] }
+          let(:alice) { { 'id' => "alice", 'ssh' => { 'public_key' => "---RSA Public Key--- Alice", 'private_key' => "---RSA Private Key-- Alice" } } }
+          let(:carol) { { 'id' => "carol", 'ssh' => { 'noise' => "6b6e0824d5b85a3cd209b279bba3d5ea9df6aae891eab056521953ecb36466c8" } } }
+
+          context "when searching a nested key", :smoke do
+            let(:request_query_parameters) {"q=ssh_public_key:*"}
+            let(:request_payload) { { 'private_key' => %w(ssh private_key), 'public_key' => %w(ssh public_key) } }
+            let(:search_result_items) do
+              [ {
+                  'url'  => api_url("/data/#{data_bag_name}/#{alice['id']}"),
+                  'data' => {
+                    'private_key' => alice['ssh']['private_key'],
+                    'public_key'  => alice['ssh']['public_key'],
+                  }
+              }]
+            end
+
+            performing_a_search 'should succeed'
+          end
+
+          context "when searching a nested key prefixed by raw_data_" do
+            let(:request_query_parameters) {"q=raw_data_ssh_public_key:*"}
+            let(:request_payload) { { 'private_key' => %w(ssh private_key), 'public_key' => %w(ssh public_key) } }
+            let(:search_result_items) { [] } # We should not get anything back
+
+            performing_a_search 'should return no results'
+          end
         end
 
         test_bad_partial_search_bodies
