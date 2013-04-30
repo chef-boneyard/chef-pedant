@@ -414,67 +414,61 @@ describe "Environments API Endpoint", :environments do
           end
 
           context "for versions" do
-            succeeds_with_value("cookbook_versions", {"cookbook" => ">= 1.0.0"},
-                                nil, true)
-            succeeds_with_value("cookbook_versions", {"cookbook" => ">= 1.0"},
-                                nil, true)
-            succeeds_with_value("cookbook_versions", {"cookbook" => "<= 1.0.0"},
-                                nil, true)
-            succeeds_with_value("cookbook_versions", {"cookbook" => "> 1.0.0"},
-                                nil, true)
-            succeeds_with_value("cookbook_versions", {"cookbook" => "< 1.0.0"},
-                                nil, true)
-            succeeds_with_value("cookbook_versions", {"cookbook" => "= 1.0.0"},
-                                nil, true)
-            succeeds_with_value("cookbook_versions", {"cookbook" => "~> 1.0.0"},
-                                nil, true)
-            succeeds_with_value("cookbook_versions", {"cookbook" => nil}, nil, true)
-            succeeds_with_value("cookbook_versions", {"cookbook" => []}, nil, true)
-            succeeds_with_value("cookbook_versions", {"cookbook" => [">= 1.0.0"]},
-                                nil, true)
+            succeeds_with_value("cookbook_versions", {"cookbook" => ">= 1.0.0"}, nil, true)
+            succeeds_with_value("cookbook_versions", {"cookbook" => ">= 1.0"}, nil, true)
+            succeeds_with_value("cookbook_versions", {"cookbook" => "<= 1.0.0"}, nil, true)
+            succeeds_with_value("cookbook_versions", {"cookbook" => "> 1.0.0"}, nil, true)
+            succeeds_with_value("cookbook_versions", {"cookbook" => "< 1.0.0"}, nil, true)
+            succeeds_with_value("cookbook_versions", {"cookbook" => "= 1.0.0"}, nil, true)
+            succeeds_with_value("cookbook_versions", {"cookbook" => "~> 1.0.0"}, nil, true)
+            succeeds_with_value("cookbook_versions", {"cookbook" => "1.0.0"}, nil, true)
 
-            # These all cause internal server errors in Ruby
-            fails_with_value("cookbook_versions", {"cookbook" => ">= 1.0.0.0"},
-                             "Invalid value '>= 1.0.0.0' for cookbook_versions", true,
-                             ruby? ? true : false)
-            fails_with_value("cookbook_versions", {"cookbook" => ">= 1,0,0"},
-                             "Invalid value '>= 1,0,0' for cookbook_versions", true,
-                             ruby? ? true : false)
-            fails_with_value("cookbook_versions", {"cookbook" => ">= 1"},
-                             "Invalid value '>= 1' for cookbook_versions", true,
-                             ruby? ? true : false)
-            fails_with_value("cookbook_versions", {"cookbook" => ">= 1.a.b"},
-                             "Invalid value '>= 1.a.b' for cookbook_versions", true,
-                             ruby? ? true : false)
-            fails_with_value("cookbook_versions", {"cookbook" => ">= 1.0rc1"},
-                             "Invalid value '>= 1.0rc1' for cookbook_versions", true,
-                             ruby? ? true : false)
-            fails_with_value("cookbook_versions", {"cookbook" => ">=1.0.0"},
-                             "Invalid value '>=1.0.0' for cookbook_versions", true,
-                             ruby? ? true : false)
-            fails_with_value("cookbook_versions", {"cookbook" => " >= 1.0.0"},
-                             "Invalid value ' >= 1.0.0' for cookbook_versions", true,
-                             ruby? ? true : false)
-            fails_with_value("cookbook_versions", {"cookbook" => ">=  1.0.0"},
-                             "Invalid value '>=  1.0.0' for cookbook_versions", true,
-                             ruby? ? true : false)
-            fails_with_value("cookbook_versions", {"cookbook" => [">= 1.0", ">= 2.0"]},
-                             'Invalid value \'[<<">= 1.0">>,<<">= 2.0">>]\'' +
-                             ' for cookbook_versions', true,
-                             ruby? ? true : false)
-            fails_with_value("cookbook_versions", {"cookbook" => 1},
-                             "Invalid value '1' for cookbook_versions", true,
-                             ruby? ? true : false)
-            fails_with_value("cookbook_versions", {"cookbook" => 1.1},
-                             "Invalid value '1.1' for cookbook_versions", true,
-                             ruby? ? true : false)
-            fails_with_value("cookbook_versions", {"cookbook" => ""},
-                             "Invalid value '' for cookbook_versions", true,
-                             ruby? ? true : false)
-            # This succeeds in ruby
-            fails_with_value("cookbook_versions", {"cookbook" => "1.0.0"},
-                             "Invalid value '1.0.0' for cookbook_versions", true,
-                             ruby? ? true : false)
+            # these are accepted only the ruby server --  chef-client
+            # and erchef both are more strict
+            if ruby?
+              succeeds_with_value("cookbook_versions", {"cookbook" => nil}, nil, true)
+              succeeds_with_value("cookbook_versions", {"cookbook" => []}, nil, true)
+              succeeds_with_value("cookbook_versions", {"cookbook" => [">= 1.0.0"]}, nil, true)
+            else
+              # Erlang server rejects these with stricter validation,
+              # while Ruby accepts them:
+              fails_with_value("cookbook_versions", {"cookbook" => nil},
+                               "Invalid value 'null' for cookbook_versions", true)
+              fails_with_value("cookbook_versions", {"cookbook" => [">= 1.0.0"]},
+                               "Invalid value '[huh]' for cookbook_versions", true)
+              fails_with_value("cookbook_versions", {"cookbook" => []},
+                               "Invalid value '[huh]' for cookbook_versions", true)
+            end
+
+            # These all cause internal server errors in Ruby - we'll run
+            # them only for erlang.
+            if erlang?
+              fails_with_value("cookbook_versions", {"cookbook" => ">= 1.0.0.0"},
+                               "Invalid value '>= 1.0.0.0' for cookbook_versions", true)
+              fails_with_value("cookbook_versions", {"cookbook" => ">= 1,0,0"},
+                               "Invalid value '>= 1,0,0' for cookbook_versions", true)
+              fails_with_value("cookbook_versions", {"cookbook" => ">= 1"},
+                               "Invalid value '>= 1' for cookbook_versions", true)
+              fails_with_value("cookbook_versions", {"cookbook" => ">= 1.a.b"},
+                               "Invalid value '>= 1.a.b' for cookbook_versions", true)
+              fails_with_value("cookbook_versions", {"cookbook" => ">= 1.0rc1"},
+                               "Invalid value '>= 1.0rc1' for cookbook_versions", true)
+              fails_with_value("cookbook_versions", {"cookbook" => ">=1.0.0"},
+                               "Invalid value '>=1.0.0' for cookbook_versions", true)
+              fails_with_value("cookbook_versions", {"cookbook" => " >= 1.0.0"},
+                               "Invalid value ' >= 1.0.0' for cookbook_versions", true)
+              fails_with_value("cookbook_versions", {"cookbook" => ">=  1.0.0"},
+                               "Invalid value '>=  1.0.0' for cookbook_versions", true)
+              fails_with_value("cookbook_versions", {"cookbook" => [">= 1.0", ">= 2.0"]},
+                               'Invalid value \'[<<">= 1.0">>,<<">= 2.0">>]\'' +
+                               ' for cookbook_versions', true)
+              fails_with_value("cookbook_versions", {"cookbook" => 1},
+                               "Invalid value '1' for cookbook_versions", true)
+              fails_with_value("cookbook_versions", {"cookbook" => 1.1},
+                               "Invalid value '1.1' for cookbook_versions", true)
+              fails_with_value("cookbook_versions", {"cookbook" => ""},
+                               "Invalid value '' for cookbook_versions", true)
+            end
           end
         end
       end
