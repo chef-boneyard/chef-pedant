@@ -654,8 +654,8 @@ module Pedant
         #   value:   value to use
         # new_value shouldn't normally ever be passed -- use
         # should_mot_change_metadata instead
-        def should_change_metadata(key, value, new_value = nil)
-          it "#{key} = #{value} returns 200" do
+        def should_change_metadata(key, value, new_value = nil, _expected_status = 200)
+          it "#{key} = #{value} returns #{_expected_status}" do
 
             cookbook = new_cookbook(cookbook_name, cookbook_version)
 
@@ -675,7 +675,7 @@ module Pedant
               end
 
               # The PUT response returns the payload exactly as it was sent
-              response.should look_like({:status => 200, :body_exact => put_payload})
+              response.should look_like({:status => _expected_status, :body_exact => put_payload})
             end
 
             # Verified change (or creation) happened
