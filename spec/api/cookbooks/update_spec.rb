@@ -1160,27 +1160,56 @@ describe "Cookbooks API endpoint", :cookbooks do
       end # context for license
 
       context "for collections" do
-        ['platforms', 'providing'].each do |type|
-          context "for #{type}" do
-            json_error = "Field 'metadata.#{type}' invalid"
-            if (ruby?)
-              should_change_metadata(type, [])
-            else
-              should_fail_to_change_metadata(type, [], 400, json_error)
-            end
-            should_change_metadata(type, {})
-            should_change_metadata(type, :delete)
-            if (ruby?)
-              should_change_metadata(type, "foo")
-              should_change_metadata(type, ["foo"])
-              should_change_metadata(type, {"foo" => {}})
-            else
-              should_fail_to_change_metadata(type, "foo", 400, json_error)
-              should_fail_to_change_metadata(type, ["foo"], 400, json_error)
-              should_fail_to_change_metadata(type, {"foo" => {}}, 400, "Invalid value '{[]}' for metadata.#{type}")
-            end
-          end # context for #{type}
-        end # [loop over platforms, providing]
+        context "for platforms" do
+          json_error = "Field 'metadata.platforms' invalid"
+          if (ruby?)
+            should_change_metadata(type, [])
+          else
+            should_fail_to_change_metadata('platforms', [], 400, json_error)
+          end
+          should_change_metadata('platforms', {})
+          should_change_metadata('platforms', :delete)
+          if (ruby?)
+            should_change_metadata('platforms', "foo")
+            should_change_metadata('platforms', ["foo"])
+            should_change_metadata('platforms', {"foo" => {}})
+          else
+            should_fail_to_change_metadata('platforms', "foo", 400, json_error)
+            should_fail_to_change_metadata('platforms', ["foo"], 400, json_error)
+            should_fail_to_change_metadata('platforms', {"foo" => {}}, 400, "Invalid value '{[]}' for metadata.platforms")
+          end
+        end
+
+        def self.should_change_with_metadata(_attribute, _value)
+          context "when #{_attribute} is set to #{_value}" do
+            let(:cookbook_name) { Pedant::Utility.with_unique_suffix("pedant-cookbook") }
+            # These macros need to be refactored and updated for flexibility.
+            # The cookbook endpoint uses PUT for both create and update, so this
+            # throws a monkey wrench into the mix.
+            should_change_metadata _attribute, _value, _value, 200
+          end
+        end
+
+        context "with metadata.providing", :pending => ruby? do
+          # In erchef, we are not validating the "providing" metadata
+          # See: http://tickets.opscode.com/browse/CHEF-3976
+
+          after(:each) { delete_cookbook admin_user, cookbook_name, cookbook_version }
+
+          # http://docs.opscode.com/config_rb_metadata.html#provides
+          should_change_with_metadata 'providing', 'cats::sleep'
+          should_change_with_metadata 'providing', 'here(:kitty, :time_to_eat)'
+          should_change_with_metadata 'providing', 'service[snuggle]'
+          should_change_with_metadata 'providing', ''
+          should_change_with_metadata 'providing', 1
+          should_change_with_metadata 'providing', true
+          should_change_with_metadata 'providing', ['cats', 'sleep', 'here']
+          should_change_with_metadata 'providing',
+            { 'cats::sleep'                => '0.0.1',
+              'here(:kitty, :time_to_eat)' => '0.0.1',
+              'service[snuggle]'           => '0.0.1'  }
+
+        end
 
         context "for groupings" do
           json_error = "Field 'metadata.groupings' invalid"
