@@ -110,9 +110,7 @@ describe "Cookbooks API endpoint", :cookbooks do
       end # context checking segments
 
       context "checking metadata sections" do
-        %w{platforms dependencies recommendations suggestions conflicting
-           providing replacing}.each do |section|
-
+        %w{platforms dependencies recommendations suggestions conflicting replacing}.each do |section|
           if (ruby?)
             # Some of these work, some of these crash, none of these are worth the
             # trouble of testing separately -- in all cases, behavior is undesirable
@@ -120,6 +118,39 @@ describe "Cookbooks API endpoint", :cookbooks do
             should_fail_to_create_metadata(section, "foo", 400, "Field 'metadata.#{section}' invalid")
             should_fail_to_create_metadata(section, {"foo" => malformed_constraint},
                                            400, "Invalid value '#{malformed_constraint}' for metadata.#{section}")
+          end
+        end
+        if erlang?
+          # In erchef, we are not validating the "providing" metadata
+          # See: http://tickets.opscode.com/browse/CHEF-3976
+
+          def self.should_create_with_metadata(_attribute, _value)
+            context "when #{_attribute} is set to #{_value}" do
+              let(:cookbook_name) { Pedant::Utility.with_unique_suffix("pedant-cookbook") }
+
+              # These macros need to be refactored and updated for flexibility.
+              # The cookbook endpoint uses PUT for both create and update, so this
+              # throws a monkey wrench into the mix.
+              should_change_metadata _attribute, _value, _value, 201
+            end
+          end
+
+          context "with metadata.providing" do
+            after(:each) { delete_cookbook admin_user, cookbook_name, cookbook_version }
+
+            # http://docs.opscode.com/config_rb_metadata.html#provides
+            should_create_with_metadata 'providing', 'cats::sleep'
+            should_create_with_metadata 'providing', 'here(:kitty, :time_to_eat)'
+            should_create_with_metadata 'providing', 'service[snuggle]'
+            should_create_with_metadata 'providing', ''
+            should_create_with_metadata 'providing', 1
+            should_create_with_metadata 'providing', true
+            should_create_with_metadata 'providing', ['cats', 'sleep', 'here']
+            should_create_with_metadata 'providing',
+              { 'cats::sleep'                => '0.0.1',
+                'here(:kitty, :time_to_eat)' => '0.0.1',
+                'service[snuggle]'           => '0.0.1'  }
+
           end
         end
       end # context checking metadata sections
