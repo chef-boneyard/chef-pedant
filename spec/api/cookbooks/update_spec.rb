@@ -1163,7 +1163,7 @@ describe "Cookbooks API endpoint", :cookbooks do
         context "for platforms" do
           json_error = "Field 'metadata.platforms' invalid"
           if (ruby?)
-            should_change_metadat('platforms', [])
+            should_change_metadata('platforms', [])
           else
             should_fail_to_change_metadata('platforms', [], 400, json_error)
           end
