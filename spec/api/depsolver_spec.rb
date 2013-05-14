@@ -227,8 +227,11 @@ describe "Depsolver API endpoint", :depsolver do
         post(api_url("/environments/_default/cookbook_versions"), admin_user,
              :payload => payload) do |response|
           if ruby?
+            # Ruby-chef double-encodes error
             response.should have_status_code(412)
-            parse(response).should have_key("error")
+            parsed_response = parse(response)
+            parsed_response.should have_key("error")
+            parsed_response["error"].should look_like(error_hash)
           else
             response.should look_like({
               :status => 412,
@@ -251,8 +254,11 @@ describe "Depsolver API endpoint", :depsolver do
         post(api_url("/environments/#{env}/cookbook_versions"), admin_user,
              :payload => payload) do |response|
           if ruby?
+            # Ruby-chef double-encodes error
             response.should have_status_code(412)
-            parse(response).should have_key("error")
+            parsed_response = parse(response)
+            parsed_response.should have_key("error")
+            parsed_response["error"].should look_like(error_hash)
           else
             response.should look_like({
               :status => 412,
@@ -274,8 +280,11 @@ describe "Depsolver API endpoint", :depsolver do
         post(api_url("/environments/#{no_cookbooks_env}/cookbook_versions"), admin_user,
              :payload => payload) do |response|
           if ruby?
+            # Ruby-chef double-encodes error
             response.should have_status_code(412)
-            parse(response).should have_key("error")
+            parsed_response = parse(response)
+            parsed_response.should have_key("error")
+            parsed_response["error"].should look_like(error_hash)
           else
             response.should look_like({
               :status => 412,
@@ -299,8 +308,11 @@ describe "Depsolver API endpoint", :depsolver do
         post(api_url("/environments/#{env}/cookbook_versions"), admin_user,
              :payload => payload) do |response|
           if ruby?
+            # Ruby-chef double-encodes error
             response.should have_status_code(412)
-            parse(response).should have_key("error")
+            parsed_response = parse(response)
+            parsed_response.should have_key("error")
+            parsed_response["error"].should look_like(error_hash)
           else
             response.should look_like({
               :status => 412,
@@ -322,8 +334,11 @@ describe "Depsolver API endpoint", :depsolver do
         post(api_url("/environments/#{env}/cookbook_versions"), admin_user,
              :payload => missing_version_payload) do |response|
           if ruby?
+            # Ruby-chef double-encodes error
             response.should have_status_code(412)
-            parse(response).should have_key("error")
+            parsed_response = parse(response)
+            parsed_response.should have_key("error")
+            parsed_response["error"].should look_like(error_hash)
           else
             response.should look_like({
               :status => 412,
@@ -349,8 +364,11 @@ describe "Depsolver API endpoint", :depsolver do
         post(api_url("/environments/#{env}/cookbook_versions"), admin_user,
              :payload => payload) do |response|
           if ruby?
+            # Ruby-chef double-encodes error
             response.should have_status_code(412)
-            parse(response).should have_key("error")
+            parsed_response = parse(response)
+            parsed_response.should have_key("error")
+            parsed_response["error"].should look_like(error_hash)
           else
             response.should look_like({
               :status => 412,
@@ -386,8 +404,11 @@ describe "Depsolver API endpoint", :depsolver do
         post(api_url("/environments/#{env}/cookbook_versions"), admin_user,
              :payload => payload) do |response|
           if ruby?
+            # Ruby-chef double-encodes error
             response.should have_status_code(412)
-            parse(response).should have_key("error")
+            parsed_response = parse(response)
+            parsed_response.should have_key("error")
+            parsed_response["error"].should look_like(error_hash)
           else
             response.should look_like({
               :status => 412,
@@ -422,8 +443,11 @@ describe "Depsolver API endpoint", :depsolver do
         post(api_url("/environments/#{env}/cookbook_versions"), admin_user,
              :payload => missing_version_payload) do |response|
           if ruby?
+            # Ruby-chef double-encodes error
             response.should have_status_code(412)
-            parse(response).should have_key("error")
+            parsed_response = parse(response)
+            parsed_response.should have_key("error")
+            parsed_response["error"].should look_like(error_hash)
           else
             response.should look_like({
               :status => 412,
@@ -451,8 +475,11 @@ describe "Depsolver API endpoint", :depsolver do
         post(api_url("/environments/#{env}/cookbook_versions"), admin_user,
              :payload => payload) do |response|
           if ruby?
+            # Ruby-chef double-encodes error
             response.should have_status_code(412)
-            parse(response).should have_key("error")
+            parsed_response = parse(response)
+            parsed_response.should have_key("error")
+            parsed_response["error"].should look_like(error_hash)
           else
             response.should look_like({
               :status => 412,
@@ -481,8 +508,11 @@ describe "Depsolver API endpoint", :depsolver do
         post(api_url("/environments/#{env}/cookbook_versions"), admin_user,
              :payload => payload) do |response|
           if ruby?
+            # Ruby-chef double-encodes error
             response.should have_status_code(412)
-            parse(response).should have_key("error")
+            parsed_response = parse(response)
+            parsed_response.should have_key("error")
+            parsed_response["error"].should look_like(error_hash)
           else
             response.should look_like({
               :status => 412,
