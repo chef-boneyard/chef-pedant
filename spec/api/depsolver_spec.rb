@@ -219,8 +219,6 @@ describe "Depsolver API endpoint", :depsolver do
       it "returns 412 with a non-existent cookbook in _default environment" do
         not_exist = "this_does_not_exist"
         payload = "{\"run_list\":[\"#{not_exist}\"]}"
-        error_message = "{\"message\":\"Run list contains invalid items: no such cookbook #{not_exist}.\","\
-                        "\"non_existent_cookbooks\":[\"#{not_exist}\"],\"cookbooks_with_no_versions\":[]}"
         error_hash = {
           "message" => "Run list contains invalid items: no such cookbook #{not_exist}.",
           "non_existent_cookbooks" => [ not_exist ],
@@ -228,20 +226,26 @@ describe "Depsolver API endpoint", :depsolver do
         }
         post(api_url("/environments/_default/cookbook_versions"), admin_user,
              :payload => payload) do |response|
-        response.should look_like({
-                                   :status => 412,
-                                   :body_exact => {
-                                       "error" => [if ruby? then error_message else error_hash end]
-                                   }
-                                  })
+          if ruby?
+            # Ruby-chef double-encodes error
+            response.should have_status_code(412)
+            parsed_response = parse(response)
+            parsed_response.should have_key("error")
+            parsed_response["error"].should look_like(error_hash)
+          else
+            response.should look_like({
+              :status => 412,
+              :body_exact => {
+                "error" => [error_hash]
+             }
+            })
+          end
         end
       end
 
       it "returns 412 with a non-existent cookbook" do
         not_exist = "this_does_not_exist"
         payload = "{\"run_list\":[\"#{not_exist}\"]}"
-        error_message = "{\"message\":\"Run list contains invalid items: no such cookbook #{not_exist}.\","\
-                        "\"non_existent_cookbooks\":[\"#{not_exist}\"],\"cookbooks_with_no_versions\":[]}"
         error_hash = {
           "message" => "Run list contains invalid items: no such cookbook #{not_exist}.",
           "non_existent_cookbooks" => [ not_exist ],
@@ -249,22 +253,25 @@ describe "Depsolver API endpoint", :depsolver do
         }
         post(api_url("/environments/#{env}/cookbook_versions"), admin_user,
              :payload => payload) do |response|
-        response.should look_like({
-                                   :status => 412,
-                                   :body_exact => {
-                                       "error" => [if ruby? then error_message else error_hash end]
-                                   }
-                                  })
+          if ruby?
+            # Ruby-chef double-encodes error
+            response.should have_status_code(412)
+            parsed_response = parse(response)
+            parsed_response.should have_key("error")
+            parsed_response["error"].should look_like(error_hash)
+          else
+            response.should look_like({
+              :status => 412,
+              :body_exact => {
+                "error" => [error_hash]
+             }
+            })
+          end
         end
       end
 
       it "returns 412 with an existing cookbook filtered out by environment" do
         payload = "{\"run_list\":[\"#{cookbook_name}\"]}"
-
-        error_message = ("{\"message\":\"Run list contains invalid items: " +
-                         "no versions match the constraints on cookbook #{cookbook_name}.\"," +
-                         "\"non_existent_cookbooks\":[]," +
-                         "\"cookbooks_with_no_versions\":[\"#{cookbook_name}\"]}")
         error_hash = {
           "message" => "Unable to satisfy constraints on cookbook #{cookbook_name}, which does not exist.",
           "non_existent_cookbooks" => [cookbook_name],
@@ -272,12 +279,20 @@ describe "Depsolver API endpoint", :depsolver do
         }
         post(api_url("/environments/#{no_cookbooks_env}/cookbook_versions"), admin_user,
              :payload => payload) do |response|
-        response.should look_like({
-                                   :status => 412,
-                                   :body_exact => {
-                                       "error" => [if ruby? then error_message else error_hash end]
-                                   }
-                                  })
+          if ruby?
+            # Ruby-chef double-encodes error
+            response.should have_status_code(412)
+            parsed_response = parse(response)
+            parsed_response.should have_key("error")
+            parsed_response["error"].should look_like(error_hash)
+          else
+            response.should look_like({
+              :status => 412,
+              :body_exact => {
+                "error" => [error_hash]
+             }
+            })
+          end
         end
       end
 
@@ -285,29 +300,32 @@ describe "Depsolver API endpoint", :depsolver do
         not_exist1 = "this_does_not_exist"
         not_exist2 = "also_this_one"
         payload = "{\"run_list\":[\"#{not_exist1}\", \"#{not_exist2}\"]}"
-        error_message = "{\"message\":\"Run list contains invalid items: no such cookbooks #{not_exist1}, #{not_exist2}.\","\
-                        "\"non_existent_cookbooks\":[\"#{not_exist1}\",\"#{not_exist2}\"],\"cookbooks_with_no_versions\":[]}"
         error_hash = {
           "message" => "Run list contains invalid items: no such cookbooks #{not_exist1}, #{not_exist2}.",
           "non_existent_cookbooks" => [ not_exist1, not_exist2 ],
           "cookbooks_with_no_versions" => []
         }
-
         post(api_url("/environments/#{env}/cookbook_versions"), admin_user,
              :payload => payload) do |response|
-        response.should look_like({
-                                   :status => 412,
-                                   :body_exact => {
-                                       "error" => [if ruby? then error_message else error_hash end]
-                                   }
-                                  })
+          if ruby?
+            # Ruby-chef double-encodes error
+            response.should have_status_code(412)
+            parsed_response = parse(response)
+            parsed_response.should have_key("error")
+            parsed_response["error"].should look_like(error_hash)
+          else
+            response.should look_like({
+              :status => 412,
+              :body_exact => {
+                "error" => [error_hash]
+             }
+            })
+          end
         end
       end
 
       it "returns 412 when there is a runlist entry specifying version that doesn't exist" do
         missing_version_payload = "{\"run_list\":[\"#{cookbook_name}@#{cookbook_version2}\"]}"
-        error_message = "{\"message\":\"Run list contains invalid items: no versions match the constraints on cookbook #{cookbook_name}.\","\
-                        "\"non_existent_cookbooks\":[],\"cookbooks_with_no_versions\":[\"#{cookbook_name}\"]}"
         error_hash = {
           "message" => "Run list contains invalid items: no versions match the constraints on cookbook (#{cookbook_name} = #{cookbook_version2}).",
           "non_existent_cookbooks" => [],
@@ -315,12 +333,20 @@ describe "Depsolver API endpoint", :depsolver do
         }
         post(api_url("/environments/#{env}/cookbook_versions"), admin_user,
              :payload => missing_version_payload) do |response|
-        response.should look_like({
-                                   :status => 412,
-                                   :body_exact => {
-                                       "error" => [if ruby? then error_message else error_hash end]
-                                   }
-                                  })
+          if ruby?
+            # Ruby-chef double-encodes error
+            response.should have_status_code(412)
+            parsed_response = parse(response)
+            parsed_response.should have_key("error")
+            parsed_response["error"].should look_like(error_hash)
+          else
+            response.should look_like({
+              :status => 412,
+              :body_exact => {
+                "error" => [error_hash]
+             }
+            })
+          end
         end
       end
 
@@ -330,9 +356,6 @@ describe "Depsolver API endpoint", :depsolver do
       it "returns 412 and both errors non-existent and no versions cookbooks" do
         not_exist = "this_does_not_exist"
         payload = "{\"run_list\":[\"#{not_exist}\", \"#{cookbook_name}@2.0.0\"]}"
-        error_message = "{\"message\":\"Run list contains invalid items: no such cookbook #{not_exist};"\
-          " no versions match the constraints on cookbook #{cookbook_name}.\","\
-          "\"non_existent_cookbooks\":[\"#{not_exist}\"],\"cookbooks_with_no_versions\":[\"#{cookbook_name}\"]}"
         error_hash = {
           "message" => "Run list contains invalid items: no such cookbook #{not_exist}.",
           "non_existent_cookbooks" => [ not_exist ],
@@ -340,12 +363,20 @@ describe "Depsolver API endpoint", :depsolver do
         }
         post(api_url("/environments/#{env}/cookbook_versions"), admin_user,
              :payload => payload) do |response|
-        response.should look_like({
-                                   :status => 412,
-                                   :body_exact => {
-                                       "error" => [if ruby? then error_message else error_hash end]
-                                   }
-                                  })
+          if ruby?
+            # Ruby-chef double-encodes error
+            response.should have_status_code(412)
+            parsed_response = parse(response)
+            parsed_response.should have_key("error")
+            parsed_response["error"].should look_like(error_hash)
+          else
+            response.should look_like({
+              :status => 412,
+              :body_exact => {
+                "error" => [error_hash]
+             }
+            })
+          end
         end
       end
 
@@ -365,14 +396,6 @@ describe "Depsolver API endpoint", :depsolver do
         not_exist_name = "this_does_not_exist"
         opts = { :dependencies => {not_exist_name => ">= 0.0.0"}}
         make_cookbook(admin_user, cookbook_name, cookbook_version,opts)
-        error_message =
-          "{\"message\":\"Unable to satisfy constraints on cookbook #{not_exist_name}, "\
-          "which does not exist, due to run list item (#{cookbook_name} >= 0.0.0). "\
-           "Run list items that may result in a constraint on #{not_exist_name}: "\
-           "[(#{cookbook_name} = #{cookbook_version}) -> (#{not_exist_name} >= 0.0.0)]\","\
-           "\"unsatisfiable_run_list_item\":\"(#{cookbook_name} >= 0.0.0)\","\
-           "\"non_existent_cookbooks\":[\"Package #{not_exist_name}\"],"\
-           "\"most_constrained_cookbooks\":[]}"
         error_hash = {
           "message" => "Unable to satisfy constraints on cookbook #{not_exist_name}, which does not exist.",
           "non_existent_cookbooks" => [ not_exist_name ],
@@ -380,12 +403,20 @@ describe "Depsolver API endpoint", :depsolver do
         }
         post(api_url("/environments/#{env}/cookbook_versions"), admin_user,
              :payload => payload) do |response|
-        response.should look_like({
-                                   :status => 412,
-                                   :body_exact => {
-                                       "error" => [if ruby? then error_message else error_hash end]
-                                   }
-                                  })
+          if ruby?
+            # Ruby-chef double-encodes error
+            response.should have_status_code(412)
+            parsed_response = parse(response)
+            parsed_response.should have_key("error")
+            parsed_response["error"].should look_like(error_hash)
+          else
+            response.should look_like({
+              :status => 412,
+              :body_exact => {
+                "error" => [error_hash]
+             }
+            })
+          end
         end
       end
     end # dependency error cases (one cookbook)
@@ -404,8 +435,6 @@ describe "Depsolver API endpoint", :depsolver do
         make_cookbook(admin_user, cookbook_name, cookbook_version)
         make_cookbook(admin_user, cookbook_name2, cookbook_version2)
         missing_version_payload = "{\"run_list\":[\"#{cookbook_name2}@2.0.0\", \"#{cookbook_name}@3.0.0\"]}"
-        error_message = "{\"message\":\"Run list contains invalid items: no versions match the constraints on cookbook #{cookbook_name}.\","\
-                        "\"non_existent_cookbooks\":[],\"cookbooks_with_no_versions\":[\"#{cookbook_name}\"]}"
         error_hash = {
           "message" => "Run list contains invalid items: no versions match the constraints on cookbook (#{cookbook_name2} = 2.0.0),(#{cookbook_name} = 3.0.0).",
           "non_existent_cookbooks" => [],
@@ -413,12 +442,20 @@ describe "Depsolver API endpoint", :depsolver do
         }
         post(api_url("/environments/#{env}/cookbook_versions"), admin_user,
              :payload => missing_version_payload) do |response|
-        response.should look_like({
-                                   :status => 412,
-                                   :body_exact => {
-                                       "error" => [if ruby? then error_message else error_hash end]
-                                   }
-                                  })
+          if ruby?
+            # Ruby-chef double-encodes error
+            response.should have_status_code(412)
+            parsed_response = parse(response)
+            parsed_response.should have_key("error")
+            parsed_response["error"].should look_like(error_hash)
+          else
+            response.should look_like({
+              :status => 412,
+              :body_exact => {
+                "error" => [error_hash]
+             }
+            })
+          end
         end
       end
 
@@ -427,14 +464,6 @@ describe "Depsolver API endpoint", :depsolver do
         opts = { :dependencies => {cookbook_name2 => "> #{cookbook_version2}"} }
         make_cookbook(admin_user, cookbook_name, cookbook_version, opts)
         make_cookbook(admin_user, cookbook_name2, cookbook_version2)
-        error_message =
-            "{\"message\":\"Unable to satisfy constraints on cookbook #{cookbook_name2} "\
-            "due to run list item (#{cookbook_name} >= 0.0.0). "\
-            "Run list items that may result in a constraint on #{cookbook_name2}: "\
-            "[(#{cookbook_name} = #{cookbook_version}) -> (#{cookbook_name2} > #{cookbook_version2})]\","\
-            "\"unsatisfiable_run_list_item\":\"(#{cookbook_name} >= 0.0.0)\","\
-            "\"non_existent_cookbooks\":[],"\
-            "\"most_constrained_cookbooks\":[\"Package #{cookbook_name2}\\n  2.0.0 -> []\"]}"
         error_hash = {
           "message" => "Unable to solve constraints, the following solutions were attempted \n\n"\
                        "    Unable to satisfy goal constraint #{cookbook_name} due to constraint on bar\n"\
@@ -445,12 +474,20 @@ describe "Depsolver API endpoint", :depsolver do
         }
         post(api_url("/environments/#{env}/cookbook_versions"), admin_user,
              :payload => payload) do |response|
-        response.should look_like({
-                                   :status => 412,
-                                   :body_exact => {
-                                       "error" => [if ruby? then error_message else error_hash end]
-                                   }
-                                  })
+          if ruby?
+            # Ruby-chef double-encodes error
+            response.should have_status_code(412)
+            parsed_response = parse(response)
+            parsed_response.should have_key("error")
+            parsed_response["error"].should look_like(error_hash)
+          else
+            response.should look_like({
+              :status => 412,
+              :body_exact => {
+                "error" => [error_hash]
+             }
+            })
+          end
         end
       end
 
@@ -460,14 +497,6 @@ describe "Depsolver API endpoint", :depsolver do
         opts2 = { :dependencies => {cookbook_name=>"> 3.0.0"}}
         make_cookbook(admin_user, cookbook_name, cookbook_version, opts1)
         make_cookbook(admin_user, cookbook_name2, cookbook_version2, opts2)
-        error_message =
-            "{\"message\":\"Unable to satisfy constraints on cookbook #{cookbook_name2} "\
-            "due to run list item (#{cookbook_name} >= 0.0.0). "\
-            "Run list items that may result in a constraint on #{cookbook_name2}: "\
-            "[(#{cookbook_name} = #{cookbook_version}) -> (#{cookbook_name2} > #{cookbook_version2})]\","\
-            "\"unsatisfiable_run_list_item\":\"(#{cookbook_name} >= 0.0.0)\","\
-            "\"non_existent_cookbooks\":[],"\
-            "\"most_constrained_cookbooks\":[\"Package #{cookbook_name2}\\n  2.0.0 -> [(#{cookbook_name} > 3.0.0)]\"]}"
         error_hash = {
           "message" => "Unable to solve constraints, the following solutions were attempted \n\n"\
                        "    Unable to satisfy goal constraint #{cookbook_name} due to constraint on bar\n"\
@@ -478,12 +507,20 @@ describe "Depsolver API endpoint", :depsolver do
         }
         post(api_url("/environments/#{env}/cookbook_versions"), admin_user,
              :payload => payload) do |response|
-        response.should look_like({
-                                   :status => 412,
-                                   :body_exact => {
-                                       "error" => [if ruby? then error_message else error_hash end]
-                                   }
-                                  })
+          if ruby?
+            # Ruby-chef double-encodes error
+            response.should have_status_code(412)
+            parsed_response = parse(response)
+            parsed_response.should have_key("error")
+            parsed_response["error"].should look_like(error_hash)
+          else
+            response.should look_like({
+              :status => 412,
+              :body_exact => {
+                "error" => [error_hash]
+             }
+            })
+          end
         end
       end
 
