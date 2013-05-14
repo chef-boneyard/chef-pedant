@@ -37,8 +37,14 @@ require 'pedant/rspec/common'
 
 module Pedant
   def self.config
+    # This is a bit of a hack: for some reason, we have UTF-8/US-ASCII encoding
+    # conversion issues when running against OHC (though not in dev-vm -- maybe it's
+    # being forced some other way there?).  This shouldn't have any other effect on
+    # the tests, but if we have a better solution at some point, we may be able to
+    # remove the next two lines here.
     Encoding.default_external = Encoding::UTF_8
     Encoding.default_internal = Encoding::UTF_8
+
     Config
   end
 
