@@ -80,7 +80,7 @@ describe "Cookbooks API endpoint", :cookbooks do
 
         if (ruby?)
           should_fail_to_create('json_class', :delete, 400, "You didn't pass me a valid object!")
-          create_should_crash_server('json_class', 'Chef::Role')
+          should_fail_to_create('json_class', 'Chef::Role', 400, "You didn't pass me a valid object!")
           should_fail_to_create('metadata', {}, 400,
                                 "You said the cookbook was version 0.0.0, " +
                                  "but the URL says it should be 1.2.3.")
@@ -96,7 +96,9 @@ describe "Cookbooks API endpoint", :cookbooks do
            files templates root_files}.each do |segment|
 
           if (ruby?)
-            create_should_crash_server(segment, "foo")
+            should_fail_to_create(segment, "foo", 400,
+                                  "Manifest has checksum  (path ) but " +
+                                  "it hasn't yet been uploaded")
             should_fail_to_create(segment, [ {} ], 400,
                                   "Manifest has checksum  (path ) but " +
                                    "it hasn't yet been uploaded")
