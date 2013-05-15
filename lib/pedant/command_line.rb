@@ -119,7 +119,8 @@ module Pedant
 
     def api_options(opts)
       tags = %w(environments cookbooks data_bags nodes roles sandboxes users
-                clients depsolver search knife validation authentication authorization)
+                clients depsolver search knife validation authentication authorization
+                principals acl containers groups)
       export_options(opts, tags)
     end
 
