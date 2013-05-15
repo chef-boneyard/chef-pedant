@@ -141,7 +141,7 @@ describe "/environments/ENVIRONMENT/recipes API endpoint", :environments do
         it 'retrieves appropriate recipes' do
           get(api_url("/environments/#{env}/recipes"), admin_user) do |response|
             response.should have_status_code 200
-            parse(response).should eq expected_recipes
+            parse(response).should =~ expected_recipes
           end
         end
       end
