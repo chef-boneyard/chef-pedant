@@ -73,41 +73,24 @@ describe "Cookbooks API endpoint", :cookbooks do
 
       malformed_constraint = "s395dss@#"
 
-      context "basic tests" do
+      context "basic tests", :pending => ruby? do
         after(:each) do
           delete_cookbook(admin_user, cookbook_name, cookbook_version)
         end
 
-        if (ruby?)
-          should_fail_to_create('json_class', :delete, 400, "You didn't pass me a valid object!")
-          should_fail_to_create('json_class', 'Chef::Role', 400, "You didn't pass me a valid object!")
-          should_fail_to_create('metadata', {}, 400,
-                                "You said the cookbook was version 0.0.0, " +
-                                 "but the URL says it should be 1.2.3.")
-        else
-          should_create('json_class', :delete, true, 'Chef::CookbookVersion')
-          should_fail_to_create('json_class', 'Chef::Role', 400, "Field 'json_class' invalid")
-          should_fail_to_create('metadata', {}, 400, "Field 'metadata.version' missing")
-        end
+        should_create('json_class', :delete, true, 'Chef::CookbookVersion')
+        should_fail_to_create('json_class', 'Chef::Role', 400, "Field 'json_class' invalid")
+        should_fail_to_create('metadata', {}, 400, "Field 'metadata.version' missing")
       end # context basic tests
 
-      context "checking segments" do
+      context "checking segments", :pending => ruby? do
         %w{resources providers recipes definitions libraries attributes
            files templates root_files}.each do |segment|
 
-          if (ruby?)
-            should_fail_to_create(segment, "foo", 400,
-                                  "Manifest has checksum  (path ) but " +
-                                  "it hasn't yet been uploaded")
-            should_fail_to_create(segment, [ {} ], 400,
-                                  "Manifest has checksum  (path ) but " +
-                                   "it hasn't yet been uploaded")
-          else
-            should_fail_to_create(segment, "foo", 400,
-                                  "Field '#{segment}' invalid")
-            should_fail_to_create(segment, [ {} ], 400,
-                                  "Invalid element in array value of '#{segment}'.")
-          end
+          should_fail_to_create(segment, "foo", 400,
+            "Field '#{segment}' invalid")
+          should_fail_to_create(segment, [ {} ], 400,
+            "Invalid element in array value of '#{segment}'.")
         end
       end # context checking segments
 
