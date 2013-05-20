@@ -209,7 +209,7 @@ describe "Sandboxes API Endpoint", :sandboxes do
     let(:error_sums) { files.map{ |f| Pedant::Utility.checksum(f) }.sort }
 
     context 'when committing an incomplete sandbox' do
-      let(:expected_response) { bad_request_exact_response }
+      let(:expected_response) { { status: 503 } }
       let(:request_payload) { { "is_completed" => true } }
 
       let(:error_message) do
