@@ -232,7 +232,7 @@ describe "Sandboxes API Endpoint", :sandboxes do
       end
 
       if erlang?
-        should_respond_with 400
+        should_respond_with 503
       else
         it 'should respond with 400 Bad Request and a random checksum (Ruby quirk)' do
 
