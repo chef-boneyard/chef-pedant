@@ -209,7 +209,7 @@ describe "Sandboxes API Endpoint", :sandboxes do
     let(:error_sums) { files.map{ |f| Pedant::Utility.checksum(f) }.sort }
 
     context 'when committing an incomplete sandbox' do
-      let(:expected_response) { bad_request_exact_response }
+      let(:expected_response) { { status: 503 } }
       let(:request_payload) { { "is_completed" => true } }
 
       let(:error_message) do
@@ -232,7 +232,7 @@ describe "Sandboxes API Endpoint", :sandboxes do
       end
 
       if erlang?
-        should_respond_with 400
+        should_respond_with 503
       else
         it 'should respond with 400 Bad Request and a random checksum (Ruby quirk)' do
 
