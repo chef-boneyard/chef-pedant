@@ -42,13 +42,12 @@ describe 'knife', knife: true, pending: !open_source? do
           # Create all the testing roles
           roles.each(&create_role!)
 
-          # Since knife currently uses search to get the roles, we
-          # need to force a commit to Solr to ensure that these new
-          # roles will be found.
-          force_solr_commit
-
-          # Runs knife role list
-          should have_outcome :status => 0, :stdout => /Deleted role pedant-role-0\s+Deleted role pedant-role-1/
+          # Since bulk delete uses search, and search is eventually consistent,
+          # we need to wait until the search results are ready.
+          with_search_polling do
+            # Runs knife role list
+            should have_outcome :status => 0, :stdout => /Deleted role pedant-role-0\s+Deleted role pedant-role-1/
+          end
         end
       end
 
