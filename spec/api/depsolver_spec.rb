@@ -394,12 +394,16 @@ describe "Depsolver API endpoint", :depsolver do
       # TODO: need more detailed depsolver output to construct error message
       it "returns 412 when there is a dep that doesn't exist" do
         not_exist_name = "this_does_not_exist"
-        opts = { :dependencies => {not_exist_name => ">= 0.0.0"}}
+        not_exist_version = "0.0.0"
+        opts = { :dependencies => {not_exist_name => ">= #{not_exist_version}"}}
         make_cookbook(admin_user, cookbook_name, cookbook_version,opts)
         error_hash = {
-          "message" => "Unable to satisfy constraints on cookbook #{not_exist_name}, which does not exist.",
-          "non_existent_cookbooks" => [ not_exist_name ],
-          "most_constrained_cookbooks" => []
+          "message" => "Unable to solve constraints, the following solutions were attempted \n\n"\
+                       "    Unable to satisfy goal constraint #{cookbook_name} due to constraint on #{not_exist_name}\n"\
+                       "        (#{cookbook_name} = #{cookbook_version}) -> (#{not_exist_name} >= #{not_exist_version})\n",
+          "non_existent_cookbooks" => [ ],
+          "unsatisfiable_run_list_item" => [cookbook_name],
+          "most_constrained_cookbooks" => ["(#{not_exist_name} >= #{not_exist_version})"]
         }
         post(api_url("/environments/#{env}/cookbook_versions"), admin_user,
              :payload => payload) do |response|
