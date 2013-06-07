@@ -286,7 +286,7 @@ module Pedant
 
         # X-Ops-Request-Source
         context 'when X-Ops-Request-Source is web' do
-          if (defined?(Pedant::Config.webui_key) != nil)
+          if Pedant::Config.webui_key
             # If no webui_key defined (i.e., in pushy pedant) skip
             # these tests
 
