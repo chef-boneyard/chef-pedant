@@ -77,7 +77,7 @@ describe 'knife', knife: true, pending: !open_source? do
               assume_existing_node!
               knife "node run_list add #{node_name} app,web -c #{knife_config}"
 
-              # Adds run_list item
+              # Adds run_list item (regex has optional [] surrounding the recipe for Chef 10/11 difference in output)
               should have_outcome :status => 0, :stdout => /run_list:\s+\[?recipe\[web\]\]?/
             end
           end
