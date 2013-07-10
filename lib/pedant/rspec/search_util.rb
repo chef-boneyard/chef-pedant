@@ -747,6 +747,82 @@ module Pedant
         end
       end
 
-    end # SearchUtil
+    end
+
+    shared_examples "Reindexing" do
+      include_context "with temporary testing node"
+      include_context "with temporary testing role"
+      include_context "with temporary testing environment"
+      # client can just use validator to test; don't bother making a new one
+      include_context "with testing data bag"
+      include_context "with testing data bag items" do
+        let(:items){ [{'id' => "test_item", "key" => "value"}]}
+      end
+
+      # Arguments supplied to the reindexing escript after the subcommand.
+      let(:reindex_args){[]}
+
+      def should_find(type, name)
+        do_search(type, name, true)
+      end
+
+      def should_not_find(type, name)
+        do_search(type, name, false)
+      end
+
+      def do_search(type, name, should_find=true)
+        with_search_polling do
+          result = authenticated_request(:GET, api_url("/search/#{type}"), requestor, {})
+          result.should have_status_code 200
+          identifiers = case type
+                        when "node", "role", "environment"
+                          parse(result)["rows"].map{|r| r['name']}
+                        when "client"
+                          parse(result)["rows"].map{|r| r['name'] || r['clientname']}
+                        else # data bag
+                          parse(result)["rows"].map{|r| r['raw_data']['id']}
+                        end
+          if should_find
+            identifiers.should include(name)
+          else
+            identifiers.should_not include(name)
+          end
+        end
+      end
+
+      it "works for all object types" do
+        # Ensure that a search against each Chef object type is
+        # successful BEFORE any reindexing operations.
+        should_find("node", node_name)
+        should_find("role", role_name)
+        should_find("environment", environment_name)
+        should_find("client", admin_client.name)
+        should_find(temporary_data_bag_name, "test_item")
+
+        # Now, drop all information from the search index
+        `#{executable} drop #{reindex_args.join(" ")}`
+
+        # Verify that searches come up empty
+        should_not_find("node", node_name)
+        should_not_find("role", role_name)
+        should_not_find("environment", environment_name)
+        should_not_find("client", admin_client.name)
+        should_not_find(temporary_data_bag_name, "test_item")
+
+        # Now, send everything to be re-indexed
+        `#{executable} reindex #{reindex_args.join(" ")}`
+
+        # Verify that the reindexing worked by finding all the items
+        # again.  Remember, there are implicit Solr commit calls being
+        # made here; it'd take a bit longer for these to succeed
+        # otherwise.
+        should_find("node", node_name)
+        should_find("role", role_name)
+        should_find("environment", environment_name)
+        should_find("client", admin_client.name)
+        should_find(temporary_data_bag_name, "test_item")
+      end
+    end # reindexing test
+
   end # RSpec
 end # Pedant
