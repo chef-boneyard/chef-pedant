@@ -425,8 +425,10 @@ describe "Environments API Endpoint", :environments do
                                "Invalid value '>= 1.0.0.0' for cookbook_versions")
               fails_with_value("cookbook_versions", {"cookbook" => ">= 1,0,0"},
                                "Invalid value '>= 1,0,0' for cookbook_versions")
-              fails_with_value("cookbook_versions", {"cookbook" => ">= 1"},
-                               "Invalid value '>= 1' for cookbook_versions")
+              fails_with_value("cookbook_versions", {"cookbook" => ">= 1.-2.3"},
+                               "Invalid value '>= 1.-2.3' for cookbook_versions")
+              fails_with_value("cookbook_versions", {"cookbook" => ">= 1.2.20130730201745"},
+                               "Invalid value '>= 1.2.20130730201745' for cookbook_versions")
               fails_with_value("cookbook_versions", {"cookbook" => ">= 1.a.b"},
                                "Invalid value '>= 1.a.b' for cookbook_versions")
               fails_with_value("cookbook_versions", {"cookbook" => ">= 1.0rc1"},
