@@ -49,6 +49,21 @@ module Pedant
       }
     end
 
+    # X Darklaunch Headers that might be used throughout the platform
+    def standard_x_darklaunch_headers
+      @_standard_x_darklaunch_headers ||=
+      {
+        'couchdb_environments' => dl_true_or_false(Pedant::Config.ruby_environment_endpoint?),
+        'couchdb_checksums'    => dl_true_or_false(Pedant::Config.ruby_sandbox_endpoint?),
+        'couchdb_data'         => dl_true_or_false(Pedant::Config.ruby_data_endpoint?),
+        'couchdb_roles'        => dl_true_or_false(Pedant::Config.ruby_role_endpoint?),
+        'couchdb_cookbooks'    => dl_true_or_false(Pedant::Config.ruby_cookbook_endpoint?),
+        'couchdb_clients'      => dl_true_or_false(Pedant::Config.ruby_client_endpoint?),
+        'couchdb_users'        => dl_true_or_false(Pedant::Config.ruby_users_endpoint?),
+      }
+    end
+
+
     # Execute an authenticated request against a Chef Server
     #
     # `method` is an HTTP verb, as an uppercase symbol, e.g., :GET
@@ -94,8 +109,12 @@ module Pedant
                   payload_raw
                 end
 
+      # Make sure there is *always* a "pedant_x_darklaunch=1;" via X-Ops-Darklaunch
+      # This is used as a 'watermark' for request log testing
+      x_darklaunch_header = encode_darklaunch(standard_x_darklaunch_headers.merge(opts[:x_darklaunch] || {}).merge(pedant_x_darklaunch: 1))
+
       auth_headers = opts[:auth_headers] || requestor.signing_headers(method, url, payload)
-      final_headers = standard_headers.merge(auth_headers).merge(user_headers)
+      final_headers = standard_headers.merge(auth_headers).merge(user_headers).merge({'X-Ops-Darklaunch' => x_darklaunch_header})
 
       response_handler = lambda{|response, request, result| response}
 
@@ -127,6 +146,17 @@ module Pedant
 
     def delete(url, requestor, opts={}, &validator)
       authenticated_request :DELETE, url, requestor, opts, &validator
+    end
+
+    # Semi-private helpers
+
+    # X-Ops-Darklaunch headers are encoded as 'k=v;', ignore whitespace
+    def encode_darklaunch(x_darklaunch_features)
+      x_darklaunch_features.to_a.map { |k,v| "#{k}=#{v}" }.join(';')
+    end
+
+    def dl_true_or_false(value)
+      (!!value ? 1 : 0 )
     end
 
   end
