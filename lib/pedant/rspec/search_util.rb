@@ -698,6 +698,16 @@ module Pedant
           end
         end
       end
+
+      def search(index, query)
+        with_search_polling do
+          response = get(api_url("/search/#{index}?q=#{query}"), admin_user)
+          response.should look_like({:status => 200, :body => { 'start' => 0 }})
+          response = parse(response)
+          response['total'].should == response['rows'].size
+          response['rows']
+        end
+      end
     end
 
 

@@ -20,6 +20,7 @@ require 'pedant/rspec/search_util'
 require 'pedant/rspec/node_util'
 require 'pedant/rspec/environment_util'
 require 'pedant/rspec/open_source_client_util'
+require 'pedant/rspec/chef_data'
 
 describe 'Search API endpoint', :search do
 
@@ -30,6 +31,7 @@ describe 'Search API endpoint', :search do
   include Pedant::RSpec::NodeUtil
   include Pedant::RSpec::EnvironmentUtil
   include Pedant::RSpec::OpenSourceClientUtil
+  include Pedant::RSpec::ChefData
 
   # TODO: until we rename requestors
   shared(:admin_requestor){admin_user}
@@ -465,6 +467,23 @@ describe 'Search API endpoint', :search do
         test_bad_partial_search_bodies
       end
 
+    end
+
+    context 'Search tokenizer' do
+      context 'When the Chef server has data bag items with "foo" and "foo-bar"' do
+        data_bag 'x', {
+          'foo' => '{ "id": "foo" }',
+          'foo-bar' => '{ "id": "foo-bar" }',
+        }
+
+        it 'A search for foo-bar returns foo-bar and nothing else' do
+          search('x', 'id:foo-bar').map { |row| row['name'] }.should == [ 'data_bag_item_x_foo-bar' ]
+        end
+
+        it 'A search for foo* AND NOT bar returns foo and foo-bar' do
+          search('x', 'id:foo*').map { |row| row['name'] }.should == [ 'data_bag_item_x_foo', 'data_bag_item_x_foo-bar' ]
+        end
+      end
     end
 
   end
