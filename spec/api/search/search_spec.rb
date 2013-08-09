@@ -471,17 +471,16 @@ describe 'Search API endpoint', :search do
 
     context 'Search tokenizer' do
       context 'When the Chef server has data bag items with "foo" and "foo-bar"' do
-        data_bag 'x', {
+        data_bag 'x',
           'foo' => '{ "id": "foo" }',
-          'foo-bar' => '{ "id": "foo-bar" }',
-        }
+          'foo-bar' => '{ "id": "foo-bar" }'
 
         it 'A search for foo-bar returns foo-bar and nothing else' do
-          search('x', 'id:foo-bar').map { |row| row['name'] }.should == [ 'data_bag_item_x_foo-bar' ]
+          search('x', 'id:foo-bar').map { |row| row['name'] }.should =~ [ 'data_bag_item_x_foo-bar' ]
         end
 
         it 'A search for foo* AND NOT bar returns foo and foo-bar' do
-          search('x', 'id:foo* AND NOT bar').map { |row| row['name'] }.should == [ 'data_bag_item_x_foo', 'data_bag_item_x_foo-bar' ]
+          search('x', 'id:foo* AND NOT bar').map { |row| row['name'] }.should =~ [ 'data_bag_item_x_foo', 'data_bag_item_x_foo-bar' ]
         end
       end
     end
