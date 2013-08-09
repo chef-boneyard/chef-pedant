@@ -481,7 +481,7 @@ describe 'Search API endpoint', :search do
         end
 
         it 'A search for foo* AND NOT bar returns foo and foo-bar' do
-          search('x', 'id:foo*').map { |row| row['name'] }.should == [ 'data_bag_item_x_foo', 'data_bag_item_x_foo-bar' ]
+          search('x', 'id:foo* AND NOT bar').map { |row| row['name'] }.should == [ 'data_bag_item_x_foo', 'data_bag_item_x_foo-bar' ]
         end
       end
     end
