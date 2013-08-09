@@ -16,6 +16,7 @@
 require 'pedant/request'
 require 'rspec/core/shared_context'
 require 'pedant/concern'
+require 'uri'
 
 module Pedant
   module RSpec
@@ -700,8 +701,9 @@ module Pedant
       end
 
       def search(index, query)
+        search_url = api_url(URI::encode("/search/#{index}?q=#{query}"))
         with_search_polling do
-          response = get(api_url("/search/#{index}?q=#{query}"), admin_user)
+          response = get(search_url, admin_user)
           response.should look_like({:status => 200, :body => { 'start' => 0 }})
           response = parse(response)
           response['total'].should == response['rows'].size
