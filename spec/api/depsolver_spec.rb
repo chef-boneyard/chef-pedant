@@ -398,12 +398,12 @@ describe "Depsolver API endpoint", :depsolver do
         opts = { :dependencies => {not_exist_name => ">= #{not_exist_version}"}}
         make_cookbook(admin_user, cookbook_name, cookbook_version,opts)
         error_hash = {
-          "message" => "Unable to solve constraints, the following solutions were attempted \n\n"\
-                       "    Unable to satisfy goal constraint #{cookbook_name} due to constraint on #{not_exist_name}\n"\
-                       "        (#{cookbook_name} = #{cookbook_version}) -> (#{not_exist_name} >= #{not_exist_version})\n",
-          "non_existent_cookbooks" => [ ],
-          "unsatisfiable_run_list_item" => [cookbook_name],
-          "most_constrained_cookbooks" => ["(#{not_exist_name} >= #{not_exist_version})"]
+          "message"=>
+          "Unable to satisfy goal constraint #{cookbook_name} due to constraint on #{not_exist_name}\n",
+          "unsatisfiable_run_list_item"=>["#{cookbook_name}"],
+          "non_existent_cookbooks"=>[],
+          "most_constrained_cookbooks"=>
+          "(this_does_not_exist non-existient version )"
         }
         post(api_url("/environments/#{env}/cookbook_versions"), admin_user,
              :payload => payload) do |response|
@@ -440,10 +440,11 @@ describe "Depsolver API endpoint", :depsolver do
         make_cookbook(admin_user, cookbook_name2, cookbook_version2)
         missing_version_payload = "{\"run_list\":[\"#{cookbook_name2}@2.0.0\", \"#{cookbook_name}@3.0.0\"]}"
         error_hash = {
-          "message" => "Run list contains invalid items: no versions match the constraints on cookbook (#{cookbook_name2} = 2.0.0),(#{cookbook_name} = 3.0.0).",
-          "non_existent_cookbooks" => [],
-          "cookbooks_with_no_versions" => ["(#{cookbook_name2} = 2.0.0)", "(#{cookbook_name} = 3.0.0)"]
-        }
+          "message"=>
+          "Unable to satisfy goal constraints  (bar = 2.0.0), (foo = 3.0.0) due to constraint on  foo\n",
+          "unsatisfiable_run_list_item"=>["(bar = 2.0.0)", "(foo = 3.0.0)"],
+          "non_existent_cookbooks"=>[],
+          "most_constrained_cookbooks"=>"(foo = 1.2.3)"}
         post(api_url("/environments/#{env}/cookbook_versions"), admin_user,
              :payload => missing_version_payload) do |response|
           if ruby?
