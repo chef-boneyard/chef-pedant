@@ -52,7 +52,7 @@ describe "Cookbooks API endpoint", :cookbooks do
           end
         }
 
-        let(:cookbook_version) { "1.2" }
+        let(:cookbook_version) { "1.2.3.4" }
 
         should_respond_with 400
       end # with bad version
