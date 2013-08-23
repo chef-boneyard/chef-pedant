@@ -466,6 +466,25 @@ describe "Environments API Endpoint", :environments do
                                "Invalid value '1.1' for cookbook_versions", true)
               fails_with_value("cookbook_versions", {"cookbook" => ""},
                                "Invalid value '' for cookbook_versions", true)
+
+              # test version integer constraints
+              # datestamp version
+              succeeds_with_value("cookbook_versions", {"cookbook" => ">= 1.2.20130730201745"}, nil, true)
+
+              # negative version
+              fails_with_value("cookbook_versions", {"cookbook" => ">= 1.-2.3"},
+                               "Invalid value '>= 1.-2.3' for cookbook_versions", true)
+
+              # 4-byte version
+              succeeds_with_value("cookbook_versions", {"cookbook" => ">= 1.2.2147483647"}, nil, true)
+
+              # 4-byte overflow version
+              succeeds_with_value("cookbook_versions", {"cookbook" => ">= 1.2.2147483669"}, nil, true)
+
+              # 8-byte overflow version
+              fails_with_value("cookbook_versions", {"cookbook" => ">= 1.2.9223372036854775849"},
+                               "Invalid value '>= 1.2.9223372036854775849' for cookbook_versions", true)
+
             end
           end
         end
