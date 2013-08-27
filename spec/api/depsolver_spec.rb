@@ -48,7 +48,7 @@ describe "Depsolver API endpoint", :depsolver do
     no_cb_env = new_environment(no_cookbooks_env)
     no_cb_env['cookbook_versions'] = {
       'foo' => '= 400.0.0',
-      'bar' => '> 400.0.0'
+       'bar' => '> 400.0.0'
     }
     add_environment(admin_user, no_cb_env)
   }
@@ -106,9 +106,6 @@ describe "Depsolver API endpoint", :depsolver do
       end
 
       let(:environment_name){"not@environment"}
-
-
-
 
       if ruby?
         # Ruby endpoint doesn't really do the right thing... just
@@ -594,6 +591,29 @@ describe "Depsolver API endpoint", :depsolver do
             json["bar"]["metadata"]["dependencies"].should eq({"foo" => "> 0.0.0"})
             json["baz"]["metadata"]["dependencies"].should eq({})
             json["quux"]["metadata"]["dependencies"].should eq({"bar" => "= 2.0.0", "baz" => "= 3.0.0"})
+          end
+        end
+      end
+
+      context "with datestamps in cookbooks and environments" do
+        before :each do
+          make_cookbook(admin_user, "datestamp", "1.2.20130730201745")
+          datestamp_env = new_environment("datestamp_env")
+          datestamp_env['cookbook_versions'] = {
+            'datestamp' => ">= 1.2.20130730200000"
+          }
+          add_environment(admin_user, datestamp_env)
+        end
+
+        after :each do
+          delete_cookbook(admin_user, "datestamp", "1.2.20130730201745")
+          delete_environment(admin_user, "datestamp_env")
+        end
+
+        it "returns the correct solution" do
+          post(api_url("/environments/datestamp_env/cookbook_versions"), admin_user,
+               :payload => {"run_list" => ["datestamp"]}) do |response|
+            response.should have_status_code 200
           end
         end
       end

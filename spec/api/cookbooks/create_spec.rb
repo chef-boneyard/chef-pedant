@@ -63,6 +63,33 @@ describe "Cookbooks API endpoint", :cookbooks do
         rejects_invalid_value "Chef::Node"
       end
 
+      context "the cookbook version" do
+        let(:request_payload) { default_resource_attributes }
+
+        context "with negative versions" do
+          let(:cookbook_version) { "1.2.-42" }
+          it { should look_like http_400_response }
+        end
+
+        context "with versions at exactly 4 bytes" do
+          int4_exact = "2147483647"
+          let(:cookbook_version) { "1.2.#{int4_exact}" }
+          it { should look_like http_201_response }
+        end
+
+        context "with versions larger than 4 bytes" do
+          int4_overflow = "2147483669" # max = 2147483647 (add 42)
+          let(:cookbook_version) { "1.2.#{int4_overflow}" }
+          it { should look_like http_201_response }
+        end
+
+        context "with versions larger than 8 bytes" do
+          int8_overflow = "9223372036854775849" # max = 9223372036854775807 (add 42)
+          let(:cookbook_version) { "1.2.#{int8_overflow}" }
+          it { should look_like http_400_response }
+        end
+      end
+
       rejects_invalid_keys
 
     end
