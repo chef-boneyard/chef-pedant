@@ -35,7 +35,7 @@ describe "Cookbooks API endpoint", :cookbooks do
       should_respond_with 404
 
       context 'with bad version', :validation do
-        let(:expected_response) { delete_invalid_cookbook_version_exact_response }
+        let(:expected_response) { invalid_cookbook_version_exact_response }
         let(:cookbook_version) { "1.2.3.4" }
         should_respond_with 400
       end # with bad version

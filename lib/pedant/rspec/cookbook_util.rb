@@ -128,10 +128,10 @@ module Pedant
         }
       end
 
-      let(:delete_invalid_cookbook_version_exact_response) do
+      let(:invalid_cookbook_version_exact_response) do
         {
           :status => 400,
-          :body_exact => { "error" => delete_invalid_cookbook_version_error_message }
+          :body_exact => { "error" => invalid_cookbook_version_error_message }
         }
       end
 
