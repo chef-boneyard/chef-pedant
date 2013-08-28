@@ -15,10 +15,6 @@
 
 require 'pedant/rspec/data_bag_util'
 describe "Data Bag API endpoint", :data_bags do
-  def self.ruby?
-    Pedant::Config.ruby_data_endpoint?
-  end
-
   include Pedant::RSpec::DataBagUtil
 
   # Just until we rename the requestors
@@ -54,12 +50,7 @@ describe "Data Bag API endpoint", :data_bags do
 
         context 'valid requests of various types to create a data bag' do
           context 'with a valid name' do
-            names = ['pedant', 'pedant-bag', 'pedant_bag', 'pedant_bag-foo', '1234567890', 'pedant99']
-
-            # The Ruby endpoint can't handle these names, but Erlang can
-            if erlang?
-              names = names + ['pedant:with:colons', 'pedant.with.dots']
-            end
+            names = ['pedant', 'pedant-bag', 'pedant_bag', 'pedant_bag-foo', '1234567890', 'pedant99', 'pedant:with:colons', 'pedant.with.dots']
 
             names.each do |n|
               context "like '#{n}'" do
@@ -96,64 +87,55 @@ describe "Data Bag API endpoint", :data_bags do
             it_behaves_like 'a successful data bag POST'
           end
 
-          if erlang?
-            # This will make Ruby blow up (understandably)
-            context 'with an incorrect \'json_class\' key' do
-              let(:data_bag) {
-                new_data_bag(data_bag_name).tap{|b| b['json_class'] = 'Chef::Node'}
-              }
-              it 'does not have the correct json_class key' do
-                # Just a touch of paranoia
-                data_bag['json_class'].should_not eq "Chef::DataBag"
-              end
-              it_behaves_like 'a successful data bag POST'
+          context 'with an incorrect \'json_class\' key' do
+            let(:data_bag) {
+              new_data_bag(data_bag_name).tap{|b| b['json_class'] = 'Chef::Node'}
+            }
+            it 'does not have the correct json_class key' do
+              # Just a touch of paranoia
+              data_bag['json_class'].should_not eq "Chef::DataBag"
             end
-          end # if erlang?
-
+            it_behaves_like 'a successful data bag POST'
+          end
         end # valid requests
 
+        context 'invalid requests of various types to create a data bag', :validation do
 
-        # These also make Ruby blow up
-        if erlang?
-          context 'invalid requests of various types to create a data bag', :validation do
-
-            context 'with an invalid name' do
-              bad_names = ["pedant_badName!!$$$$_oh_very+bad", "pedant-does-not-like-punctuation!!!!"]
-              bad_names.each do |bad_name|
-                context "like '#{bad_name}'" do
-                  let(:data_bag_name) { bad_name }
-                  let(:expected_failure_response) { create_data_bag_bad_name_failure_response }
-                  it_behaves_like 'an unsuccessful data bag POST'
-                end
+          context 'with an invalid name' do
+            bad_names = ["pedant_badName!!$$$$_oh_very+bad", "pedant-does-not-like-punctuation!!!!"]
+            bad_names.each do |bad_name|
+              context "like '#{bad_name}'" do
+                let(:data_bag_name) { bad_name }
+                let(:expected_failure_response) { create_data_bag_bad_name_failure_response }
+                it_behaves_like 'an unsuccessful data bag POST'
               end
             end
+          end
 
-            ## THIS BREAKS ON RUBY OPEN SOURCE
-            # context 'without a name' do
-            #   let(:data_bag) {{ "id" => data_bag_name }}
-            #   let(:expected_failure_response) { create_data_bag_no_name_failure_response }
-            #   it_behaves_like 'an unsuccessful data bag POST'
-            # end
-          end # invalid requests
-        end # if erlang?
+          context 'without a name' do
+            let(:data_bag) {{ "id" => data_bag_name }}
+            let(:expected_failure_response) { create_data_bag_no_name_failure_response }
+            it_behaves_like 'an unsuccessful data bag POST'
+          end
+        end # invalid requests
 
-        if erlang?
-          respects_maximum_payload_size
-        end
-
+        respects_maximum_payload_size
       end # POST
+
       context 'PUT' do
         let(:put_body){{"fake" => "value"}}
         it 'is not allowed' do
           put(data_bags_url, requestor, :payload => put_body).should look_like data_endpoint_method_not_allowed_response
         end
       end # PUT
+
       context 'DELETE' do
         it 'is not allowed' do
           delete(data_bags_url, requestor).should look_like data_endpoint_method_not_allowed_response
         end
       end # DELETE
     end # request to /data
+
     context 'a request to /data/<bag>' do
       let(:data_bag_name){unique_name("no_bag")}
       context 'GET' do
@@ -185,18 +167,7 @@ describe "Data Bag API endpoint", :data_bags do
       let(:data_bag_item_id){unique_name("no_item")}
       context 'GET' do
         it 'fails because there is no bag' do
-          r = if ruby?
-                {
-                  :status => 404,
-                  :body_exact => {
-                    "error" => ["Cannot load data bag item #{data_bag_item_id} for data bag #{data_bag_name}"]
-                  }
-                }
-              else
-                data_bag_item_not_found_no_bag_response
-              end
-
-          get(data_bag_item_url, requestor).should look_like r
+          get(data_bag_item_url, requestor).should look_like data_bag_item_not_found_no_bag_response
         end
       end
       context 'POST' do
@@ -273,10 +244,7 @@ describe "Data Bag API endpoint", :data_bags do
             context 'with a good ID' do
               ids = ['pedantitem', 'pedant_item', 'pedant-item', 'pedant-123-item']
 
-              # Ruby can't handle these
-              if erlang?
-                ids = ids + ['pedant:item', 'pedant.item']
-              end
+              ids = ids + ['pedant:item', 'pedant.item']
 
               ids.each do |i|
                 context "like '#{i}'" do
@@ -289,37 +257,32 @@ describe "Data Bag API endpoint", :data_bags do
             end
           end
 
-          if erlang?
-            # Ruby can't handle these
-            context 'various bad inputs to create a data bag item', :validation do
-              context 'without an ID' do
-                let(:data_bag_item) {{"answer" => 42}}
-                let(:expected_failure_response){create_data_bag_item_no_id_response}
-                it 'really does not have an id' do
-                  data_bag_item.should_not have_key 'id'
-                end
-                it_behaves_like 'an unsuccessful data bag item POST'
+          context 'various bad inputs to create a data bag item', :validation do
+            context 'without an ID' do
+              let(:data_bag_item) {{"answer" => 42}}
+              let(:expected_failure_response){create_data_bag_item_no_id_response}
+              it 'really does not have an id' do
+                data_bag_item.should_not have_key 'id'
               end
+              it_behaves_like 'an unsuccessful data bag item POST'
+            end
 
-              context 'with a malformed ID' do
-                ids = ['pedant_badId!!', '^$@^*  pedant']
-                ids.each do |i|
-                  context "like '#{i}'" do
-                    let(:data_bag_item_id){i}
-                    let(:data_bag_item) {{"id" => data_bag_item_id, "answer" => 42}}
-                    let(:expected_failure_response) {create_data_bag_item_invalid_id_response}
-                    it_behaves_like 'an unsuccessful data bag item POST'
-                  end
+            context 'with a malformed ID' do
+              ids = ['pedant_badId!!', '^$@^*  pedant']
+              ids.each do |i|
+                context "like '#{i}'" do
+                  let(:data_bag_item_id){i}
+                  let(:data_bag_item) {{"id" => data_bag_item_id, "answer" => 42}}
+                  let(:expected_failure_response) {create_data_bag_item_invalid_id_response}
+                  it_behaves_like 'an unsuccessful data bag item POST'
                 end
               end
-            end # if erlang?
+            end
           end
 
-          if erlang?
-            respects_maximum_payload_size
-          end
-
+          respects_maximum_payload_size
         end
+
         # PUT isn't allowed, but that's already been tested
         context 'DELETE' do
           it 'deletes the data bag' do
@@ -337,28 +300,14 @@ describe "Data Bag API endpoint", :data_bags do
         let(:data_bag_item_id){unique_name("no_item")}
         context 'GET' do
           it 'fails because there is no item' do
-            expected_response = if ruby?
-                                  {
-                :status => 404,
-                :body_exact => {
-                  "error" => ["Cannot load data bag item #{data_bag_item_id} for data bag #{data_bag_name}"]
-                }
-              }
-                                else
-                                  data_bag_item_not_found_response
-                                end
-
-            get(data_bag_item_url, requestor).should look_like expected_response
-
+            get(data_bag_item_url, requestor).should look_like data_bag_item_not_found_response
           end
         end
         # POST is not allowed, but that's already been tested
         context 'PUT' do
           let(:put_body){{"id"=>data_bag_item_id}}
           it 'fails because there is no item' do
-            pending("Ruby conflates PUT and POST", :if => ruby?) do
-              put(data_bag_item_url, requestor, :payload => put_body).should look_like data_bag_item_not_found_from_put_response
-            end
+            put(data_bag_item_url, requestor, :payload => put_body).should look_like data_bag_item_not_found_from_put_response
           end
         end
         context 'DELETE' do
@@ -412,10 +361,8 @@ describe "Data Bag API endpoint", :data_bags do
         context 'POST' do
           let(:data_bag_item){data_bag_item_1}
           it 'raises a conflict when creating an existing data bag item' do
-            pending("Ruby conflates PUT and POST", :if => ruby?) do
-              post(named_data_bag_url, requestor,
-                   :payload => data_bag_item).should look_like create_data_bag_item_conflict_response
-            end
+            post(named_data_bag_url, requestor,
+                 :payload => data_bag_item).should look_like create_data_bag_item_conflict_response
           end
         end
         # PUT is not allowed, but that's already been tested
@@ -468,23 +415,18 @@ describe "Data Bag API endpoint", :data_bags do
           context 'with various incorrect inputs to update a data bag item' do
 
             context 'to an item with a different id' do
-              pending("Ruby conflates PUT and POST", :if => ruby?) do
+              let(:different_data_bag_id) { "different" }
+              let(:updated_data_bag_item) {{ "id" => different_data_bag_id, "new_stuff" => "foo" }}
 
-                let(:different_data_bag_id) { "different" }
-                let(:updated_data_bag_item) {{ "id" => different_data_bag_id, "new_stuff" => "foo" }}
-
-                let(:expected_failure_response){update_data_bag_item_mismatched_id_response}
-                it 'should have a different id' do
-                  updated_data_bag_item['id'].should_not eq data_bag_item_id
-                end
-                it_behaves_like 'an unsuccessful data bag item PUT'
+              let(:expected_failure_response){update_data_bag_item_mismatched_id_response}
+              it 'should have a different id' do
+                updated_data_bag_item['id'].should_not eq data_bag_item_id
               end
+              it_behaves_like 'an unsuccessful data bag item PUT'
             end
           end
 
-          if erlang?
-            respects_maximum_payload_size
-          end
+          respects_maximum_payload_size
 
         end
         context 'DELETE' do
