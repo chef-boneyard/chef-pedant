@@ -29,14 +29,7 @@ require 'pedant/rspec/cookbook_util'
 describe "Cookbooks API endpoint", :cookbooks do
   include Pedant::RSpec::CookbookUtil
 
-  def self.ruby?
-    Pedant::Config.ruby_cookbook_endpoint?
-  end
-  # When testing against the Ruby version of this endpoint the
-  # 'cookbook-to-be-modified' cookbook which is created (and deleted) in the
-  # 'cookbook_spec' is leaking into this spec. Most likely caused by some Couch
-  # shenanigans...we'll just mark the tests as pending on Ruby.
-  context "PUT /cookbooks/<name>/<version> [update]", :pending => ruby? do
+  context "PUT /cookbooks/<name>/<version> [update]" do
 
     let(:request_method){:PUT}
     shared(:requestor){admin_user}
@@ -66,9 +59,7 @@ describe "Cookbooks API endpoint", :cookbooks do
       delete_cookbook(admin_user, cookbook_name, cookbook_version)
     }
 
-    if erlang?
-      respects_maximum_payload_size
-    end
+    respects_maximum_payload_size
 
     context "as admin user" do
       it "should respond with 200 Ok", :smoke do
@@ -79,10 +70,6 @@ describe "Cookbooks API endpoint", :cookbooks do
 
         put(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
             admin_user, :payload => payload) do |response|
-          if (ruby?)
-            # Don't really care about this; going away in erchef
-            payload["_rev"] = /.*/
-          end
           response.
             should look_like({
                                :status => 200,
@@ -93,10 +80,6 @@ describe "Cookbooks API endpoint", :cookbooks do
         # verify change happened
         get(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
             admin_user) do |response|
-          if (ruby?)
-            # Don't really care about this; going away in erchef
-            payload.delete("_rev")
-          end
           response.
             should look_like({
                                :status => 200,
@@ -171,11 +154,6 @@ describe "Cookbooks API endpoint", :cookbooks do
 
           put(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
               admin_user, :payload => payload) do |response|
-
-            if (ruby?)
-              # Don't really care about this; going away in erchef
-              payload["_rev"] = /.*/
-            end
             response.
               should look_like({
                                  :status => 200,
@@ -187,10 +165,6 @@ describe "Cookbooks API endpoint", :cookbooks do
           # TODO make this match on body when URLs are parsable
           get(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
               admin_user) do |response|
-            if (ruby?)
-              # Don't really care about this; going away in erchef
-              payload.delete("_rev")
-            end
             response.
               should look_like({
                                  :status => 200
@@ -212,11 +186,6 @@ describe "Cookbooks API endpoint", :cookbooks do
 
         put(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
             admin_user, :payload => payload) do |response|
-
-          if (ruby?)
-            # Don't really care about this; going away in erchef
-            payload["_rev"] = /.*/
-          end
           response.
             should look_like({
                                :status => 200,
@@ -228,16 +197,6 @@ describe "Cookbooks API endpoint", :cookbooks do
         # TODO make this match on body when URLs are parsable
         get(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
             admin_user) do |response|
-          if (ruby?)
-            # Don't really care about this; going away in erchef
-            payload.delete("_rev")
-            payload["files"] = [{"name" => "name1", "path" => "path/name1",
-                                  "checksum" => checksums[0],
-                                  "specificity" => "default"},
-                                {"name" => "name2", "path" => "path/name2",
-                                  "checksum" => checksums[1],
-                                  "specificity" => "default"}]
-          end
           response.
             should look_like({
                                :status => 200
@@ -259,11 +218,6 @@ describe "Cookbooks API endpoint", :cookbooks do
             admin_user, :payload => payload) do |response|
 
           error = ["Manifest has checksum aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa but it hasn't yet been uploaded"]
-          if (ruby?)
-            # Don't really care about this; going away in erchef
-            payload["_rev"] = /.*/
-            error = ["Manifest has checksum aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa (path path/name2) but it hasn't yet been uploaded"]
-          end
           response.
             should look_like({
                                :status => 400,
@@ -278,10 +232,6 @@ describe "Cookbooks API endpoint", :cookbooks do
 
         get(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
             admin_user) do |response|
-          if (ruby?)
-            # Don't really care about this; going away in erchef
-            payload.delete("_rev")
-          end
           response.
             should look_like({
                                :status => 200,
@@ -311,11 +261,6 @@ describe "Cookbooks API endpoint", :cookbooks do
         # TODO make this match on body when URLs are parsable
         get(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
             admin_user) do |response|
-          if (ruby?)
-            # Don't really care about this; going away in erchef
-            payload.delete("_rev")
-          end
-
           response.
             should look_like({
                                :status => 200
@@ -328,11 +273,6 @@ describe "Cookbooks API endpoint", :cookbooks do
           payload.delete("files")
           put(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
               admin_user, :payload => payload) do |response|
-
-            if (ruby?)
-              # Don't really care about this; going away in erchef
-              payload["_rev"] = /.*/
-            end
             response.
               should look_like({
                                  :status => 200,
@@ -344,10 +284,6 @@ describe "Cookbooks API endpoint", :cookbooks do
           # TODO make this match on body when URLs are parsable
           get(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
               admin_user) do |response|
-            if (ruby?)
-              # Don't really care about this; going away in erchef
-              payload.delete("_rev")
-            end
             response.
               should look_like({
                                  :status => 200
@@ -380,10 +316,6 @@ describe "Cookbooks API endpoint", :cookbooks do
         # TODO make this match on body when URLs are parsable
         get(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
             admin_user) do |response|
-          if (ruby?)
-            # Don't really care about this; going away in erchef
-            payload.delete("_rev")
-          end
           response.
             should look_like({
                                :status => 200
@@ -401,11 +333,6 @@ describe "Cookbooks API endpoint", :cookbooks do
                                 "specificity" => "default"}]
           put(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
               admin_user, :payload => payload) do |response|
-
-            if (ruby?)
-              # Don't really care about this; going away in erchef
-              payload["_rev"] = /.*/
-            end
             response.
               should look_like({
                                  :status => 200,
@@ -417,10 +344,6 @@ describe "Cookbooks API endpoint", :cookbooks do
           # TODO make this match on body when URLs are parsable
           get(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
               admin_user) do |response|
-            if (ruby?)
-              # Don't really care about this; going away in erchef
-              payload.delete("_rev")
-            end
             response.
               should look_like({
                                  :status => 200
@@ -445,10 +368,6 @@ describe "Cookbooks API endpoint", :cookbooks do
         # TODO make this match on body when URLs are parsable
         get(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
             admin_user) do |response|
-          if (ruby?)
-            # Don't really care about this; going away in erchef
-            payload.delete("_rev")
-          end
           response.
             should look_like({
                                :status => 200
@@ -466,11 +385,6 @@ describe "Cookbooks API endpoint", :cookbooks do
                                 "specificity" => "default"}]
           put(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
               admin_user, :payload => payload) do |response|
-
-            if (ruby?)
-              # Don't really care about this; going away in erchef
-              payload["_rev"] = /.*/
-            end
             response.
               should look_like({
                                  :status => 200,
@@ -482,10 +396,6 @@ describe "Cookbooks API endpoint", :cookbooks do
           # TODO make this match on body when URLs are parsable
           get(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
               admin_user) do |response|
-            if (ruby?)
-              # Don't really care about this; going away in erchef
-              payload.delete("_rev")
-            end
             response.
               should look_like({
                                  :status => 200
@@ -513,10 +423,6 @@ describe "Cookbooks API endpoint", :cookbooks do
         # TODO make this match on body when URLs are parsable
         get(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
             admin_user) do |response|
-          if (ruby?)
-            # Don't really care about this; going away in erchef
-            payload.delete("_rev")
-          end
           response.
             should look_like({
                                :status => 200
@@ -537,11 +443,6 @@ describe "Cookbooks API endpoint", :cookbooks do
                                 "specificity" => "default"}]
           put(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
               admin_user, :payload => payload) do |response|
-
-            if (ruby?)
-              # Don't really care about this; going away in erchef
-              payload["_rev"] = /.*/
-            end
             response.
               should look_like({
                                  :status => 200,
@@ -553,10 +454,6 @@ describe "Cookbooks API endpoint", :cookbooks do
           # TODO make this match on body when URLs are parsable
           get(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
               admin_user) do |response|
-            if (ruby?)
-              # Don't really care about this; going away in erchef
-              payload.delete("_rev")
-            end
             response.
               should look_like({
                                  :status => 200
@@ -585,10 +482,6 @@ describe "Cookbooks API endpoint", :cookbooks do
         # TODO make this match on body when URLs are parsable
         get(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
             admin_user) do |response|
-          if (ruby?)
-            # Don't really care about this; going away in erchef
-            payload.delete("_rev")
-          end
           response.
             should look_like({
                                :status => 200
@@ -609,11 +502,6 @@ describe "Cookbooks API endpoint", :cookbooks do
             admin_user, :payload => payload) do |response|
 
           error = ["Manifest has checksum aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa but it hasn't yet been uploaded"]
-          if (ruby?)
-            # Don't really care about this; going away in erchef
-            payload["_rev"] = /.*/
-            error = ["Manifest has checksum aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa (path path/name4) but it hasn't yet been uploaded"]
-          end
           response.
             should look_like({
                                :status => 400,
@@ -637,10 +525,6 @@ describe "Cookbooks API endpoint", :cookbooks do
         # TODO make this match on body when URLs are parsable
         get(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
             admin_user) do |response|
-          if (ruby?)
-            # Don't really care about this; going away in erchef
-            payload.delete("_rev")
-          end
           response.
             should look_like({
                                :status => 200
@@ -725,10 +609,6 @@ describe "Cookbooks API endpoint", :cookbooks do
 
         put(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
             admin_user, :payload => payload) do |response|
-          if (ruby?)
-            # Don't really care about this; going away in erchef
-            payload["_rev"] = /.*/
-          end
           response.
             should look_like({
                                :status => 200,
@@ -790,10 +670,6 @@ describe "Cookbooks API endpoint", :cookbooks do
 
         put(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}?force=true"),
             admin_user, :payload => payload) do |response|
-          if (ruby?)
-            # Don't really care about this; going away in erchef
-            payload["_rev"] = /.*/
-          end
           # You can modify things, but you can't unfreeze the cookbook
           payload["frozen?"] = true
           response.
@@ -806,9 +682,6 @@ describe "Cookbooks API endpoint", :cookbooks do
         # Verify that change did occur
         get(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
             admin_user) do |response|
-          if (ruby?)
-           payload.delete("_rev")
-          end
           response.
             should look_like({
                                :status => 200,
@@ -826,40 +699,22 @@ describe "Cookbooks API endpoint", :cookbooks do
 
         put(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}?force=false"),
             admin_user, :payload => payload) do |response|
-          if (ruby?)
-            # Don't really care about this; going away in erchef
-            payload["_rev"] = /.*/
-          end
           # You can modify things, but you can't unfreeze the cookbook
           payload["frozen?"] = true
-          if (ruby?)
-            # This is a bug in Ruby -- this shouldn't work, and we are
-            # NOT duplicating this behavior in erlang
-            response.
-              should look_like({
-                                 :status => 200,
-                                 :body_exact => payload
-                               })
-          else
-            response.
-              should look_like({
-                                 :status => 409,
-                                 :body_exact => {
-                                   "error" => ["The cookbook #{cookbook_name} at version #{cookbook_version} is frozen. Use the 'force' option to override."]
-                                 }
-                               })
-          end
+          response.
+            should look_like({
+                               :status => 409,
+                               :body_exact => {
+                                 "error" => ["The cookbook #{cookbook_name} at version #{cookbook_version} is frozen. Use the 'force' option to override."]
+                               }
+                             })
         end
 
         # Verify that change did occur
         get(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
             admin_user) do |response|
-          if (ruby?)
-            payload.delete("_rev")
-          else
-            payload = new_cookbook(cookbook_name, cookbook_version)
-            payload["frozen?"] = true
-          end
+          payload = new_cookbook(cookbook_name, cookbook_version)
+          payload["frozen?"] = true
           response.
             should look_like({
                                :status => 200,
@@ -870,180 +725,50 @@ describe "Cookbooks API endpoint", :cookbooks do
     end # context for frozen?
 
     context "when modifying data" do
-      if ruby?
-        # Not duplicating this for erlang; raise 400 instead
-        it "changing name has very odd behavior" do
-          # TODO: This seems very bad
-
-          new_name = 'new_name'
-
-          payload = new_cookbook(cookbook_name, cookbook_version)
-          payload['name'] = new_name
-          put(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
-              admin_user, :payload => payload) do |response|
-            if (ruby?)
-              # Ruby endpoint produces this, erlang should not
-              payload["_rev"] = /.*/
-            end
-            response.
-              should look_like({
-                                 :status => 200,
-                                 :body_exact => payload
-                               })
-          end
-
-          # verify change happened
-
-          # Old name is gone?
-          get(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
-              admin_user) do |response|
-            if (ruby?)
-              payload.delete("_rev")
-            end
-            response.
-              should look_like({
-                                 :status => 404
-                               })
-          end
-
-          # New name?
-          get(api_url("/cookbooks/#{new_name}/#{cookbook_version}"),
-              admin_user) do |response|
-            if (ruby?)
-              payload.delete("_rev")
-            end
-            response.
-              should look_like({
-                                 :status => 404
-                               })
-          end
-
-          # Maybe a different new name?
-          get(api_url("/cookbooks/"),
-              admin_user) do |response|
-            if (ruby?)
-              payload.delete("_rev")
-            end
-            response.
-              should look_like({
-                                 :status => 200,
-                                 :body_exact => {
-                                   cookbook_name => {
-                                     'url' => api_url("/cookbooks/#{cookbook_name}"),
-                                     'versions' => [{
-                                                      'url' => api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
-                                                      'version' => cookbook_version
-                                                    }]
-                                   }
-                                 }
-                               })
-          end
-
-          # Wait, what?
-          get(api_url("/cookbooks/#{cookbook_name}"),
-              admin_user) do |response|
-            if (ruby?)
-              payload.delete("_rev")
-            end
-            response.
-              should look_like({
-                                 :status => 200
-                               })
-          end
-        end # it changing name has very odd behavior
-      end # if ruby?
-
       context "for cookbook_name" do
-        if (ruby?)
-          should_fail_to_change('cookbook_name', 'new_cookbook_name', 400,
-                                'You said the cookbook was named new_cookbook_name, ' +
-                                 'but the URL says it should be ' +
-                                 'cookbook-to-be-modified.')
-          should_fail_to_change('cookbook_name', :delete, 400,
-                                'You said the cookbook was named , ' +
-                                 'but the URL says it should be ' +
-                                 'cookbook-to-be-modified.')
-
-          [1, true, [], {}, 'with a space', '外国語'].each do |value|
-            should_fail_to_change('cookbook_name', value, 400,
-                                  "You said the cookbook was named #{value}, but the" +
-                                   " URL says it should be cookbook-to-be-modified.")
-          end
-        else
-          [1, true, [], {}].each do |value|
-            should_fail_to_change('cookbook_name', value, 400, "Field 'cookbook_name' invalid")
-          end
-          ['new_cookbook_name', 'with a space', '外国語'].each do |value|
-            should_fail_to_change('cookbook_name', value, 400, "Field 'cookbook_name' invalid")
-          end
-          should_fail_to_change('cookbook_name', :delete, 400, "Field 'cookbook_name' missing")
+        [1, true, [], {}].each do |value|
+          should_fail_to_change('cookbook_name', value, 400, "Field 'cookbook_name' invalid")
         end
+        ['new_cookbook_name', 'with a space', '外国語'].each do |value|
+          should_fail_to_change('cookbook_name', value, 400, "Field 'cookbook_name' invalid")
+        end
+        should_fail_to_change('cookbook_name', :delete, 400, "Field 'cookbook_name' missing")
       end # context for cookbook_name
 
       context "for json_class" do
-        if (ruby?)
-          update_should_crash_server('json_class', 'Chef::NonCookbook')
-          should_fail_to_change('json_class', :delete, 400, "You didn't pass me a valid object!")
-          update_should_crash_server('json_class', 1)
-          update_should_crash_server('json_class', 'all wrong')
-        else
-          should_not_change('json_class', :delete, 'Chef::CookbookVersion')
-          should_fail_to_change('json_class', 1, 400, "Field 'json_class' invalid")
-          should_fail_to_change('json_class', 'Chef::NonCookbook', 400, "Field 'json_class' invalid")
-          should_fail_to_change('json_class', 'all wrong', 400, "Field 'json_class' invalid")
-        end
+        should_not_change('json_class', :delete, 'Chef::CookbookVersion')
+        should_fail_to_change('json_class', 1, 400, "Field 'json_class' invalid")
+        should_fail_to_change('json_class', 'Chef::NonCookbook', 400, "Field 'json_class' invalid")
+        should_fail_to_change('json_class', 'all wrong', 400, "Field 'json_class' invalid")
       end # context for json_class
 
       context "for chef_type" do
         should_not_change('chef_type', :delete, 'cookbook_version')
-        if (ruby?)
-          should_not_change('chef_type', 'not_cookbook', 'cookbook_version')
-          should_not_change('chef_type', false, 'cookbook_version')
-          should_not_change('chef_type', ['just any', 'old junk'], 'cookbook_version')
-        else
-          should_fail_to_change('chef_type', 'not_cookbook', 400, "Field 'chef_type' invalid")
-          should_fail_to_change('chef_type', false, 400, "Field 'chef_type' invalid")
-          should_fail_to_change('chef_type', ['just any', 'old junk'], 400, "Field 'chef_type' invalid")
-        end
+        should_fail_to_change('chef_type', 'not_cookbook', 400, "Field 'chef_type' invalid")
+        should_fail_to_change('chef_type', false, 400, "Field 'chef_type' invalid")
+        should_fail_to_change('chef_type', ['just any', 'old junk'], 400, "Field 'chef_type' invalid")
       end # context for chef_type
 
       context "for version" do
         should_change('version', :delete)
-        if (ruby?)
-          should_change('version', '0.0')
-          should_change('version', 1)
-          should_change('version', ['all', 'ignored'])
-          should_change('version', {})
-          should_change('version', 'something invalid')
-        else
-          error = "Field 'version' invalid"
-          should_fail_to_change('version', 1, 400, error)
-          should_fail_to_change('version', ['all', 'ignored'], 400, error)
-          should_fail_to_change('version', {}, 400, error)
+        error = "Field 'version' invalid"
+        should_fail_to_change('version', 1, 400, error)
+        should_fail_to_change('version', ['all', 'ignored'], 400, error)
+        should_fail_to_change('version', {}, 400, error)
 
-          error = "Field 'version' invalid"
-          should_fail_to_change('version', '0.0', 400, error)
-          should_fail_to_change('version', 'something invalid', 400, error)
-        end
+        error = "Field 'version' invalid"
+        should_fail_to_change('version', '0.0', 400, error)
+        should_fail_to_change('version', 'something invalid', 400, error)
       end # context for version
 
       context "for collections" do
         ['attributes', 'definitions', 'files', 'libraries', 'providers', 'recipes',
          'resources', 'root_files', 'templates'].each do |segment|
           context "for #{segment}" do
-            if (ruby?)
-              update_should_crash_server(segment, 'foo')
-              update_should_crash_server(segment, ['foo'])
-            else
-              should_fail_to_change(segment, 'foo', 400, "Field '#{segment}' invalid")
-              error = "Invalid element in array value of '#{segment}'."
-              should_fail_to_change(segment, ['foo'], 400, error)
-            end
+            should_fail_to_change(segment, 'foo', 400, "Field '#{segment}' invalid")
+            error = "Invalid element in array value of '#{segment}'."
+            should_fail_to_change(segment, ['foo'], 400, error)
             should_change(segment, [])
-
-            if (ruby?)
-              error = "Manifest has checksum  (path ) but it hasn't yet been uploaded"
-            end
             should_fail_to_change(segment, [{}, {}], 400, error)
             should_fail_to_change(segment, [{'foo' => 'bar'}], 400, error)
           end # context for #{segment}
@@ -1057,40 +782,26 @@ describe "Cookbooks API endpoint", :cookbooks do
     end # context when modifying data
 
     context "when modifying metadata" do
-      if (ruby?)
-        should_fail_to_change('metadata', {'new_name' => 'foo'}, 400, "You said the cookbook was version 0.0.0, but the URL says it should be #{cookbook_version}.")
-      else
-        should_fail_to_change('metadata', {'new_name' => 'foo'}, 400, "Field 'metadata.version' missing")
-      end
+      should_fail_to_change('metadata', {'new_name' => 'foo'}, 400, "Field 'metadata.version' missing")
 
       context "for name" do
-        if (ruby?)
-          ['new_name', :delete, 1, true, {}, [], 'invalid name', 'ダメよ'].each do |name|
-            should_change_metadata('name', name)
-          end
-        else
-          ['new_name', :delete].each do |name|
-            should_change_metadata('name', name)
-          end
-          [[1, 'number'], [true, 'boolean'], [{}, 'object'],
-           [[], 'array']].each do |error|
-            json_error = "Field 'metadata.name' invalid"
-            should_fail_to_change_metadata('name', error[0], 400, json_error)
-          end
-          ['invalid name', 'ダメよ'].each do |name|
-            should_fail_to_change_metadata('name', name, 400, "Field 'metadata.name' invalid")
-          end
+        ['new_name', :delete].each do |name|
+          should_change_metadata('name', name)
+        end
+        [[1, 'number'], [true, 'boolean'], [{}, 'object'],
+        [[], 'array']].each do |error|
+          json_error = "Field 'metadata.name' invalid"
+          should_fail_to_change_metadata('name', error[0], 400, json_error)
+        end
+        ['invalid name', 'ダメよ'].each do |name|
+          should_fail_to_change_metadata('name', name, 400, "Field 'metadata.name' invalid")
         end
       end # context for name
 
       context "for description" do
         should_change_metadata('description', 'new description')
         should_change_metadata('description', :delete)
-        if (ruby?)
-          should_change_metadata('description', 1)
-        else
-          should_fail_to_change_metadata('description', 1, 400, "Field 'metadata.description' invalid")
-        end
+        should_fail_to_change_metadata('description', 1, 400, "Field 'metadata.description' invalid")
       end # context for description
 
       context "for long description" do
@@ -1099,85 +810,41 @@ describe "Cookbooks API endpoint", :cookbooks do
         # Deleting the long description results in it being "reset" to
         # the empty string
         should_change_metadata('long_description', :delete, "")
-
-        if (ruby?)
-          should_change_metadata('long_description', false)
-        else
-          should_fail_to_change_metadata('long_description', false, 400, "Field 'metadata.long_description' invalid")
-        end
+        should_fail_to_change_metadata('long_description', false, 400, "Field 'metadata.long_description' invalid")
       end # context for long description
 
       context "for version" do
-        if (ruby?)
-          should_fail_to_change_metadata('version', '0.0', 400,
-                                         'You said the cookbook was version 0.0, ' +
-                                          "but the URL says it should be #{cookbook_version}.")
-          should_fail_to_change_metadata('version', 'not a version', 400,
-                                         'You said the cookbook was version ' +
-                                          'not a version, ' +
-                                          "but the URL says it should be #{cookbook_version}.")
-          should_fail_to_change_metadata('version', :delete, 400,
-                                         'You said the cookbook was version 0.0.0, ' +
-                                          "but the URL says it should be #{cookbook_version}.")
-          should_fail_to_change_metadata('version', 1, 400,
-                                         'You said the cookbook was version 1, ' +
-                                          "but the URL says it should be #{cookbook_version}.")
-        else
-          should_fail_to_change_metadata('version', '0.0', 400, "Field 'metadata.version' invalid")
-          should_fail_to_change_metadata('version', 'not a version', 400, "Field 'metadata.version' invalid")
-          should_fail_to_change_metadata('version', :delete, 400, "Field 'metadata.version' missing")
-          should_fail_to_change_metadata('version', 1, 400, "Field 'metadata.version' invalid")
-        end
+        should_fail_to_change_metadata('version', '0.0', 400, "Field 'metadata.version' invalid")
+        should_fail_to_change_metadata('version', 'not a version', 400, "Field 'metadata.version' invalid")
+        should_fail_to_change_metadata('version', :delete, 400, "Field 'metadata.version' missing")
+        should_fail_to_change_metadata('version', 1, 400, "Field 'metadata.version' invalid")
       end # context for version
 
       context "for maintainer" do
         should_change_metadata('maintainer', 'Captain Stupendous')
         should_change_metadata('maintainer', :delete)
-        if (ruby?)
-          should_change_metadata('maintainer', true)
-        else
-          should_fail_to_change_metadata('maintainer', true, 400, "Field 'metadata.maintainer' invalid")
-        end
-
+        should_fail_to_change_metadata('maintainer', true, 400, "Field 'metadata.maintainer' invalid")
         should_change_metadata('maintainer_email', 'cap@awesome.com')
         should_change_metadata('maintainer_email', 'not really an email')
         should_change_metadata('maintainer_email', :delete)
-        if (ruby?)
-          should_change_metadata('maintainer_email', false)
-        else
-          should_fail_to_change_metadata('maintainer_email', false, 400, "Field 'metadata.maintainer_email' invalid")
-        end
+        should_fail_to_change_metadata('maintainer_email', false, 400, "Field 'metadata.maintainer_email' invalid")
       end # context for maintainer
 
       context "for license" do
         should_change_metadata('license', 'to_kill')
         should_change_metadata('license', :delete)
-        if (ruby?)
-          should_change_metadata('license', 1)
-        else
-          should_fail_to_change_metadata('license', 1, 400, "Field 'metadata.license' invalid")
-        end
+        should_fail_to_change_metadata('license', 1, 400, "Field 'metadata.license' invalid")
       end # context for license
 
       context "for collections" do
         context "for platforms" do
           json_error = "Field 'metadata.platforms' invalid"
-          if (ruby?)
-            should_change_metadata('platforms', [])
-          else
-            should_fail_to_change_metadata('platforms', [], 400, json_error)
-          end
+          should_fail_to_change_metadata('platforms', [], 400, json_error)
           should_change_metadata('platforms', {})
           should_change_metadata('platforms', :delete)
-          if (ruby?)
-            should_change_metadata('platforms', "foo")
-            should_change_metadata('platforms', ["foo"])
-            should_change_metadata('platforms', {"foo" => {}})
-          else
-            should_fail_to_change_metadata('platforms', "foo", 400, json_error)
-            should_fail_to_change_metadata('platforms', ["foo"], 400, json_error)
-            should_fail_to_change_metadata('platforms', {"foo" => {}}, 400, "Invalid value '{[]}' for metadata.platforms")
-          end
+          should_fail_to_change_metadata('platforms', "foo", 400, json_error)
+          should_fail_to_change_metadata('platforms', ["foo"], 400, json_error)
+          should_fail_to_change_metadata('platforms', {"foo" => {}}, 400, "Invalid value '{[]}' for metadata.platforms")
         end
 
         def self.should_change_with_metadata(_attribute, _value)
@@ -1190,7 +857,7 @@ describe "Cookbooks API endpoint", :cookbooks do
           end
         end
 
-        context "with metadata.providing", :pending => ruby? do
+        context "with metadata.providing" do
           # In erchef, we are not validating the "providing" metadata
           # See: http://tickets.opscode.com/browse/CHEF-3976
 
@@ -1213,20 +880,11 @@ describe "Cookbooks API endpoint", :cookbooks do
 
         context "for groupings" do
           json_error = "Field 'metadata.groupings' invalid"
-          if (ruby?)
-            should_change_metadata('groupings', [])
-          else
-            should_fail_to_change_metadata('groupings', [], 400, json_error)
-          end
+          should_fail_to_change_metadata('groupings', [], 400, json_error)
           should_change_metadata('groupings', {})
           should_change_metadata('groupings', :delete)
-          if (ruby?)
-            should_change_metadata('groupings', "foo")
-            should_change_metadata('groupings', ["foo"])
-          else
-            should_fail_to_change_metadata('groupings', "foo", 400, json_error)
-            should_fail_to_change_metadata('groupings', ["foo"], 400, json_error)
-          end
+          should_fail_to_change_metadata('groupings', "foo", 400, json_error)
+          should_fail_to_change_metadata('groupings', ["foo"], 400, json_error)
           should_change_metadata('groupings', {"foo" => {}})
         end # context for groupings
 
@@ -1234,11 +892,7 @@ describe "Cookbooks API endpoint", :cookbooks do
          'replacing'].each do |type|
           context "for #{type}" do
             json_error = "Field 'metadata.#{type}' invalid"
-            if (ruby?)
-              should_change_metadata(type, [])
-            else
-              should_fail_to_change_metadata(type, [], 400, json_error)
-            end
+            should_fail_to_change_metadata(type, [], 400, json_error)
             should_change_metadata(type, {})
 
             if type == "dependencies"
@@ -1250,15 +904,9 @@ describe "Cookbooks API endpoint", :cookbooks do
                should_change_metadata(type, :delete)
             end
 
-            if (ruby?)
-              update_metadata_should_crash_server(type, "foo")
-              should_not_change_metadata(type, ["foo"], {"foo" => []})
-              should_change_metadata(type, {"foo" => {}})
-            else
-              should_fail_to_change_metadata(type, "foo", 400, json_error)
-              should_fail_to_change_metadata(type, ["foo"], 400, json_error)
-              should_fail_to_change_metadata(type, {"foo" => {}}, 400, "Invalid value '{[]}' for metadata.#{type}")
-            end
+            should_fail_to_change_metadata(type, "foo", 400, json_error)
+            should_fail_to_change_metadata(type, ["foo"], 400, json_error)
+            should_fail_to_change_metadata(type, {"foo" => {}}, 400, "Invalid value '{[]}' for metadata.#{type}")
           end # context for #{type}
         end # [loop over dependencies, recommendations, suggestions,
             #            conflicting, replacing]

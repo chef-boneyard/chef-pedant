@@ -18,10 +18,6 @@ require 'pedant/rspec/cookbook_util'
 describe "Cookbook Versions API endpoint, GET", :cookbooks do
   include Pedant::RSpec::CookbookUtil
 
-  def self.ruby?
-    Pedant::Config.ruby_cookbook_endpoint?
-  end
-
   let(:request_method) { :GET }
   let(:request_url)    { named_cookbook_url }
   let(:requestor)      { admin_user }
@@ -105,21 +101,12 @@ describe "Cookbook Versions API endpoint, GET", :cookbooks do
       should_respond_with 200, 'and the latest cookbook version'
     end # when requesting the 'latest' cookbook version
 
-    # Note that this will only work on erchef... The Ruby implementation blows up on a request like this
-    puts "Ruby? #{ruby?} Erlang? #{erlang?}"
-    if erlang?
-      context 'on Erlang' do
-
-        context "when requesting the 'latest' version of a non-existent cookbook" do
-          let(:expected_response) { cookbook_version_not_found_exact_response }
-          let(:cookbook_name) { non_existent_cookbook }
-          let(:cookbook_version) { '_latest' }
-
-          should_respond_with 404
-        end # when requesting the 'latest' version of a non-existent cookbook
-
-      end # on Erlang
-    end # erlang?
-
+    context "when requesting the 'latest' version of a non-existent cookbook" do
+      let(:expected_response) { cookbook_version_not_found_exact_response }
+      let(:cookbook_name) { non_existent_cookbook }
+      let(:cookbook_version) { '_latest' }
+      
+      should_respond_with 404
+    end # when requesting the 'latest' version of a non-existent cookbook
   end # with existing cookbook
 end
