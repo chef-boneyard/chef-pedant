@@ -22,14 +22,6 @@ describe 'Search Endpoint Open Source Permission Checks', :search => true, :plat
   include Pedant::RSpec::DataBagUtil
   include Pedant::OpenSource::PermissionChecks
 
-  def self.ruby?
-    Pedant::Config.ruby_search_endpoint?
-  end
-
-  if ruby?
-    let(:method_not_allowed_response){resource_not_found_response}
-  end
-
   let(:admin_requestor){admin_user}
 
   context "/search" do
@@ -61,17 +53,13 @@ describe 'Search Endpoint Open Source Permission Checks', :search => true, :plat
       end
 
       # Partial Search
-      if ruby?
-        should_not_allow_method :POST
-      else
-        context 'POST' do
-          let(:request_method){:POST}
-          # Set a minimally-acceptable payload to avoid errors
-          let(:request_payload){{"foo" => ["bar"]}}
-          include_context 'permission checks' do
-            let(:admin_response){ok_response}
-            let(:non_admin_response){ok_response}
-          end
+      context 'POST' do
+        let(:request_method){:POST}
+        # Set a minimally-acceptable payload to avoid errors
+        let(:request_payload){{"foo" => ["bar"]}}
+        include_context 'permission checks' do
+          let(:admin_response){ok_response}
+          let(:non_admin_response){ok_response}
         end
       end
 
