@@ -20,16 +20,6 @@ describe 'Node Endpoint Open Source Permission Checks', :platform => :open_sourc
   include Pedant::RSpec::NodeUtil
   include Pedant::OpenSource::PermissionChecks
 
-  def self.ruby?
-    Pedant::Config.ruby_node_endpoint?
-  end
-
-  # TODO: This can be removed when we're on Erchef OSC
-  if ruby?
-    # Merb returns 404s instead of 405s
-    let(:method_not_allowed_response){resource_not_found_response}
-  end
-
   # Until we rename the requestors
   let(:admin_requestor){admin_user}
 
