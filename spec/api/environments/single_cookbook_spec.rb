@@ -23,10 +23,6 @@ describe "/environments/ENVIRONMENT/cookbooks/COOKBOOK API endpoint", :environme
 
   include_context "environment_body_util" # from EnvironmentUtil
 
-  def self.ruby?
-    Pedant::Config.ruby_environment_endpoint?
-  end
-
   # TODO: Refactor as macros instead of being data-driven
   def self.env
     "test_env"
@@ -62,10 +58,6 @@ describe "/environments/ENVIRONMENT/cookbooks/COOKBOOK API endpoint", :environme
   shared(:default)   { self.class.default }
   shared(:cookbooks) { self.class.cookbooks }
 
-  def ruby?
-    Pedant::Config.ruby_environment_endpoint?
-  end
-
   before(:all) { add_environment(admin_user, new_environment(env)) }
   after(:all)  { delete_environment(admin_user, env) }
 
@@ -76,22 +68,13 @@ describe "/environments/ENVIRONMENT/cookbooks/COOKBOOK API endpoint", :environme
 
       get(api_url("/environments/#{non_existent_environment}/cookbooks/fake_cookbook_doesnt_matter"), admin_user) do |response|
         response.should look_like(
-                                  # Ruby bombs out when it attempts to check permissions
-                                  if ruby?
-                                    {
-                                      :status => 403,
-                                      :body_exact => {
-                                        "error" => ["Merb::ControllerExceptions::Forbidden"]
-                                      }
-                                    }
-                                  else
                                     {
                                       :status => 404,
                                       :body_exact => {
                                         "error" => ["Cannot load environment #{non_existent_environment}"]
                                       }
                                     }
-                                  end)
+                                  )
       end
     end
 
@@ -103,27 +86,18 @@ describe "/environments/ENVIRONMENT/cookbooks/COOKBOOK API endpoint", :environme
         # (searching for the _latest version as a way to query for existence of the cookbook)
         get(api_url("/cookbooks/#{non_existent_cookbook}/_latest"), admin_user) do |response|
           # Ruby bombs out when checking for a non-existent cookbook
-          response.should have_status_code(ruby? ? 500 : 404)
+          response.should have_status_code(404)
         end
 
         get(api_url("/environments/#{environment}/cookbooks/#{non_existent_cookbook}"), admin_user) do |response|
           response.should look_like(
-                                    # Ruby bombs out when it attempts to check permissions
-                                    if ruby?
-                                      {
-                                        :status => 403,
-                                        :body_exact => {
-                                          "error" => ["Merb::ControllerExceptions::Forbidden"]
-                                        }
-                                      }
-                                    else
                                       {
                                         :status => 404,
                                         :body_exact => {
                                           "error" => ["Cannot find a cookbook named #{non_existent_cookbook}"]
                                         }
                                       }
-                                    end)
+                                    )
         end
       end
     end

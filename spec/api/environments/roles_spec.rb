@@ -24,10 +24,6 @@ describe "Environments API Endpoint", :environments, :roles do
   # include roles for testing w/ environments roles method
   include Pedant::RSpec::RoleUtil
 
-  def self.ruby?
-    Pedant::Config.ruby_environment_endpoint?
-  end
-
   # TODO: pull this up somewhere else, eventually
   let(:organizations_url){ "#{server}/organizations" }
 
@@ -39,14 +35,6 @@ describe "Environments API Endpoint", :environments, :roles do
   let(:new_environment_name) { 'pedant_testing_environment' }
   let(:non_existent_environment_name) { 'pedant_dummy_environment' }
 
-  # For these tests to work, both roles and environments
-  # have to route to the same endpoint/data store
-  # erchef/sql or ruby/couchdb
-  #
-  # The environments + roles endpoint is the same in erchef -
-  # so no matter which way the endpoint is reached, through
-  # environments or roles, these tests are the same and should pass
-  #
   # TODO: Should turn this into a macro or a shared_context
   describe "GET /environments/<name>/roles" do
     let(:request_method) { :GET }

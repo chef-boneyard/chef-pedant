@@ -24,12 +24,7 @@ describe "Environments API Endpoint", :environments do
   # include roles for testing w/ environments roles method
   #include Pedant::RSpec::RoleUtil
 
-  def self.ruby?
-    Pedant::Config.ruby_environment_endpoint?
-  end
-
   let(:requestor) { admin_user }
-
 
   # Deal with subtly different error messages/codes in one place
 
@@ -45,9 +40,7 @@ describe "Environments API Endpoint", :environments do
     let(:created_resource)  { { "uri" => api_url("/environments/#{new_environment_name}") } }
     let(:persisted_resource) { get_environment requestor, new_environment_name }
 
-    if erlang?
-      respects_maximum_payload_size
-    end
+    respects_maximum_payload_size
 
     context 'with no additional environments' do
       before(:suite) { delete_environment(admin_user, new_environment_name) }
@@ -101,11 +94,7 @@ describe "Environments API Endpoint", :environments do
           let(:request_headers) { { "Accept" => "application/xml" } }
           let(:expected_response) { not_acceptable_response }
 
-          if erlang?
-            should_respond_with 406
-          else
-            pending "should respond with 406 Not Acceptable"
-          end
+          should_respond_with 406
         end
 
         context 'when sending something other than application/json' do
@@ -153,12 +142,7 @@ describe "Environments API Endpoint", :environments do
 
           context 'with an array', :validation do
             let(:request_payload) { '["name","blah"]' }
-
-            if (ruby?)
-              should_respond_with_error 500, "undefined method `name' for [\"name\", \"blah\"]:Array"
-            else
-              should_respond_with_error 400, incorrect_json_type_body_msg
-            end
+            should_respond_with_error 400, incorrect_json_type_body_msg
           end
 
           should_respond_with_bad_request 'with a string', '"environment"'
@@ -167,29 +151,14 @@ describe "Environments API Endpoint", :environments do
           should_respond_with_bad_request 'with a boolean', 'true'
           should_respond_with_bad_request 'with a null', 'null'
 
-          if (ruby?)
-            it "succeeds with invalid key blah in request body", :pending do
-              # This actually succeeds, but the test doesn't work with ruby endpoint
-            end
-          else
-            fails_with_value("blah", "anyoldvalue", "Invalid key blah in request body")
-          end
+          fails_with_value("blah", "anyoldvalue", "Invalid key blah in request body")
         end
 
         context 'for name' do
-          # Error message different in Ruby
-          fails_with_value("name", :delete, "Field 'name' missing", nil,
-                           ruby? ? true : false)
-
-          # These cause internal server errors in Ruby
-          fails_with_value("name", "", "Field 'name' invalid",
-                           nil, ruby? ? true : false)
-          fails_with_value("name", "abc!123",
-                           "Field 'name' invalid", nil,
-                           ruby? ? true : false)
-          fails_with_value("name", "abc 123",
-                           "Field 'name' invalid", nil,
-                           ruby? ? true : false)
+          fails_with_value("name", :delete, "Field 'name' missing", nil, false)
+          fails_with_value("name", "", "Field 'name' invalid", nil, false)
+          fails_with_value("name", "abc!123", "Field 'name' invalid", nil, false)
+          fails_with_value("name", "abc 123", "Field 'name' invalid", nil, false)
 
           # TODO: Looks like we're losing the null character with the
           # ejson:decode call which is eating it silently
@@ -205,23 +174,13 @@ describe "Environments API Endpoint", :environments do
             end
           end
 
-          # Ruby enpoint happily accepts this
           fails_with_value("name", "大爆発",
-                           "Field 'name' invalid", nil,
-                           ruby? ? true : false)
-          # Ruby fails with internal server error
-          fails_with_value("name", 1999, incorrect_json_type_name_msg, nil,
-                           ruby? ? true : false)
-
+                           "Field 'name' invalid", nil, false)
+          fails_with_value("name", 1999, incorrect_json_type_name_msg, nil, false)
           fails_with_value("name", nil, incorrect_json_type_name_msg)
-
-          # These cause internal server errors in Ruby
-          fails_with_value("name", true, incorrect_json_type_name_msg, nil,
-                           ruby? ? true : false)
-          fails_with_value("name", [], incorrect_json_type_name_msg, nil,
-                           ruby? ? true : false)
-          fails_with_value("name", {}, incorrect_json_type_name_msg, nil,
-                           ruby? ? true : false)
+          fails_with_value("name", true, incorrect_json_type_name_msg, nil, false)
+          fails_with_value("name", [], incorrect_json_type_name_msg, nil, false)
+          fails_with_value("name", {}, incorrect_json_type_name_msg, nil, false)
         end
 
         context "with weird environment name" do
@@ -241,43 +200,24 @@ describe "Environments API Endpoint", :environments do
           succeeds_with_value("description",
                               "\u0048\u0065\u006c\u006c\u006f\u0020\u65e5\u672c!")
 
-          # Ruby fails with internal server error
-          fails_with_value("description", 1999, "Field 'description' invalid",
-                           nil, ruby? ? true : false)
+          fails_with_value("description", 1999, "Field 'description' invalid", nil, false)
         end
 
         context "for json_class" do
           succeeds_with_value("json_class", "Chef::Environment")
-
-          # Ruby endpoint fails on this
-          if (ruby?)
-            fails_with_value("json_class", :delete, must_supply_data_msg)
-          else
-            succeeds_with_value("json_class", :delete)
-          end
+          succeeds_with_value("json_class", :delete)
           fails_with_value("json_class", "", incorrect_json_type_class_msg)
-
-          # These fail with internal service error in Ruby
-          fails_with_value("json_class", 1999, incorrect_json_type_class_msg, nil,
-                           ruby? ? true : false)
-          fails_with_value("json_class", "notaclass", incorrect_json_type_class_msg,
-                           nil, ruby? ? true : false)
+          fails_with_value("json_class", 1999, incorrect_json_type_class_msg, nil, false)
+          fails_with_value("json_class", "notaclass", incorrect_json_type_class_msg, nil, false)
         end
 
         context "for chef_type" do
           succeeds_with_value("chef_type", "environment")
           succeeds_with_value("chef_type", :delete)
 
-          # Ruby endpoint swallows bad JSON here, but tests can't handle it
-          if (ruby?)
-            succeeds_with_value("chef_type", "", nil, nil, true)
-            succeeds_with_value("chef_type", 1999, nil, nil, true)
-            succeeds_with_value("chef_type", "notaclass", nil, nil, true)
-          else
-            fails_with_value("chef_type", "", incorrect_json_type_type_msg)
-            fails_with_value("chef_type", 1999, incorrect_json_type_type_msg)
-            fails_with_value("chef_type", "notaclass", incorrect_json_type_type_msg)
-          end
+          fails_with_value("chef_type", "", incorrect_json_type_type_msg)
+          fails_with_value("chef_type", 1999, incorrect_json_type_type_msg)
+          fails_with_value("chef_type", "notaclass", incorrect_json_type_type_msg)
         end
 
         context "for default_attributes" do
@@ -286,13 +226,9 @@ describe "Environments API Endpoint", :environments do
           succeeds_with_value("default_attributes", {"key1" => "value1",
                               "key2" => "value2"})
 
-          # These cause internal server errors in Ruby
-          fails_with_value("default_attributes", 1999,
-                           "Field 'default_attributes' is not a hash", nil,
-                           ruby? ? true : false)
+          fails_with_value("default_attributes", 1999, "Field 'default_attributes' is not a hash", nil, false)
           fails_with_value("default_attributes", "hello",
-                           "Field 'default_attributes' is not a hash", nil,
-                           ruby? ? true : false)
+                           "Field 'default_attributes' is not a hash", nil, false)
 
           context "for keys" do
             succeeds_with_value("default_attributes", {"key" => "value"})
@@ -300,16 +236,12 @@ describe "Environments API Endpoint", :environments do
 
             succeeds_with_value("default_attributes", {"" => "value"})
 
-            # These cause internal server errors in Ruby
             fails_with_value("default_attributes", '{null:"value"}',
-                             "Field 'default_attributes' is not a hash", nil,
-                             ruby? ? true : false)
+                             "Field 'default_attributes' is not a hash", nil, false)
             fails_with_value("default_attributes", '{99:"value"}',
-                              "Field 'default_attributes' is not a hash", nil,
-                             ruby? ? true : false)
+                              "Field 'default_attributes' is not a hash", nil, false)
             fails_with_value("default_attributes", '{"key":"value","key":"value"}',
-                             "Field 'default_attributes' is not a hash", nil,
-                             ruby? ? true : false)
+                             "Field 'default_attributes' is not a hash", nil, false)
           end
 
           context "for values" do
@@ -328,11 +260,9 @@ describe "Environments API Endpoint", :environments do
 
           # These cause internal server errors in Ruby
           fails_with_value("override_attributes", 1999,
-                           "Field 'override_attributes' is not a hash", nil,
-                           ruby? ? true : false)
+                           "Field 'override_attributes' is not a hash", nil, false)
           fails_with_value("override_attributes", "hello",
-                           "Field 'override_attributes' is not a hash", nil,
-                           ruby? ? true : false)
+                           "Field 'override_attributes' is not a hash", nil, false)
           context "for keys" do
             succeeds_with_value("override_attributes", {"key" => "value"})
             succeeds_with_value("override_attributes", {"鍵" => "value"})
@@ -341,14 +271,11 @@ describe "Environments API Endpoint", :environments do
 
             # These cause internal server errors in Ruby
             fails_with_value("override_attributes", '{null:"value"}',
-                             "Field 'override_attributes' is not a hash", nil,
-                             ruby? ? true : false)
+                             "Field 'override_attributes' is not a hash", nil, false)
             fails_with_value("override_attributes", '{99:"value"}',
-                             "Field 'override_attributes' is not a hash", nil,
-                             ruby? ? true : false)
+                             "Field 'override_attributes' is not a hash", nil, false)
             fails_with_value("override_attributes", '{"key":"value","key":"value"}',
-                             "Field 'override_attributes' is not a hash", nil,
-                             ruby? ? true : false)
+                             "Field 'override_attributes' is not a hash", nil, false)
           end
 
           context "for values" do
@@ -365,32 +292,23 @@ describe "Environments API Endpoint", :environments do
 
           # These cause internal server errors in Ruby
           fails_with_value("cookbook_versions", 1999,
-                           "Field 'cookbook_versions' is not a hash", nil,
-                           ruby? ? true : false)
+                           "Field 'cookbook_versions' is not a hash", nil, false)
           fails_with_value("cookbook_versions", "hello",
-                           "Field 'cookbook_versions' is not a hash", nil,
-                           ruby? ? true : false)
+                           "Field 'cookbook_versions' is not a hash", nil, false)
 
           context "for cookbook names" do
             succeeds_with_value("cookbook_versions", {"cookbook" => ">= 1.0.0"})
 
-            # These succeed in ruby (no validation)
             fails_with_value("cookbook_versions", {"the cookbook" => ">= 1.0.0"},
-                             "Invalid key 'the cookbook' for cookbook_versions", nil,
-                             ruby? ? true : false)
+                             "Invalid key 'the cookbook' for cookbook_versions", nil, false)
             fails_with_value("cookbook_versions", {"料理書" => ">= 1.0.0"},
-                             "Invalid key '料理書' for cookbook_versions", nil,
-                             ruby? ? true : false)
+                             "Invalid key '料理書' for cookbook_versions", nil, false)
             fails_with_value("cookbook_versions", {"" => ">= 1.0.0"},
-                             "Invalid key '' for cookbook_versions", nil,
-                             ruby? ? true : false)
-            # These cause internal server errors in Ruby
+                             "Invalid key '' for cookbook_versions", nil, false)
             fails_with_value("cookbook_versions", '{null:">= 1.0.0"}',
-                             "Field 'cookbook_versions' is not a hash", nil,
-                             ruby? ? true : false)
+                             "Field 'cookbook_versions' is not a hash", nil, false)
             fails_with_value("cookbook_versions", '{1999:">= 1.0.0"}',
-                             "Field 'cookbook_versions' is not a hash", nil,
-                             ruby? ? true : false)
+                             "Field 'cookbook_versions' is not a hash", nil, false)
           end
 
           context "for versions" do
@@ -403,66 +321,53 @@ describe "Environments API Endpoint", :environments do
             succeeds_with_value("cookbook_versions", {"cookbook" => "~> 1.0.0"})
             succeeds_with_value("cookbook_versions", {"cookbook" => "1.0.0"})
 
-            # these are accepted only the ruby server.  chef-client
-            # and erchef server has been modified to be more strict
-            if ruby?
-              succeeds_with_value("cookbook_versions", {"cookbook" => nil})
-              succeeds_with_value("cookbook_versions", {"cookbook" => []})
-              succeeds_with_value("cookbook_versions", {"cookbook" => [">= 1.0.0"]})
-            else
-              fails_with_value("cookbook_versions", {"cookbook" => nil},
-                               "Invalid value 'null' for cookbook_versions")
-              fails_with_value("cookbook_versions", {"cookbook" => [">= 1.0.0"]},
-                               "Invalid value '[huh]' for cookbook_versions")
-              fails_with_value("cookbook_versions", {"cookbook" => []},
-                               "Invalid value '[huh]' for cookbook_versions")
-            end
+            fails_with_value("cookbook_versions", {"cookbook" => nil},
+                             "Invalid value 'null' for cookbook_versions")
+            fails_with_value("cookbook_versions", {"cookbook" => [">= 1.0.0"]},
+                             "Invalid value '[huh]' for cookbook_versions")
+            fails_with_value("cookbook_versions", {"cookbook" => []},
+                             "Invalid value '[huh]' for cookbook_versions")
+            fails_with_value("cookbook_versions", {"cookbook" => ">= 1.0.0.0"},
+                             "Invalid value '>= 1.0.0.0' for cookbook_versions")
+            fails_with_value("cookbook_versions", {"cookbook" => ">= 1,0,0"},
+                             "Invalid value '>= 1,0,0' for cookbook_versions")
+            fails_with_value("cookbook_versions", {"cookbook" => ">= 1.a.b"},
+                             "Invalid value '>= 1.a.b' for cookbook_versions")
+            fails_with_value("cookbook_versions", {"cookbook" => ">= 1.0rc1"},
+                             "Invalid value '>= 1.0rc1' for cookbook_versions")
+            fails_with_value("cookbook_versions", {"cookbook" => ">=1.0.0"},
+                             "Invalid value '>=1.0.0' for cookbook_versions")
+            fails_with_value("cookbook_versions", {"cookbook" => " >= 1.0.0"},
+                             "Invalid value ' >= 1.0.0' for cookbook_versions")
+            fails_with_value("cookbook_versions", {"cookbook" => ">=  1.0.0"},
+                             "Invalid value '>=  1.0.0' for cookbook_versions")
+            fails_with_value("cookbook_versions", {"cookbook" => [">= 1.0", ">= 2.0"]},
+                             'Invalid value \'[<<">= 1.0">>,<<">= 2.0">>]\'' +
+                             ' for cookbook_versions')
+            fails_with_value("cookbook_versions", {"cookbook" => 1},
+                             "Invalid value '1' for cookbook_versions")
+            fails_with_value("cookbook_versions", {"cookbook" => 1.1},
+                             "Invalid value '1.1' for cookbook_versions")
+            fails_with_value("cookbook_versions", {"cookbook" => ""},
+                             "Invalid value '' for cookbook_versions")
 
-            # These all cause internal server errors in Ruby - we'll run
-            # them only for erlang.
-            if erlang?
-              fails_with_value("cookbook_versions", {"cookbook" => ">= 1.0.0.0"},
-                               "Invalid value '>= 1.0.0.0' for cookbook_versions")
-              fails_with_value("cookbook_versions", {"cookbook" => ">= 1,0,0"},
-                               "Invalid value '>= 1,0,0' for cookbook_versions")
-              fails_with_value("cookbook_versions", {"cookbook" => ">= 1.a.b"},
-                               "Invalid value '>= 1.a.b' for cookbook_versions")
-              fails_with_value("cookbook_versions", {"cookbook" => ">= 1.0rc1"},
-                               "Invalid value '>= 1.0rc1' for cookbook_versions")
-              fails_with_value("cookbook_versions", {"cookbook" => ">=1.0.0"},
-                               "Invalid value '>=1.0.0' for cookbook_versions")
-              fails_with_value("cookbook_versions", {"cookbook" => " >= 1.0.0"},
-                               "Invalid value ' >= 1.0.0' for cookbook_versions")
-              fails_with_value("cookbook_versions", {"cookbook" => ">=  1.0.0"},
-                               "Invalid value '>=  1.0.0' for cookbook_versions")
-              fails_with_value("cookbook_versions", {"cookbook" => [">= 1.0", ">= 2.0"]},
-                               'Invalid value \'[<<">= 1.0">>,<<">= 2.0">>]\'' +
-                               ' for cookbook_versions')
-              fails_with_value("cookbook_versions", {"cookbook" => 1},
-                               "Invalid value '1' for cookbook_versions")
-              fails_with_value("cookbook_versions", {"cookbook" => 1.1},
-                               "Invalid value '1.1' for cookbook_versions")
-              fails_with_value("cookbook_versions", {"cookbook" => ""},
-                               "Invalid value '' for cookbook_versions")
+            # test version integer constraints
+            # datestamp version
+            succeeds_with_value("cookbook_versions", {"cookbook" => ">= 1.2.20130730201745"})
 
-              # test version integer constraints
-              # datestamp version
-              succeeds_with_value("cookbook_versions", {"cookbook" => ">= 1.2.20130730201745"})
+            # negative version
+            fails_with_value("cookbook_versions", {"cookbook" => ">= 1.-2.3"},
+                             "Invalid value '>= 1.-2.3' for cookbook_versions")
 
-              # negative version
-              fails_with_value("cookbook_versions", {"cookbook" => ">= 1.-2.3"},
-                               "Invalid value '>= 1.-2.3' for cookbook_versions")
+            # 4-byte version
+            succeeds_with_value("cookbook_versions", {"cookbook" => ">= 1.2.2147483647"})
 
-              # 4-byte version
-              succeeds_with_value("cookbook_versions", {"cookbook" => ">= 1.2.2147483647"})
+            # 4-byte overflow version
+            succeeds_with_value("cookbook_versions", {"cookbook" => ">= 1.2.2147483669"})
 
-              # 4-byte overflow version
-              succeeds_with_value("cookbook_versions", {"cookbook" => ">= 1.2.2147483669"})
-
-              # 8-byte overflow version
-              fails_with_value("cookbook_versions", {"cookbook" => ">= 1.2.9223372036854775849"},
-                               "Invalid value '>= 1.2.9223372036854775849' for cookbook_versions")
-            end
+            # 8-byte overflow version
+            fails_with_value("cookbook_versions", {"cookbook" => ">= 1.2.9223372036854775849"},
+                             "Invalid value '>= 1.2.9223372036854775849' for cookbook_versions")
 
           end
         end
@@ -473,13 +378,7 @@ describe "Environments API Endpoint", :environments do
 
         let(:request_payload) { new_environment(new_environment_name).except('json_class') }
 
-        if erlang?
-          should_create_an_environment
-        else
-          let(:expected_response) { bad_request_response }
-          should_respond_with 400
-          pending 'should persist the environment'
-        end
+        should_create_an_environment
       end # when creating an environment without json_class
 
     end # with no additional environments

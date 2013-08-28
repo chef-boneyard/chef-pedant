@@ -24,14 +24,7 @@ module Pedant
       extend ::RSpec::Core::SharedContext
 
       # Error messages
-      let(:failed_to_authenticate_as_invalid_msg) do
-        if ruby?
-          ["Failed to authenticate as #{invalid_user.name}. Ensure that your node_name and client key are correct."]
-        else
-          ["Failed to authenticate as '#{invalid_user.name}'. Ensure that your node_name and client key are correct."]
-        end
-      end
-
+      let(:failed_to_authenticate_as_invalid_msg) { ["Failed to authenticate as '#{invalid_user.name}'. Ensure that your node_name and client key are correct."] }
       let(:cannot_load_nonexistent_env_msg) { ["Cannot load environment #{non_existent_environment_name}"] }
       let(:cannot_load_new_env_msg) { ["Cannot load environment #{new_environment_name}"] }
       let(:incorrect_json_type_body_msg) { self.class.incorrect_json_type_body_msg }
@@ -39,11 +32,7 @@ module Pedant
       module ClassMethods
 
         def incorrect_json_type_body_msg
-          if ruby?
-            'Must supply environment data'
-          else
-            'Incorrect JSON type for request body'
-          end
+          'Incorrect JSON type for request body'
         end
 
         def must_supply_data_msg
@@ -51,27 +40,15 @@ module Pedant
         end
 
         def incorrect_json_type_name_msg
-          if ruby?
-            must_supply_data_msg
-          else
-            "Field 'name' invalid"
-          end
+          "Field 'name' invalid"
         end
 
         def incorrect_json_type_class_msg
-          if ruby?
-            must_supply_data_msg
-          else
-            "Field 'json_class' invalid"
-          end
+          "Field 'json_class' invalid"
         end
 
         def incorrect_json_type_type_msg
-          if ruby?
-            must_supply_data_msg
-          else
-            "Field 'chef_type' invalid"
-          end
+          "Field 'chef_type' invalid"
         end
       end
 

@@ -26,12 +26,7 @@ describe "Environments API Endpoint", :environments do
   # include roles for testing w/ environments roles method
   include Pedant::RSpec::RoleUtil
 
-  def self.ruby?
-    Pedant::Config.ruby_environment_endpoint?
-  end
-
   # Deal with subtly different error messages/codes in one place
-
   let(:new_environment_name) { 'pedant_testing_environment' }
   let(:non_existent_environment_name) { 'pedant_dummy_environment' }
 

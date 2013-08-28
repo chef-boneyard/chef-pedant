@@ -30,10 +30,6 @@ describe "/environments/ENVIRONMENT/cookbooks API endpoint", :environments, :coo
 
   include_context "environment_body_util" # from EnvironmentUtil
 
-  def self.ruby?
-    Pedant::Config.ruby_environment_endpoint?
-  end
-
   shared(:env){ "test_env" }
   shared(:default){ "_default" }
 
@@ -50,18 +46,12 @@ describe "/environments/ENVIRONMENT/cookbooks API endpoint", :environments, :coo
     end
 
     context 'when environment does not exist' do
-      let(:environment_name) { non_existent_environment }
+      let(:expected_response) { resource_not_found_exact_response }
+      let(:environment_name)  { non_existent_environment }
       let(:non_existent_environment) { 'bad_env' }
+      let(:not_found_error_message) { ["Cannot load environment #{non_existent_environment}"] }
 
-      if erlang?
-        let(:expected_response)       { resource_not_found_exact_response }
-        let(:not_found_error_message) { ["Cannot load environment #{non_existent_environment}"] }
-        should_respond_with 404
-      else # Ruby
-        let(:expected_response) { forbidden_exact_response }
-        let(:error_message)     { ["Merb::ControllerExceptions::Forbidden"] }
-        should_respond_with 403
-      end
+      should_respond_with 404
     end
 
     context 'when fetching cookbooks' do
