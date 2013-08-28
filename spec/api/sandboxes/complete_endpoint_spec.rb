@@ -18,10 +18,6 @@ require 'pedant/rspec/cookbook_util'
 describe "Sandboxes API Endpoint", :sandboxes do
   include Pedant::RSpec::CookbookUtil
 
-  def self.ruby?
-    Pedant::Config.ruby_sandbox_endpoint?
-  end
-
   let(:request_url)    { api_url "/sandboxes" }
   let(:requestor)      { admin_user }
 
@@ -85,18 +81,12 @@ describe "Sandboxes API Endpoint", :sandboxes do
         it 'should fail' do
           should look_like({
                              :status => 400,
-                             :body_exact => {
-                               "error" => if ruby?
-                                            ["missing required parameter: checksums"]
-                                          else
-                                            ["Field 'checksums' missing"]
-                                          end
-                             }
+                             :body_exact => { "error" => ["Field 'checksums' missing"] }
                            })
         end
       end
 
-      context 'with an empty checksums hash', :pending => ruby? do
+      context 'with an empty checksums hash' do
         let(:request_payload){ {"checksums" => {}} }
         it 'should fail' do
           should look_like ({
@@ -108,7 +98,7 @@ describe "Sandboxes API Endpoint", :sandboxes do
         end
       end
 
-      context 'with non-null hash values', :pending => ruby? do
+      context 'with non-null hash values' do
         let(:request_payload){ {"checksums" => {checksums[0] => "foo"} }}
         it 'should fail' do
           should look_like ({
@@ -190,10 +180,7 @@ describe "Sandboxes API Endpoint", :sandboxes do
       end
     end
 
-    if erlang?
-      respects_maximum_payload_size
-    end
-
+    respects_maximum_payload_size
   end
 
   describe 'Sandboxes Endpoint, PUT' do
@@ -216,33 +203,7 @@ describe "Sandboxes API Endpoint", :sandboxes do
         ["Cannot update sandbox #{sandbox_id}: the following checksums have not been uploaded: #{error_sums.join(', ')}"]
       end
 
-      # The specific checksum that gets returned is actually random on Ruby
-      if open_source?
-        let(:possible_ruby_responses) do
-          (0..1).to_a.map do |i|
-            "cannot update sandbox #{sandbox_id}: checksum #{error_sums[i]} was not uploaded"
-          end
-        end
-      else
-        let(:possible_ruby_responses) do
-          (0..1).to_a.map do |i|
-            "Cannot update sandbox #{sandbox_id}: checksum #{error_sums[i]} was not uploaded"
-          end
-        end
-      end
-
-      if erlang?
-        should_respond_with 503
-      else
-        it 'should respond with 400 Bad Request and a random checksum (Ruby quirk)' do
-
-          should have_status_code 400
-          error_message = parse(response)["error"][0] # It should be an array
-
-          # Ugly, but it works, and we're going to ditch this code soon anyway
-          possible_ruby_responses.include?(error_message).should be_true
-        end
-      end
+      should_respond_with 503
     end
 
     context 'when uploading expected files to the sandbox ' do
@@ -312,7 +273,7 @@ describe "Sandboxes API Endpoint", :sandboxes do
     end
 
     # 'is_completed' isn't actually set to 'true' in the Ruby endpoint
-    it "'is_committed' should be true for a committed sandbox", :pending => ruby? do
+    it "'is_committed' should be true for a committed sandbox" do
       file1 = Pedant::Utility.new_random_file
       file2 = Pedant::Utility.new_random_file
 
@@ -349,9 +310,6 @@ describe "Sandboxes API Endpoint", :sandboxes do
 
     end
 
-    if erlang?
-      respects_maximum_payload_size
-    end
-
+    respects_maximum_payload_size
   end
 end
