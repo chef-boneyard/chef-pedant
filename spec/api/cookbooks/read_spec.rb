@@ -23,10 +23,6 @@ require 'pedant/rspec/cookbook_util'
 describe "Cookbooks API endpoint", :cookbooks do
   include Pedant::RSpec::CookbookUtil
 
-  def self.ruby?
-    Pedant::Config.ruby_cookbook_endpoint?
-  end
-
   context "GET /cookbooks" do
     let(:url) { cookbook_collection_url }
     let(:request_url) { cookbook_collection_url }
@@ -304,30 +300,12 @@ describe "Cookbooks API endpoint", :cookbooks do
             http.verify_mode = OpenSSL::SSL::VERIFY_NONE
           end
 
-          # Need to add headers if on Ruby, since Erlang uses pre-signed URLs
-          headers = if ruby?
-                      requestor.signing_headers(:get, uri.request_uri, "")
-                    else
-                      {}
-                    end
-
-          response = http.get(uri.request_uri, headers)
+          response = http.get(uri.request_uri, {})
           response.body.should == recipe_content
         end
 
         it "curl" do
-          # Need to add headers if on Ruby, since Erlang uses pre-signed URLs
-          header_string = if ruby?
-                            signing_headers = requestor.signing_headers(:get,recipe_url, "")
-                            header_strings = signing_headers.inject([]) do |acc, pair|
-              name, value = pair
-              acc << "#{name}: #{value}"
-            end
-                            header_strings.map{|h| "--header '#{h}'" }.join(" ")
-                          else
-                            ""
-                          end
-          got = `curl -sk #{header_string} '#{recipe_url}'`
+          got = `curl -sk '#{recipe_url}'`
           got.should == recipe_content
         end
       end # access to recipe file content

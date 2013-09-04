@@ -20,12 +20,6 @@ describe "Depsolver API endpoint", :depsolver do
   include Pedant::RSpec::CookbookUtil
   include Pedant::RSpec::EnvironmentUtil
 
-  def self.ruby?
-    Pedant::Config.ruby_environment_endpoint?
-  end
-
-  # include_context "configuration_check"
-
   let(:env){ "test_depsolver_env"}
   let(:no_cookbooks_env) { "test_depsolver_no_cookbooks_env" }
   let(:cookbook_name){"foo"}
@@ -76,12 +70,7 @@ describe "Depsolver API endpoint", :depsolver do
           response.should look_like({
                                      :status => 400,
                                      :body_exact => {
-                                         "error" =>
-                                             if ruby?
-                                                 ["Missing param: run_list"]
-                                             else
-                                                 ["invalid JSON"]
-                                             end
+                                         "error" => ["invalid JSON"]
                                      }
                                     })
         end
@@ -94,12 +83,7 @@ describe "Depsolver API endpoint", :depsolver do
           response.should look_like({
                                      :status => 400,
                                      :body_exact => {
-                                         "error" =>
-                                             if ruby?
-                                                 ["Missing param: run_list"]
-                                             else
-                                                 ["invalid JSON"]
-                                             end
+                                         "error" => ["invalid JSON"]
                                      }
                                     })
         end
@@ -107,30 +91,14 @@ describe "Depsolver API endpoint", :depsolver do
 
       let(:environment_name){"not@environment"}
 
-      if ruby?
-        # Ruby endpoint doesn't really do the right thing... just
-        # copying this over from an older Pedant incarnation
-        it "returns (WRONGLY) 403 with an invalid environment" do
-          payload = "{\"run_list\":[]}"
-          post(api_url("/environments/not@environment/cookbook_versions"), admin_user,
-               :payload => payload) do |response|
-            response.should look_like({
-                                        :status => 403,
-                                        :body_exact => {
-                                          "error" => ["Merb::ControllerExceptions::Forbidden"]
-                                        }
-                                      })
-          end
-        end
-      else
-        it "returns 404 with an invalid environment" do
-          payload = "{\"run_list\":[]}"
-          post(api_url("/environments/#{environment_name}/cookbook_versions"), normal_user,
+      it "returns 404 with an invalid environment" do
+        payload = "{\"run_list\":[]}"
+        post(api_url("/environments/#{environment_name}/cookbook_versions"), normal_user,
              :payload => payload) do |response|
-            response.should look_like environment_not_found_response
-          end
+          response.should look_like environment_not_found_response
         end
       end
+
       it "returns 400 with non-Array as run_list value", :validation do
         payload = "{\"run_list\":\"#{cookbook_name}\"}"
         post(api_url("/environments/#{env}/cookbook_versions"), admin_user,
@@ -138,42 +106,22 @@ describe "Depsolver API endpoint", :depsolver do
           response.should look_like({
                                      :status => 400,
                                      :body_exact => {
-                                         "error" =>
-                                             if ruby?
-                                                 ["Param run_list is not an Array: String"]
-                                             else
-                                                 ["Field 'run_list' is not a valid run list"]
-                                             end
+                                         "error" => ["Field 'run_list' is not a valid run list"]
                                      }
                                     })
         end
       end
 
-      if ruby?
-        it "returns (WRONGLY) 400 (run_list missing) with malformed JSON" do
-          payload = "{\"run_list\": "
-          post(api_url("/environments/#{env}/cookbook_versions"), admin_user,
+      it "returns 400 with malformed JSON", :validation do
+        payload = "{\"run_list\": "
+        post(api_url("/environments/#{env}/cookbook_versions"), admin_user,
               :payload => payload) do |response|
-            response.should look_like({
-                                       :status => 400,
-                                       :body_exact => {
-                                           "error" => ["Missing param: run_list"]
-                                       }
-                                      })
-          end
-        end
-      else
-        it "returns 400 with malformed JSON", :validation do
-          payload = "{\"run_list\": "
-          post(api_url("/environments/#{env}/cookbook_versions"), admin_user,
-              :payload => payload) do |response|
-            response.should look_like({
-                                       :status => 400,
-                                         :body_exact => {
-                                           "error" => ["invalid JSON"]
-                                       }
-                                      })
-          end
+          response.should look_like({
+                                      :status => 400,
+                                      :body_exact => {
+                                        "error" => ["invalid JSON"]
+                                      }
+                                    })
         end
       end
 
@@ -181,22 +129,12 @@ describe "Depsolver API endpoint", :depsolver do
         payload = "{\"run_list\": [12]}"
         post(api_url("/environments/#{env}/cookbook_versions"), admin_user,
             :payload => payload) do |response|
-          response.should look_like(if ruby? then
-                                    {
-                                     :status => 500,
-                                     :body_exact => {
-                                         "error" => ["Unable to create Chef::RunList::RunListItem from Fixnum:12: must be a Hash or String"]
-                                     }
-                                    }
-                                    else
-                                    {
-                                     :status => 400,
-                                     :body_exact => {
-                                         "error" => ["Field 'run_list' is not a valid run list"]
-                                     }
-                                    }
-                                    end
-                                   )
+          response.should look_like({
+                                      :status => 400,
+                                      :body_exact => {
+                                        "error" => ["Field 'run_list' is not a valid run list"]
+                                      }
+                                    })
         end
       end
 
@@ -223,20 +161,12 @@ describe "Depsolver API endpoint", :depsolver do
         }
         post(api_url("/environments/_default/cookbook_versions"), admin_user,
              :payload => payload) do |response|
-          if ruby?
-            # Ruby-chef double-encodes error
-            response.should have_status_code(412)
-            parsed_response = parse(response)
-            parsed_response.should have_key("error")
-            parsed_response["error"].should look_like(error_hash)
-          else
-            response.should look_like({
-              :status => 412,
-              :body_exact => {
-                "error" => [error_hash]
-             }
-            })
-          end
+          response.should look_like({
+                                      :status => 412,
+                                      :body_exact => {
+                                        "error" => [error_hash]
+                                      }
+                                    })
         end
       end
 
@@ -250,20 +180,12 @@ describe "Depsolver API endpoint", :depsolver do
         }
         post(api_url("/environments/#{env}/cookbook_versions"), admin_user,
              :payload => payload) do |response|
-          if ruby?
-            # Ruby-chef double-encodes error
-            response.should have_status_code(412)
-            parsed_response = parse(response)
-            parsed_response.should have_key("error")
-            parsed_response["error"].should look_like(error_hash)
-          else
-            response.should look_like({
-              :status => 412,
-              :body_exact => {
-                "error" => [error_hash]
-             }
-            })
-          end
+          response.should look_like({
+                                      :status => 412,
+                                      :body_exact => {
+                                        "error" => [error_hash]
+                                      }
+                                    })
         end
       end
 
@@ -276,20 +198,12 @@ describe "Depsolver API endpoint", :depsolver do
         }
         post(api_url("/environments/#{no_cookbooks_env}/cookbook_versions"), admin_user,
              :payload => payload) do |response|
-          if ruby?
-            # Ruby-chef double-encodes error
-            response.should have_status_code(412)
-            parsed_response = parse(response)
-            parsed_response.should have_key("error")
-            parsed_response["error"].should look_like(error_hash)
-          else
-            response.should look_like({
-              :status => 412,
-              :body_exact => {
-                "error" => [error_hash]
-             }
-            })
-          end
+          response.should look_like({
+                                      :status => 412,
+                                      :body_exact => {
+                                        "error" => [error_hash]
+                                      }
+                                    })
         end
       end
 
@@ -304,20 +218,12 @@ describe "Depsolver API endpoint", :depsolver do
         }
         post(api_url("/environments/#{env}/cookbook_versions"), admin_user,
              :payload => payload) do |response|
-          if ruby?
-            # Ruby-chef double-encodes error
-            response.should have_status_code(412)
-            parsed_response = parse(response)
-            parsed_response.should have_key("error")
-            parsed_response["error"].should look_like(error_hash)
-          else
-            response.should look_like({
-              :status => 412,
-              :body_exact => {
-                "error" => [error_hash]
-             }
-            })
-          end
+          response.should look_like({
+                                      :status => 412,
+                                      :body_exact => {
+                                        "error" => [error_hash]
+                                      }
+                                    })
         end
       end
 
@@ -330,20 +236,12 @@ describe "Depsolver API endpoint", :depsolver do
         }
         post(api_url("/environments/#{env}/cookbook_versions"), admin_user,
              :payload => missing_version_payload) do |response|
-          if ruby?
-            # Ruby-chef double-encodes error
-            response.should have_status_code(412)
-            parsed_response = parse(response)
-            parsed_response.should have_key("error")
-            parsed_response["error"].should look_like(error_hash)
-          else
-            response.should look_like({
-              :status => 412,
-              :body_exact => {
-                "error" => [error_hash]
-             }
-            })
-          end
+          response.should look_like({
+                                      :status => 412,
+                                      :body_exact => {
+                                        "error" => [error_hash]
+                                      }
+                                    })
         end
       end
 
@@ -360,20 +258,12 @@ describe "Depsolver API endpoint", :depsolver do
         }
         post(api_url("/environments/#{env}/cookbook_versions"), admin_user,
              :payload => payload) do |response|
-          if ruby?
-            # Ruby-chef double-encodes error
-            response.should have_status_code(412)
-            parsed_response = parse(response)
-            parsed_response.should have_key("error")
-            parsed_response["error"].should look_like(error_hash)
-          else
-            response.should look_like({
-              :status => 412,
-              :body_exact => {
-                "error" => [error_hash]
-             }
-            })
-          end
+          response.should look_like({
+                                      :status => 412,
+                                      :body_exact => {
+                                        "error" => [error_hash]
+                                      }
+                                    })
         end
       end
 
@@ -405,20 +295,12 @@ describe "Depsolver API endpoint", :depsolver do
         }
         post(api_url("/environments/#{env}/cookbook_versions"), admin_user,
              :payload => payload) do |response|
-          if ruby?
-            # Ruby-chef double-encodes error
-            response.should have_status_code(412)
-            parsed_response = parse(response)
-            parsed_response.should have_key("error")
-            parsed_response["error"].should look_like(error_hash)
-          else
-            response.should look_like({
-              :status => 412,
-              :body_exact => {
-                "error" => [error_hash]
-             }
-            })
-          end
+          response.should look_like({
+                                      :status => 412,
+                                      :body_exact => {
+                                        "error" => [error_hash]
+                                      }
+                                    })
         end
       end
     end # dependency error cases (one cookbook)
@@ -444,20 +326,12 @@ describe "Depsolver API endpoint", :depsolver do
         }
         post(api_url("/environments/#{env}/cookbook_versions"), admin_user,
              :payload => missing_version_payload) do |response|
-          if ruby?
-            # Ruby-chef double-encodes error
-            response.should have_status_code(412)
-            parsed_response = parse(response)
-            parsed_response.should have_key("error")
-            parsed_response["error"].should look_like(error_hash)
-          else
-            response.should look_like({
-              :status => 412,
-              :body_exact => {
-                "error" => [error_hash]
-             }
-            })
-          end
+          response.should look_like({
+                                      :status => 412,
+                                      :body_exact => {
+                                        "error" => [error_hash]
+                                      }
+                                    })
         end
       end
 
@@ -477,20 +351,12 @@ describe "Depsolver API endpoint", :depsolver do
         }
         post(api_url("/environments/#{env}/cookbook_versions"), admin_user,
              :payload => payload) do |response|
-          if ruby?
-            # Ruby-chef double-encodes error
-            response.should have_status_code(412)
-            parsed_response = parse(response)
-            parsed_response.should have_key("error")
-            parsed_response["error"].should look_like(error_hash)
-          else
-            response.should look_like({
-              :status => 412,
-              :body_exact => {
-                "error" => [error_hash]
-             }
-            })
-          end
+          response.should look_like({
+                                      :status => 412,
+                                      :body_exact => {
+                                        "error" => [error_hash]
+                                      }
+                                    })
         end
       end
 
@@ -510,20 +376,12 @@ describe "Depsolver API endpoint", :depsolver do
         }
         post(api_url("/environments/#{env}/cookbook_versions"), admin_user,
              :payload => payload) do |response|
-          if ruby?
-            # Ruby-chef double-encodes error
-            response.should have_status_code(412)
-            parsed_response = parse(response)
-            parsed_response.should have_key("error")
-            parsed_response["error"].should look_like(error_hash)
-          else
-            response.should look_like({
-              :status => 412,
-              :body_exact => {
-                "error" => [error_hash]
-             }
-            })
-          end
+          response.should look_like({
+                                      :status => 412,
+                                      :body_exact => {
+                                        "error" => [error_hash]
+                                      }
+                                    })
         end
       end
 
@@ -544,16 +402,13 @@ describe "Depsolver API endpoint", :depsolver do
 
         cb = retrieved_cookbook(cookbook_name, cookbook_version)
 
-        # We filter out some additional metadata fields for the depsolver endpoint
-        unless(ruby?)
-          meta = cb["metadata"]
-          meta.delete("attributes")
-          meta.delete("long_description")
-          cb["metadata"] = meta
-        end
+        meta = cb["metadata"]
+        meta.delete("attributes")
+        meta.delete("long_description")
+        cb["metadata"] = meta
 
         post(api_url("/environments/#{env}/cookbook_versions"), normal_user,
-             :payload => payload) do |response|
+              :payload => payload) do |response|
           response.should look_like({
                                       :status => 200,
                                       :body_exact => {

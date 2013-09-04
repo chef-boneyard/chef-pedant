@@ -74,29 +74,13 @@ module Pedant
         ### Don't you mean OSC non-admin clients can't delete a role?
         let(:delete_role_as_non_admin_response) { open_source_not_allowed_response }
 
-
         # Cookbook endpoint overrides
-        # Open-Source (Ruby) Chef Server uses these defaults values for cookbooks
+        # Open-Source Chef Server uses these defaults values for cookbooks
         let(:default_maintainer)       { 'YOUR_COMPANY_NAME' }
         let(:default_maintainer_email) { 'YOUR_EMAIL' }
         let(:default_license)          { "none" }
 
-        let(:invalid_cookbook_version_error_message) do
-          if ruby?
-            ["No routes match the request: #{named_cookbook_path}"]
-          else
-            ["Invalid cookbook version '#{cookbook_version}'."]
-          end
-        end
-
-        # Quirk of the OSC-ruby
-        let(:delete_invalid_cookbook_version_error_message) do
-          if ruby?
-            ["Cannot find a cookbook named #{cookbook_name} with version #{cookbook_version}"]
-          else
-            ["Invalid cookbook version '#{cookbook_version}'."]
-          end
-        end
+        let(:invalid_cookbook_version_error_message) { ["Invalid cookbook version '#{cookbook_version}'."] }
 
         # Sandbox Endpoints
         let(:sandbox_not_found_error_message) { ["Listing sandboxes not supported."] }

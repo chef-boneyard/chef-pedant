@@ -62,18 +62,12 @@ module Pedant
 
       # Can't do PUTs or DELETEs to /data
       let(:data_endpoint_method_not_allowed_response) do
-        if ruby?
-          # Merb does the wrong thing by returning a 404 instead of a
-          # 405; we just care about the status code, not the body
-          {:status => 404}
-        else
-          {
-            :status => 405,
-            :headers => {
-              "allow" => ["GET, POST"]
-            }
+        {
+          :status => 405,
+          :headers => {
+            "allow" => ["GET, POST"]
           }
-        end
+        }
       end
 
       let(:fetch_data_bag_list_empty_response) { http_200_response.with(:body_exact, {}) }
@@ -92,18 +86,12 @@ module Pedant
 
       # Can't PUT to a specific data bag
       let(:data_bag_endpoint_method_not_allowed_response) do
-        if ruby?
-          # Merb does the wrong thing by returning a 404 instead of a
-          # 405; we just care about the status code, not the body
-          {:status => 404}
-        else
-          {
-            :status => 405,
-            :headers => {
-              "allow" => ["GET, POST, DELETE"]
-            }
+        {
+          :status => 405,
+          :headers => {
+            "allow" => ["GET, POST, DELETE"]
           }
-        end
+        }
       end
 
       let(:fetch_empty_data_bag_success_response) { http_200_response.with(:body_exact, {}) }
@@ -165,18 +153,12 @@ module Pedant
 
       # Can't POST to a specific data bag
       let(:data_bag_item_endpoint_method_not_allowed_response) do
-        if ruby?
-          # Merb does the wrong thing by returning a 404 instead of a
-          # 405; we just care about the status code, not the body
-          {:status => 404}
-        else
-          {
-            :status => 405,
-            :headers => {
-              "allow" => ["GET, PUT, DELETE"]
-            }
+        {
+          :status => 405,
+          :headers => {
+            "allow" => ["GET, PUT, DELETE"]
           }
-        end
+        }
       end
 
       let(:fetch_data_bag_item_success_response) { http_200_response.with :body_exact, data_bag_item }
@@ -192,11 +174,7 @@ module Pedant
       let(:data_bag_item_not_found_from_delete_no_bag_response) { data_bag_item_not_found_from_delete_response }
 
       let(:data_bag_item_not_found_response) do
-        http_404_response.with :body_exact, "error" => if ruby?
-                                                         ["No data bag '#{data_bag_name}' could be found. Please create this data bag before adding items to it."]
-                                                       else
-                                                         data_bag_item_not_found_message_1
-                                                       end
+        http_404_response.with :body_exact, "error" => data_bag_item_not_found_message_1
       end
 
       let(:data_bag_item_not_found_from_delete_response) { http_404_response.with :body_exact, "error" => data_bag_item_not_found_message_2 }
@@ -208,9 +186,7 @@ module Pedant
       let(:create_data_bag_item_no_id_response) { http_400_response.with :body_exact, "error" => ["Field 'id' missing"] }
       let(:create_data_bag_item_invalid_id_response) { http_400_response.with :body_exact, "error" => ["Field 'id' invalid"] }
 
-      ## We only need this because the Ruby implementation is wrong;
-      ## remove this key when we're all-Erlang
-      let(:create_data_bag_item_status_code) { ruby? ? 200 : 201 }
+      let(:create_data_bag_item_status_code) { 201 }
 
       let(:create_data_bag_item_success_response) do
         {
@@ -220,15 +196,7 @@ module Pedant
       end
 
       let(:update_data_bag_item_success_response) do
-
-        # Ruby endpoint uses CouchDB, so we'll have some crufty fields
-        # we don't need to match
-        body_comparison_test = if ruby?
-                                 :body
-                               else
-                                 :body_exact
-                               end
-        http_200_response.with body_comparison_test, with_extra_data_bag_item_fields(updated_data_bag_item)
+        http_200_response.with :body_exact, with_extra_data_bag_item_fields(updated_data_bag_item)
       end
 
       let(:create_data_bag_item_no_data_bag_message) do
@@ -248,16 +216,7 @@ module Pedant
       # Even if the body is missing the ID, it'll get added back from the URL
       let(:update_data_bag_item_missing_id_response) do
         item = with_extra_data_bag_item_fields(updated_data_bag_item).with('id', data_bag_item_id)
-
-        # We'll have some CouchDB cruft in the item on Ruby
-        body_comparison_test = if ruby?
-                                 :body
-                               else
-                                 :body_exact
-                               end
-
-        http_200_response.with body_comparison_test, item
-
+        http_200_response.with :body_exact, item
       end
 
       let(:delete_data_bag_item_success_response) do

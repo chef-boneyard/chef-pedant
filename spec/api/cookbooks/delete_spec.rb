@@ -18,10 +18,6 @@ require 'pedant/rspec/cookbook_util'
 describe "Cookbooks API endpoint", :cookbooks do
   include Pedant::RSpec::CookbookUtil
 
-  def self.ruby?
-    Pedant::Config.ruby_cookbook_endpoint?
-  end
-
   context "DELETE /cookbooks/<name>/<version>" do
     let(:request_method) { :DELETE }
     let(:request_url)    { named_cookbook_url }
@@ -39,21 +35,8 @@ describe "Cookbooks API endpoint", :cookbooks do
       should_respond_with 404
 
       context 'with bad version', :validation do
-        # Quirk of the Open Source Chef (ruby) server
-        let(:expected_response) {
-          if ruby?
-            {:status => 404,
-              :body_exact => {
-                "error" => ["Cannot find a cookbook named #{cookbook_name} with version #{cookbook_version}"]
-              }
-            }
-          else
-            delete_invalid_cookbook_version_exact_response
-          end
-        }
-
+        let(:expected_response) { invalid_cookbook_version_exact_response }
         let(:cookbook_version) { "1.2.3.4" }
-
         should_respond_with 400
       end # with bad version
     end # context for non-existent cookbooks
@@ -105,9 +88,7 @@ describe "Cookbooks API endpoint", :cookbooks do
         before(:each) { setup_cookbooks(cookbooks) }
         after(:each)  { remove_cookbooks(cookbooks) }
 
-        # The Ruby endpoint doesn't delete data on demand like the
-        # Erlang version does (that'd be a separate purge operation)
-        it "should cleanup unused checksum data in s3/bookshelf", :pending => ruby? do
+        it "should cleanup unused checksum data in s3/bookshelf" do
           verify_checksum_cleanup(:recipes) do
             response.should look_like(:status => 200)
           end

@@ -123,15 +123,15 @@ module Pedant
 
       let(:invalid_cookbook_version_response) do
         {
-          :status => ruby? ? 404 : 400,
+          :status => 400,
           :body => { "error" => invalid_cookbook_version_error_message }
         }
       end
 
-      let(:delete_invalid_cookbook_version_exact_response) do
+      let(:invalid_cookbook_version_exact_response) do
         {
-          :status => ( erlang? ? 400 : 404 ),
-          :body_exact => { "error" => delete_invalid_cookbook_version_error_message }
+          :status => 400,
+          :body_exact => { "error" => invalid_cookbook_version_error_message }
         }
       end
 
@@ -313,44 +313,20 @@ module Pedant
           "recipes" => opts[:recipes] || []
         }
 
-        all_metadata = {
+        metadata = {
           "attributes" => {},
-          "conflicting" => {},
           "dependencies" => {},
           "description" => opts[:description] || default_description,
-          "groupings" => {},
           "license" => opts[:license] || default_license,
           "long_description" => opts[:long_description] || default_long_description,
           "maintainer" => opts[:maintainer] || default_maintainer,
           "maintainer_email" =>  opts[:maintainer_email] || default_maintainer_email,
           "name" => name,
-          "platforms" => {},
-          "providing" => {},
           "recipes" => opts[:meta_recipes] || {},
-          "recommendations" => {},
-          "replacing" => {},
-          "suggestions" => {},
           "version" => version
         }
 
-        # These are fields that Ruby endpoint responses keep in the
-        # metadata, but that the Erlang response filters out.
-        extra_fields = ["conflicting",
-                        "groupings",
-                        "platforms",
-                        "providing",
-                        "recommendations",
-                        "replacing",
-                        "suggestions"]
-
-        metadata = if(ruby?)
-                     all_metadata
-                   else
-                     all_metadata.reject!{|k| extra_fields.include?(k)}
-                   end
-
         cookbook["metadata"] = metadata
-
         cookbook
       end
 
@@ -506,17 +482,13 @@ module Pedant
               payload[key] = value
             end
             put(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
-                admin_user, :payload => payload) do |response|
-                  if (ruby?)
-                    # Ruby endpoint produces this, erlang should not
-                    payload["_rev"] = /.*/
-                  end
+                 admin_user, :payload => payload) do |response|
                   if (ignores_value)
                     payload[key] = actual_value
                   end
                   response.
                     should look_like({
-                    :status => erlang? & create ? 201 : 200,
+                    :status => create ? 201 : 200,
                     :body_exact => payload
                   })
                 end
@@ -524,9 +496,6 @@ module Pedant
                 # Verified change (or creation) happened
                 get(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
                     admin_user) do |response|
-                      if (ruby?)
-                        payload.delete("_rev")
-                      end
                       response.
                         should look_like({
                         :status => 200,
@@ -669,22 +638,12 @@ module Pedant
             put_payload["metadata"] = put_metadata
 
             put(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"), admin_user, :payload => put_payload) do |response|
-              if (ruby?)
-                # Ruby endpoint produces this, erlang should not
-                put_payload["_rev"] = /.*/
-              end
-
               # The PUT response returns the payload exactly as it was sent
               response.should look_like({:status => _expected_status, :body_exact => put_payload})
             end
 
             # Verified change (or creation) happened
             get(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"), admin_user) do |response|
-              # When you retrieve the cookbook, changes will be reflected
-              # if (ruby?)
-              #   payload.delete("_rev")
-              # end
-
               get_response = cookbook.dup
               if (new_value)
                 get_metadata = get_response["metadata"]

@@ -23,11 +23,6 @@ require 'pedant/rspec/validations'
 require 'pedant/opensource/permission_checks'
 
 describe "Open Source Client API endpoint", :platform => :open_source, :clients => true do
-
-  def self.ruby?
-    Pedant::Config.ruby_client_endpoint?
-  end
-
   include Pedant::RSpec::OpenSourceClientUtil
   include Pedant::OpenSource::PermissionChecks
 
@@ -211,17 +206,15 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
         end
       end
 
-      # Bah... creates a dud record in CouchDB on Ruby Server
-      context 'with an empty payload', :pending => ruby?  do
+      context 'with an empty payload' do
         let(:request_payload){{}}
         it 'fails' do
           should look_like create_client_no_name_failure_response
         end
       end
 
-      # Bah... creates a dud record in CouchDB on Ruby Server
-      context 'with no name', :pending => ruby?  do
-        let(:request_payload){{"admin" => false}}
+      context 'with no name' do
+        let(:request_payload) {{"admin" => false}}
         it 'fails' do
           should look_like create_client_no_name_failure_response
         end
@@ -533,7 +526,7 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
           end
         end
 
-        context 'to an existing name', pending: (ruby? ? 'Ruby OSC responds with 200 instead of 409' : false) do
+        context 'to an existing name' do
           let(:expected_response) { conflict_response }
           let(:new_name) { normal_client.name }
 

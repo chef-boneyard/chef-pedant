@@ -20,10 +20,6 @@ describe "Environments API Endpoint", :environments do
   include Pedant::RSpec::EnvironmentUtil
   include Pedant::RSpec::AuthHeadersUtil
 
-  def self.ruby?
-    Pedant::Config.ruby_environment_endpoint?
-  end
-
   let(:new_environment_name) { 'pedant_testing_environment' }
   let(:non_existent_environment_name) { 'pedant_dummy_environment' }
 
@@ -38,13 +34,8 @@ describe "Environments API Endpoint", :environments do
       let(:request_method) { :DELETE }
       let(:request_url)    { api_url '/environments' }
 
-      if ruby?
-        let(:expected_response) { resource_not_found_response }
-        should_respond_with 404
-      else
-        let(:expected_response) { method_not_allowed_response }
-        should_respond_with 405
-      end
+      let(:expected_response) { method_not_allowed_response }
+      should_respond_with 405
     end # DELETE /environments
 
     describe "DELETE /environments/<name>" do
@@ -54,12 +45,7 @@ describe "Environments API Endpoint", :environments do
       context 'with "_default" environment' do
         let(:environment_name) { '_default' }
         let(:expected_response) { method_not_allowed_exact_response }
-
-        if erlang?
-          let(:error_message) { ["The '_default' environment cannot be modified."] }
-        else
-          let(:error_message) { ["Merb::ControllerExceptions::MethodNotAllowed"] }
-        end
+        let(:error_message) { ["The '_default' environment cannot be modified."] }
 
         should_respond_with 405
       end

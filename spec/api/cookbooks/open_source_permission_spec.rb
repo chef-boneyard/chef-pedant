@@ -16,19 +16,9 @@
 require 'pedant/rspec/cookbook_util'
 require 'pedant/opensource/permission_checks'
 
-describe 'Cookbooks Endpoint Open Source Permission Checks', :platform => :open_source  do
+describe 'Cookbooks Endpoint Open Source Permission Checks', :platform => :open_source do
   include Pedant::RSpec::CookbookUtil
   include Pedant::OpenSource::PermissionChecks
-
-  def self.ruby?
-    Pedant::Config.ruby_cookbook_endpoint?
-  end
-
-  # TODO: This can be removed when we're on Erchef OSC
-  if ruby?
-    # Merb returns 404s instead of 405s
-    let(:method_not_allowed_response){resource_not_found_response}
-  end
 
   # Until we rename the requestors
   let(:admin_requestor){admin_user}
@@ -49,8 +39,7 @@ describe 'Cookbooks Endpoint Open Source Permission Checks', :platform => :open_
     should_not_allow_method :DELETE
   end
 
-  # This endpoint doesn't exist on Ruby?!
-  context '/cookbooks/_latest', :pending => ruby? do
+  context '/cookbooks/_latest' do
     let(:request_url){api_url("/cookbooks/_latest")}
 
     context 'GET' do

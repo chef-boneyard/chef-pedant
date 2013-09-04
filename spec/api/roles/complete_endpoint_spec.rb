@@ -21,10 +21,6 @@ describe "Testing the Roles API endpoint", :roles do
   include Pedant::RSpec::RoleUtil
   include Pedant::RSpec::EnvironmentUtil
 
-  def self.ruby?
-    Pedant::Config.ruby_role_endpoint?
-  end
-
   let(:admin_requestor){admin_user}
   let(:requestor){admin_requestor}
 
@@ -69,8 +65,7 @@ describe "Testing the Roles API endpoint", :roles do
         should_successfully_create_a_role
       end
 
-      # Don't want to tax the Ruby endpoint with tests it can't handle
-      context 'when validating', :pending => ruby? do
+      context 'when validating' do
         let(:resource_url){api_url("/roles/#{resource_name}")}
         let(:default_resource_attributes){new_role(role_name)}
         let(:persisted_resource_response){ get(resource_url, requestor) }
@@ -112,54 +107,46 @@ describe "Testing the Roles API endpoint", :roles do
         should_set_default_value_for 'role', 'run_list', []
         should_set_default_value_for 'role', 'env_run_lists', {}
 
-        if erlang?
-          # These tests cover more advanced normalization and
-          # validation of run lists that is not present in the Ruby
-          # endpoints
+        # This just tests 'run_list', not 'env_run_lists'
+        test_run_list_corner_cases :role
 
-          # This just tests 'run_list', not 'env_run_lists'
-          test_run_list_corner_cases :role
-
-          # ... THIS tests 'env_run_lists' :)
-          #
-          # With a bit of work, this could probably be incorporated into
-          # the 'test_run_list_corner_cases' helper method in common.rb,
-          # but I'm not sure that'd be all that much of a win.
-          def self.environment_run_list_test(context_message, example_message, run_lists)
-            context context_message do
-              let(:role){new_role(role_name, :env_run_lists => run_lists)}
-              should_successfully_create_a_role example_message
-            end
+        # ... THIS tests 'env_run_lists' :)
+        #
+        # With a bit of work, this could probably be incorporated into
+        # the 'test_run_list_corner_cases' helper method in common.rb,
+        # but I'm not sure that'd be all that much of a win.
+        def self.environment_run_list_test(context_message, example_message, run_lists)
+          context context_message do
+            let(:role){new_role(role_name, :env_run_lists => run_lists)}
+            should_successfully_create_a_role example_message
           end
+        end
 
-          environment_run_list_test("with non-normalized environment run lists",
-                                    "with normalized environment run lists",
-                                    {"prod" =>["foo", "foo::bar", "bar::baz@1.0.0", "recipe[web]", "role[prod]"],
-                                      "dev" => ["oof", "oof::rab", "rab::zab@0.0.1", "recipe[bew]", "role[dev]"]})
+        environment_run_list_test("with non-normalized environment run lists",
+                                  "with normalized environment run lists",
+                                  {"prod" =>["foo", "foo::bar", "bar::baz@1.0.0", "recipe[web]", "role[prod]"],
+                                    "dev" => ["oof", "oof::rab", "rab::zab@0.0.1", "recipe[bew]", "role[dev]"]})
 
-          environment_run_list_test("with environment run lists that have duplicates",
-                                    "with duplicates removed",
-                                    {"prod" =>["foo", "recipe[foo]", "role[prod]", "role[prod]"],
-                                      "dev" => ["bar", "recipe[bar]", "role[dev]", "role[dev]"]})
+        environment_run_list_test("with environment run lists that have duplicates",
+                                  "with duplicates removed",
+                                  {"prod" =>["foo", "recipe[foo]", "role[prod]", "role[prod]"],
+                                    "dev" => ["bar", "recipe[bar]", "role[dev]", "role[dev]"]})
 
-          environment_run_list_test("with environment run lists that have implicit and explicit 'default' recipes",
-                                    "with both versions remaining in the lists",
-                                    {"prod" =>["foo", "foo::default", "recipe[foo]", "recipe[foo::default]"],
-                                      "dev" => ["bar", "bar::default", "recipe[bar]", "recipe[bar::default]"]})
+        environment_run_list_test("with environment run lists that have implicit and explicit 'default' recipes",
+                                  "with both versions remaining in the lists",
+                                  {"prod" =>["foo", "foo::default", "recipe[foo]", "recipe[foo::default]"],
+                                    "dev" => ["bar", "bar::default", "recipe[bar]", "recipe[bar::default]"]})
 
-          environment_run_list_test("with environment run lists that have recipes named 'recipe' and 'role'",
-                                    "with all oddly-named recipes intact in the run lists",
-                                    {"prod"=>   ["recipe", "recipe::foo", "recipe::bar@1.0.0", "role", "role::foo", "role::bar@1.0.0",
-                                                 "recipe[recipe]", "recipe[role]", "role[recipe]", "role[role]"],
-                                      "dev" =>  ["recipe", "recipe::foo", "recipe::bar@1.0.0", "role", "role::foo", "role::bar@1.0.0",
-                                                 "recipe[recipe]", "recipe[role]", "role[recipe]", "role[role]"] })
-
-        end # if erlang?
+        environment_run_list_test("with environment run lists that have recipes named 'recipe' and 'role'",
+                                  "with all oddly-named recipes intact in the run lists",
+                                  {"prod"=>   ["recipe", "recipe::foo", "recipe::bar@1.0.0", "role", "role::foo", "role::bar@1.0.0",
+                                    "recipe[recipe]", "recipe[role]", "role[recipe]", "role[role]"],
+                                    "dev" =>  ["recipe", "recipe::foo", "recipe::bar@1.0.0", "role", "role::foo", "role::bar@1.0.0",
+                                      "recipe[recipe]", "recipe[role]", "role[recipe]", "role[role]"] })
 
       end # various valid inputs
 
-      # Ruby endpoint can't do these kinds of validations gracefully
-      context 'with various invalid inputs', :pending => ruby? do
+      context 'with various invalid inputs' do
 
         should_not_allow_creation_with_incorrect_types 'role', 'default_attributes', 'hash', "This is clearly not a hash"
         should_not_allow_creation_with_incorrect_types 'role', 'override_attributes', 'hash', "This is clearly not a hash"
@@ -191,10 +178,7 @@ describe "Testing the Roles API endpoint", :roles do
           end
         end
 
-        if erlang?
-          respects_maximum_payload_size
-        end
-
+        respects_maximum_payload_size
       end
 
       context 'for a role that already exists' do
@@ -256,13 +240,7 @@ describe "Testing the Roles API endpoint", :roles do
 
         context 'with role name changed in the payload', :validation do
           let(:updated_fields){ {'name' => 'this_is_not_the_same_name_as_before'} }
-          if ruby?
-            it "Returns 200, but does not change the role" do
-              should look_like({:status => 200, :body_exact => role})
-            end
-          else
-            should_fail_to_update_a_role 400, 'Role name mismatch.'
-          end
+          should_fail_to_update_a_role 400, 'Role name mismatch.'
         end
 
         context 'without role name in payload' do
@@ -284,18 +262,10 @@ describe "Testing the Roles API endpoint", :roles do
             }
           end
 
-          if ruby?
-            it{should look_like server_error_response}
-          else
-            should_fail_to_update_a_role 400, "Field 'json_class' invalid"
-          end
-
-
+          should_fail_to_update_a_role 400, "Field 'json_class' invalid"
         end
 
-        if erlang?
-          respects_maximum_payload_size
-        end
+        respects_maximum_payload_size
 
       end
     end # PUT

@@ -300,9 +300,16 @@ module Pedant
 
 
         # Ruby endpoint magic
+        # This will still be needed for users, etc. This can be removed when
+        # everything has been ported to Erlang
 
         # If let() is working properly, then you only need to define self.ruby? in
-        # the specific endpoints. (See Roles endpoint spec for a template)
+        # the specific endpoints. Example:
+        #
+        #     def self.ruby?
+        #       Pedant::Config.ruby_users_endpoint?
+        #     end
+
         let(:ruby?) { self.class.ruby? }
         let(:erlang?) { not ruby? }
 

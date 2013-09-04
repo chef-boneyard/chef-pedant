@@ -149,10 +149,8 @@ module Pedant
           # X-Ops-Sign
           with_modified_auth_headers('missing X-Ops-Sign', 400, :signing_description => nil)
           with_modified_auth_headers('unsupported X-Ops-Sign version', 400,
-                                     :signing_description => 'version=8.1',
-                                     :pending => ruby?)
-          with_modified_auth_headers('empty X-Ops-Sign', 400, :signing_description => '',
-                                     :pending => ruby?)
+                                     :signing_description => 'version=8.1')
+          with_modified_auth_headers('empty X-Ops-Sign', 400, :signing_description => '')
 
           # X-Ops-Userid
           with_modified_auth_headers('missing X-Ops-Userid', 400, :user_id => nil,
@@ -177,8 +175,7 @@ module Pedant
           with_modified_auth_headers('missing X-Ops-Timestamp', 400, :timestamp => nil)
           # empty should behave just like missing
           with_modified_auth_headers('empty X-Ops-Timestamp', 400,
-                                     :timestamp => '',
-                                     :pending => ruby?)
+                                     :timestamp => '')
           with_modified_auth_headers('malformed X-Ops-Timestamp', 401,
                                      :timestamp => 'xxx')
           with_modified_auth_headers('old X-Ops-Timestamp', 401,
@@ -202,7 +199,7 @@ module Pedant
 
           # X-Ops-Content-Hash: hashed body of request
           with_modified_auth_headers('missing X-Ops-Content-Hash', 400, :hashed_body => nil)
-          with_modified_auth_headers('empty X-Ops-Content-Hash', 400, :hashed_body => '', :pending => ruby?)
+          with_modified_auth_headers('empty X-Ops-Content-Hash', 400, :hashed_body => '')
           with_modified_auth_headers('malformed X-Ops-Content-Hash', 401, :hashed_body => 'xxx')
           with_modified_auth_headers('when body does not match X-Ops-Content-Hash and signature', 401,
                                      :hashed_body => digester.hash_string('{thisisnotevenjson}'))

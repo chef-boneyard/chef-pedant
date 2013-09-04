@@ -18,10 +18,6 @@ require 'pedant/rspec/cookbook_util'
 describe "Cookbooks API endpoint, named filters", :cookbooks do
   include Pedant::RSpec::CookbookUtil
 
-  def self.ruby?
-    Pedant::Config.ruby_cookbook_endpoint?
-  end
-
   let(:request_method) { :GET }
   let(:request_url)    { api_url "/cookbooks/#{named_filter}" }
   let(:requestor)      { admin_user }
@@ -67,7 +63,7 @@ describe "Cookbooks API endpoint, named filters", :cookbooks do
       version_string, recipe_names =latest_version
 
       # don't sort the recipes for the Ruby endpoint; CouchDB keeps them in insertion order
-      recipe_names.sort! unless ruby?
+      recipe_names.sort!
 
       recipe_names.map do |recipe_name|
         "#{cookbook_name}::#{recipe_name}"
@@ -105,13 +101,7 @@ describe "Cookbooks API endpoint, named filters", :cookbooks do
 
       it "shows the recipes from the latest cookbooks" do
         should have_status_code 200
-
-        if open_source? and ruby?
-          # This is going away.
-          should look_like expected_for_latest(cookbooks)
-        else
-          parse(response).should == expected_for_recipes(cookbooks)
-        end
+        parse(response).should == expected_for_recipes(cookbooks)
       end
     end
   end
@@ -147,7 +137,7 @@ describe "Cookbooks API endpoint, named filters", :cookbooks do
   context "with no cookbooks" do
     let(:cookbooks) { {} }
 
-    should_respond_with_latest_cookbooks unless open_source? and ruby?
+    should_respond_with_latest_cookbooks
     should_respond_with_recipes_from_latest_cookbooks
     should_respond_with_single_cookbook_not_found
   end
@@ -161,7 +151,7 @@ describe "Cookbooks API endpoint, named filters", :cookbooks do
       {"my_cookbook" => {"1.0.0" => ["recipe1", "recipe2"]}}
     end
 
-    should_respond_with_latest_cookbooks unless open_source? and ruby?
+    should_respond_with_latest_cookbooks
     should_respond_with_recipes_from_latest_cookbooks
     should_respond_with_single_cookbook
   end
@@ -171,7 +161,7 @@ describe "Cookbooks API endpoint, named filters", :cookbooks do
       {"your_cookbook" => {"1.0.0" => ["recipe1", "recipe2"]}}
     end
 
-    should_respond_with_latest_cookbooks unless open_source? and ruby?
+    should_respond_with_latest_cookbooks
     should_respond_with_recipes_from_latest_cookbooks
     should_respond_with_single_cookbook_not_found
   end
@@ -184,7 +174,7 @@ describe "Cookbooks API endpoint, named filters", :cookbooks do
       }
     end
 
-    should_respond_with_latest_cookbooks unless open_source? and ruby?
+    should_respond_with_latest_cookbooks
     should_respond_with_recipes_from_latest_cookbooks
     should_respond_with_single_cookbook
   end
@@ -203,7 +193,7 @@ describe "Cookbooks API endpoint, named filters", :cookbooks do
       }
     end
 
-    should_respond_with_latest_cookbooks unless open_source? and ruby?
+    should_respond_with_latest_cookbooks
     should_respond_with_recipes_from_latest_cookbooks
     should_respond_with_single_cookbook
   end

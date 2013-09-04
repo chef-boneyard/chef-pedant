@@ -20,10 +20,6 @@ require 'pedant/rspec/validations'
 describe "Cookbooks API endpoint", :cookbooks do
   include Pedant::RSpec::CookbookUtil
 
-  def self.ruby?
-    Pedant::Config.ruby_cookbook_endpoint?
-  end
-
   context "PUT /cookbooks/<name>/<version> [create]" do
     include Pedant::RSpec::Validations::Create
     let(:request_method){:PUT}
@@ -39,15 +35,11 @@ describe "Cookbooks API endpoint", :cookbooks do
       let(:cookbook_name) { "pedant_basic" }
       let(:cookbook_version) { "1.0.0" }
       let(:created_resource) { default_resource_attributes }
-      if ruby?
-        it { should look_like http_200_response }
-      else
-        it { should look_like created_exact_response }
-      end
+      it { should look_like created_exact_response }
     end
 
     # Start using the new validation macros
-    context "when validating", :pending => ruby? do
+    context "when validating" do
 
       let(:cookbook_name) { "cookbook_name" }
       let(:cookbook_version) { "1.2.3" }
@@ -100,7 +92,7 @@ describe "Cookbooks API endpoint", :cookbooks do
 
       malformed_constraint = "s395dss@#"
 
-      context "basic tests", :pending => ruby? do
+      context "basic tests" do
         after(:each) do
           delete_cookbook(admin_user, cookbook_name, cookbook_version)
         end
@@ -110,7 +102,7 @@ describe "Cookbooks API endpoint", :cookbooks do
         should_fail_to_create('metadata', {}, 400, "Field 'metadata.version' missing")
       end # context basic tests
 
-      context "checking segments", :pending => ruby? do
+      context "checking segments" do
         %w{resources providers recipes definitions libraries attributes
            files templates root_files}.each do |segment|
 
@@ -123,47 +115,38 @@ describe "Cookbooks API endpoint", :cookbooks do
 
       context "checking metadata sections" do
         %w{platforms dependencies recommendations suggestions conflicting replacing}.each do |section|
-          if (ruby?)
-            # Some of these work, some of these crash, none of these are worth the
-            # trouble of testing separately -- in all cases, behavior is undesirable
-          else
-            should_fail_to_create_metadata(section, "foo", 400, "Field 'metadata.#{section}' invalid")
-            should_fail_to_create_metadata(section, {"foo" => malformed_constraint},
-                                           400, "Invalid value '#{malformed_constraint}' for metadata.#{section}")
+          should_fail_to_create_metadata(section, "foo", 400, "Field 'metadata.#{section}' invalid")
+          should_fail_to_create_metadata(section, {"foo" => malformed_constraint},
+                                         400, "Invalid value '#{malformed_constraint}' for metadata.#{section}")
+        end
+
+        def self.should_create_with_metadata(_attribute, _value)
+          context "when #{_attribute} is set to #{_value}" do
+            let(:cookbook_name) { Pedant::Utility.with_unique_suffix("pedant-cookbook") }
+
+            # These macros need to be refactored and updated for flexibility.
+            # The cookbook endpoint uses PUT for both create and update, so this
+            # throws a monkey wrench into the mix.
+            should_change_metadata _attribute, _value, _value, 201
           end
         end
-        if erlang?
-          # In erchef, we are not validating the "providing" metadata
-          # See: http://tickets.opscode.com/browse/CHEF-3976
 
-          def self.should_create_with_metadata(_attribute, _value)
-            context "when #{_attribute} is set to #{_value}" do
-              let(:cookbook_name) { Pedant::Utility.with_unique_suffix("pedant-cookbook") }
+        context "with metadata.providing" do
+          after(:each) { delete_cookbook admin_user, cookbook_name, cookbook_version }
 
-              # These macros need to be refactored and updated for flexibility.
-              # The cookbook endpoint uses PUT for both create and update, so this
-              # throws a monkey wrench into the mix.
-              should_change_metadata _attribute, _value, _value, 201
-            end
-          end
+          # http://docs.opscode.com/config_rb_metadata.html#provides
+          should_create_with_metadata 'providing', 'cats::sleep'
+          should_create_with_metadata 'providing', 'here(:kitty, :time_to_eat)'
+          should_create_with_metadata 'providing', 'service[snuggle]'
+          should_create_with_metadata 'providing', ''
+          should_create_with_metadata 'providing', 1
+          should_create_with_metadata 'providing', true
+          should_create_with_metadata 'providing', ['cats', 'sleep', 'here']
+          should_create_with_metadata 'providing',
+          { 'cats::sleep'                => '0.0.1',
+            'here(:kitty, :time_to_eat)' => '0.0.1',
+            'service[snuggle]'           => '0.0.1'  }
 
-          context "with metadata.providing" do
-            after(:each) { delete_cookbook admin_user, cookbook_name, cookbook_version }
-
-            # http://docs.opscode.com/config_rb_metadata.html#provides
-            should_create_with_metadata 'providing', 'cats::sleep'
-            should_create_with_metadata 'providing', 'here(:kitty, :time_to_eat)'
-            should_create_with_metadata 'providing', 'service[snuggle]'
-            should_create_with_metadata 'providing', ''
-            should_create_with_metadata 'providing', 1
-            should_create_with_metadata 'providing', true
-            should_create_with_metadata 'providing', ['cats', 'sleep', 'here']
-            should_create_with_metadata 'providing',
-              { 'cats::sleep'                => '0.0.1',
-                'here(:kitty, :time_to_eat)' => '0.0.1',
-                'service[snuggle]'           => '0.0.1'  }
-
-          end
         end
       end # context checking metadata sections
 
@@ -184,8 +167,7 @@ describe "Cookbooks API endpoint", :cookbooks do
         payload = {}
         put(api_url("/cookbooks/first@second/1.2.3"), admin_user,
             :payload => payload) do |response|
-          error = ruby? ? "You didn't pass me a valid object!" :
-            "Invalid cookbook name 'first@second' using regex: 'Malformed cookbook name. Must only contain A-Z, a-z, 0-9, _ or -'."
+          error = "Invalid cookbook name 'first@second' using regex: 'Malformed cookbook name. Must only contain A-Z, a-z, 0-9, _ or -'."
           response.should look_like({
                                       :status => 400,
                                       :body => {
@@ -199,9 +181,7 @@ describe "Cookbooks API endpoint", :cookbooks do
         payload = new_cookbook(cookbook_name, "0.0.1")
         put(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"), admin_user,
             :payload => payload) do |response|
-          error = ruby? ? "You said the cookbook was version 0.0.1, " +
-                           "but the URL says it should be 1.2.3." :
-            "Field 'name' invalid"
+          error = "Field 'name' invalid"
           response.should look_like({
                                       :status => 400,
                                       :body => {
@@ -215,9 +195,7 @@ describe "Cookbooks API endpoint", :cookbooks do
         payload = new_cookbook("foobar", cookbook_version)
         put(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"), admin_user,
             :payload => payload) do |response|
-          error = ruby? ? "You said the cookbook was named foobar, " +
-                           "but the URL says it should be cookbook_name." :
-            "Field 'name' invalid"
+          error = "Field 'name' invalid"
           response.should look_like({
                                       :status => 400,
                                       :body => {
@@ -243,12 +221,7 @@ describe "Cookbooks API endpoint", :cookbooks do
                                ]
           put(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
               admin_user, :payload => payload) do |response|
-            error = if ruby?
-                       "Manifest has checksum 8288b67da0793b5abec709d6226e6b73 " +
-                          "(path recipes/default.rb) but it hasn't yet been uploaded"
-                    else
-                      "Manifest has a checksum that hasn't been uploaded."
-                    end
+            error = "Manifest has a checksum that hasn't been uploaded."
             response.should look_like({
                                         :status => 400,
                                         :body => {
@@ -284,9 +257,7 @@ describe "Cookbooks API endpoint", :cookbooks do
         delete_cookbook(admin_user, cookbook_name, cookbook_version)
       end
 
-      if erlang?
-        respects_maximum_payload_size
-      end
+      respects_maximum_payload_size
 
       it "allows creation of a minimal cookbook with no data" do
 
@@ -300,7 +271,7 @@ describe "Cookbooks API endpoint", :cookbooks do
             :payload => payload) do |response|
           response.
             should look_like({
-                               :status => ruby? ? 200 : 201,
+                               :status => 201,
                                :body => payload
                              })
         end
@@ -312,7 +283,7 @@ describe "Cookbooks API endpoint", :cookbooks do
             admin_user, :payload => payload) do |response|
           response.
             should look_like({
-                               :status => ruby? ? 200 : 201,
+                               :status => 201,
                                :body => retrieved_cookbook(cookbook_name, cookbook_version,
                                                       opts)
                              })
@@ -338,7 +309,7 @@ describe "Cookbooks API endpoint", :cookbooks do
         admin_user,
         :payload => payload) do |response|
         response.should look_like({
-            :status => if ruby? then 200 else 201 end,
+            :status => 201,
             :body => payload
           })
       end
@@ -348,7 +319,7 @@ describe "Cookbooks API endpoint", :cookbooks do
         admin_user,
         :payload => payload2) do |response|
         response.should look_like({
-            :status => if ruby? then 200 else 201 end,
+            :status => 201,
             :body => payload2
           })
       end

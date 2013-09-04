@@ -27,10 +27,6 @@ describe "/environments/ENVIRONMENT/recipes API endpoint", :environments do
 
   include_context "environment_body_util"
 
-  def self.ruby?
-    Pedant::Config.ruby_environment_endpoint?
-  end
-
   # TODO: Refactor
   def self.env; 'test_env'; end
   def self.default; '_default'; end

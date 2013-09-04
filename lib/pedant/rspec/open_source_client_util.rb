@@ -86,32 +86,7 @@ module Pedant
         }
       end
 
-      # TODO: This is broken on the Ruby implementation; should be 405
-      let(:incorrect_ruby_clients_resource_method_not_allowed_response) do
-        {
-          :status => 404,
-          :body_exact => {
-            "error" => ["No routes match the request: /clients"]
-          }
-        }
-      end
-
-      # TODO: This is broken on the Ruby implementation; should be 405
-      let(:incorrect_ruby_named_client_resource_method_not_allowed_response) do
-        {
-          :status => 404,
-          :body_exact => {
-            "error" => ["No routes match the request: /clients/#{client_name}"]
-          }
-        }
-      end
-
       let(:client_not_found_response) { resource_not_found_response }
-
-      let(:update_clients_method_not_allowed_response) { incorrect_ruby_clients_resource_method_not_allowed_response }
-      let(:delete_clients_method_not_allowed_response) { incorrect_ruby_clients_resource_method_not_allowed_response }
-
-      let(:post_named_client_method_not_allowed_response) { incorrect_ruby_named_client_resource_method_not_allowed_response }
 
       let(:expected_public_key) { /^(-----BEGIN RSA PUBLIC KEY-----|-----BEGIN PUBLIC KEY-----)/ }
       let(:fetch_admin_client_success_response)     { ok_response.with(body_exact: new_client(client_name, admin: true).with('public_key', expected_public_key)) }
