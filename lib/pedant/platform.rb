@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and			
 # limitations under the License.								
 
+require 'uri'
+
 module Pedant
 
   # Abstraction of an Opscode Chef Server platform
@@ -26,7 +28,8 @@ module Pedant
     # superuser's key file, which can either be the path to the file,
     # or the contents of the file.
     def initialize(server, superuser_key_file, superuser_name)
-      @server = server
+      @server = explicit_port_url(server)
+      puts "Configured URL: #{@server}"
       @superuser_key_file = superuser_key_file
       @superuser = Pedant::Requestor.new(superuser_name, superuser_key_file, platform: self)
       self.pedant_run_timestamp # Cache the global timestamp at initialization
@@ -35,6 +38,15 @@ module Pedant
 
     def api_url(url_path)
       raise "Must override with an appropriate url generation method!"
+    end
+
+    # Since Erchef will now return URLs based upon the Host: header, and it receives
+    # a fully-qualified url with an explicit port, we need to normalize the server url
+    # so that port numbers are added, even if the url are default port
+    def explicit_port_url(url)
+      uri = URI.parse(url)
+      return url unless uri.default_port == uri.port
+      return "#{url}:#{uri.port}"
     end
 
     def setup
