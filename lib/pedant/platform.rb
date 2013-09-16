@@ -28,7 +28,7 @@ module Pedant
     # superuser's key file, which can either be the path to the file,
     # or the contents of the file.
     def initialize(server, superuser_key_file, superuser_name)
-      @server = explicit_port_url(server)
+      @server = (Pedant.config.explicit_port_url ? explicit_port_url(server) : server )
       puts "Configured URL: #{@server}"
       @superuser_key_file = superuser_key_file
       @superuser = Pedant::Requestor.new(superuser_name, superuser_key_file, platform: self)
