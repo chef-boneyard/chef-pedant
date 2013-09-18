@@ -55,6 +55,7 @@ module Pedant
       {
         'couchdb_environments' => dl_true_or_false(Pedant::Config.ruby_environment_endpoint?),
         'couchdb_checksums'    => dl_true_or_false(Pedant::Config.ruby_sandbox_endpoint?),
+        'couchdb_containers'   => 0,
         'couchdb_data'         => dl_true_or_false(Pedant::Config.ruby_data_endpoint?),
         'couchdb_roles'        => dl_true_or_false(Pedant::Config.ruby_role_endpoint?),
         'couchdb_cookbooks'    => dl_true_or_false(Pedant::Config.ruby_cookbook_endpoint?),
