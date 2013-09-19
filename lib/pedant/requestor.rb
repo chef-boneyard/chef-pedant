@@ -113,6 +113,14 @@ module Pedant
   end
 
   class User < Requestor
+    attr_reader :associate
+
+    def initialize(name, key, options = {})
+      # For platforms with multitenancy
+      @associate = !!options[:associate]
+      super(name, key, options)
+    end
+
     def delete!
       platform.delete_user(self)
     end
