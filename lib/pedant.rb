@@ -54,6 +54,13 @@ module Pedant
     configure_logging
     puts "Creating platform..."
     create_platform
+
+    # If we need more hooks, we should have a general hook infrastructure
+    # This is needed for oc-chef-pedant
+    if config.pedant_platform.respond_to?(:before_configure_rspec)
+      config.pedant_platform.before_configure_rspec
+    end
+
     puts "Starting Pedant Run: #{config.pedant_platform.pedant_run_timestamp}"
     configure_rspec
   end

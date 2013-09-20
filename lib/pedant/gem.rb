@@ -45,12 +45,12 @@ module Pedant
       # derivatives to use the same core gem, but not have to deal
       # with loading of test specs that will never be run.
       def test_directories(suite)
-        @test_dirs ||= absolute_paths_for("spec/#{suite}")
+        absolute_paths_for("spec/#{suite}")
       end
 
       # Returns an array of absolute paths to fixtures directories in Pedant test gems
       def fixture_directories
-        @fixture_dirs ||= absolute_paths_for('fixtures')
+        @_fixture_directories ||= absolute_paths_for('fixtures')
       end
     end
   end

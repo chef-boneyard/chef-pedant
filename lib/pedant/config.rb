@@ -63,15 +63,8 @@ module Pedant
         args.concat(self[:tags].map { |tag| ['-t', tag.to_s] } )
       end
 
-      if junit_file
-        args.concat(%W[-r rspec_junit_formatter -f RspecJunitFormatter -o #{junit_file} -f documentation])
-      else
-        args.concat(%w[ --color -f documentation --tty])
-      end
-      
-      # Always use the failures formatter, in case we want to rerun failures
-      args.concat(%W[-f #{::RSpec::Rerun::Formatters::FailuresFormatter}])
-      
+      args.concat(rspec_formatting_args)
+
       # Load up the failures file if we're re-running
       if rerun
         args.concat(%W[-O #{::RSpec::Rerun::Formatters::FailuresFormatter::FILENAME}])
@@ -87,6 +80,18 @@ module Pedant
       args.concat _test_dirs
 
       args.flatten
+    end
+
+    # Returns just the arguments for formatting
+    def self.rspec_formatting_args
+      format_args = if junit_file
+                      %W[-r rspec_junit_formatter -f RspecJunitFormatter -o #{junit_file} -f documentation]
+                    else
+                      %w[ --color -f documentation --tty]
+                    end
+
+      # Always use the failures formatter, in case we want to rerun failures
+      format_args.concat(%W[-f #{::RSpec::Rerun::Formatters::FailuresFormatter}])
     end
 
     # Default Values
