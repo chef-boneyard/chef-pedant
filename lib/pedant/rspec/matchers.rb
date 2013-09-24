@@ -275,7 +275,11 @@ RSpec::Matchers.define :look_like do |expected_response_spec|
               parsed_json.should loosely_match expected_body_spec
             end
           else
-            parsed_json.should == expected_body_spec
+            if expected_body_spec.is_a?(Array)
+              parsed_json.should =~ expected_body_spec
+            else
+              parsed_json.should == expected_body_spec
+            end
           end
         end
       end
