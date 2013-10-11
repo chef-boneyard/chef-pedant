@@ -15,7 +15,7 @@ describe "Server-side reindexing" do
   shared(:admin_requestor){admin_user}
   shared(:requestor){admin_requestor}
 
-  context "reindexing", :platform => :open_source do
+  context "reindexing", :platform => :open_source, :omnibus => true do
     it_should_behave_like "Reindexing" do
       let(:executable){"/opt/chef-server/embedded/service/erchef/bin/reindex-chef-server"}
     end

@@ -314,7 +314,7 @@ module Pedant
           @response = put(data_bag_item_url, requestor, :payload => updated_data_bag_item)
         end
 
-        it 'should return failure' do
+        it 'should return failure', :validation do
           @response.should look_like expected_failure_response
         end
       end # shared context
