@@ -58,7 +58,7 @@ describe "Cookbooks API endpoint", :cookbooks do
       context "the cookbook version" do
         let(:request_payload) { default_resource_attributes }
 
-        context "with negative versions" do
+        context "with negative versions", :validation do
           let(:cookbook_version) { "1.2.-42" }
           it { should look_like http_400_response }
         end
@@ -75,7 +75,7 @@ describe "Cookbooks API endpoint", :cookbooks do
           it { should look_like http_201_response }
         end
 
-        context "with versions larger than 8 bytes" do
+        context "with versions larger than 8 bytes", :validation do
           int8_overflow = "9223372036854775849" # max = 9223372036854775807 (add 42)
           let(:cookbook_version) { "1.2.#{int8_overflow}" }
           it { should look_like http_400_response }
