@@ -404,7 +404,7 @@ describe "Environments API Endpoint", :environments do
 
       context 'when updating name' do
         let(:request_payload)     { updated_environment }
-        let(:expected_response)   { ok_exact_response }
+        let(:expected_response)   { created_response }
         let(:success_message)     { updated_environment }
 
         let(:updated_environment) { full_environment(updated_name) }
@@ -412,10 +412,10 @@ describe "Environments API Endpoint", :environments do
 
         after(:each) { delete(api_url("/environments/#{updated_name}"), admin_user) }
 
-        should_respond_with 200, 'and the updated environment'
-        should_respond_with 200, 'and renames the environment' do
+        should_respond_with 201, 'and the updated environment'
+        should_respond_with 201, 'and renames the environment' do
           get(api_url("/environments/#{new_environment_name}"), admin_user).should look_like resource_not_found_response
-          get(api_url("/environments/different_name"), admin_user).should look_like expected_response
+          get(api_url("/environments/different_name"), admin_user).should look_like ok_exact_response
         end
       end
 
