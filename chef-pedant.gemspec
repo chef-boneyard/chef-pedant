@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name          = 'chef-pedant'
-  s.version       = '1.0.23'
+  s.version       = '1.0.24'
   s.date          = '2013-10-25'
   s.summary       = "Opscode Chef API Testing Framework"
   s.authors       = ["Opscode Software Engineering"]
@@ -17,7 +17,7 @@ Gem::Specification.new do |s|
   s.add_dependency('mixlib-authentication', '~> 1.3.0')
   s.add_dependency('mixlib-config', '~> 1.1.2')
   s.add_dependency('mixlib-shellout', '~> 1.1.0')
-  s.add_dependency('rest-client', '~> 1.6.7')
+  s.add_development_dependency('rest-client', '~> 1.7')
   s.add_dependency('rspec_junit_formatter', '~> 0.1.1')
   s.add_dependency('net-http-spy', '~> 0.2.1')
   s.add_dependency('erubis', '~> 2.7.0')
