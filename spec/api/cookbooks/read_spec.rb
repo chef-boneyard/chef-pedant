@@ -305,7 +305,7 @@ describe "Cookbooks API endpoint", :cookbooks do
         end
 
         it "curl" do
-          got = `curl -sk '#{recipe_url}'`
+          got = `curl -gsk '#{recipe_url}'`
           got.should == recipe_content
         end
       end # access to recipe file content
