@@ -196,7 +196,7 @@ module Pedant
 
       def verify_checksum_url(url, expected_reponse_code)
         uri = URI.parse(url)
-        http = Net::HTTP.new(uri.host, uri.port)
+        http = Net::HTTP.new(uri.hostname, uri.port)
         if uri.scheme == 'https'
           http.use_ssl = true
           http.verify_mode = OpenSSL::SSL::VERIFY_NONE

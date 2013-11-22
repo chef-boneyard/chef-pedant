@@ -294,7 +294,7 @@ describe "Cookbooks API endpoint", :cookbooks do
 
         it "net/http" do
           uri = URI.parse(recipe_url)
-          http = Net::HTTP.new(uri.host, uri.port)
+          http = Net::HTTP.new(uri.hostname, uri.port)
           if uri.scheme == "https"
             http.use_ssl = true
             http.verify_mode = OpenSSL::SSL::VERIFY_NONE
