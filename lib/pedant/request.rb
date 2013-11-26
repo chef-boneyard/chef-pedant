@@ -114,7 +114,11 @@ module Pedant
       x_darklaunch_header = encode_darklaunch(standard_x_darklaunch_headers.merge(opts[:x_darklaunch] || {}).merge(pedant_x_darklaunch: 1))
 
       auth_headers = opts[:auth_headers] || requestor.signing_headers(method, url, payload)
-      final_headers = standard_headers.merge(auth_headers).merge(user_headers).merge({'X-Ops-Darklaunch' => x_darklaunch_header})
+      final_headers = standard_headers.
+        merge(auth_headers).
+        merge(user_headers).
+        merge({'X-Ops-Darklaunch' => x_darklaunch_header}).
+        merge({'Host' => URI.parse(url).host})
 
       response_handler = lambda{|response, request, result| response}
 
