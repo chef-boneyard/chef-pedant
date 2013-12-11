@@ -294,7 +294,7 @@ describe "Cookbooks API endpoint", :cookbooks do
 
         it "net/http" do
           uri = URI.parse(recipe_url)
-          http = Net::HTTP.new(uri.host, uri.port)
+          http = Net::HTTP.new(uri.hostname, uri.port)
           if uri.scheme == "https"
             http.use_ssl = true
             http.verify_mode = OpenSSL::SSL::VERIFY_NONE
@@ -305,7 +305,7 @@ describe "Cookbooks API endpoint", :cookbooks do
         end
 
         it "curl" do
-          got = `curl -sk '#{recipe_url}'`
+          got = `curl -gsk '#{recipe_url}'`
           got.should == recipe_content
         end
       end # access to recipe file content

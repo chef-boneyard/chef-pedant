@@ -95,7 +95,11 @@ module Pedant
                 end
 
       auth_headers = opts[:auth_headers] || requestor.signing_headers(method, url, payload)
-      final_headers = standard_headers.merge(auth_headers).merge(user_headers)
+
+      final_headers = standard_headers.
+        merge(auth_headers).
+        merge(user_headers).
+        merge({'Host' => URI.parse(url).host})
 
       response_handler = lambda{|response, request, result| response}
 
