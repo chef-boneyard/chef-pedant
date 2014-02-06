@@ -23,6 +23,10 @@
 # sent to.  Only specify protocol, hostname, and port.
 chef_server "https://#{`hostname -f`.strip}"
 
+# OSC sends erchef a host header with a port, so this option needs
+# # to be enabled for Pedant tests to work correctly
+explicit_port_url true
+
 # If you are doing development testing, you can specify the address of
 # the Solr server.  The presence of this parameter will enable tests
 # to force commits to Solr, greatly decreasing the amout of time
