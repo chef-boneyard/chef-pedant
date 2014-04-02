@@ -17,7 +17,7 @@ require 'optparse'
 
 module Pedant
 
-  class CommandLine < Struct.new(:junit_file, :config_file, :log_file, :include_internal, :only_internal, :run_all, :verify_error_messages, :bell_on_completion, :rerun)
+  class CommandLine < Struct.new(:junit_file, :config_file, :log_file, :include_internal, :only_internal, :run_all, :include_internal_orgs, :only_internal_orgs, :verify_error_messages, :bell_on_completion, :rerun)
 
     def initialize(argv)
       @argv = argv.dup
@@ -49,12 +49,20 @@ module Pedant
         self.log_file = f
       end
 
-      opts.on("-I", "--[no-]only-internal", "Only run Opscode internal tests (no API tests") do |i|
+      opts.on("-I", "--[no-]only-internal", "Only run Chef internal tests (no API tests)") do |i|
         self.only_internal = i
       end
 
-      opts.on("-i", "--[no-]include-internal", "Run Opscode internal tests in addition to API tests") do |i|
+      opts.on("-i", "--[no-]include-internal", "Run Chef internal tests in addition to API tests") do |i|
         self.include_internal = i
+      end
+
+      opts.on("-O", "--only-internal-orgs", "Only run Chef internal organization tests (no API tests)") do |i|
+        self.only_internal_orgs = i
+      end
+
+      opts.on("-o", "--include-internal-orgs", "Run Chef internal organization tests in addition to API tests") do |i|
+        self.include_internal_orgs = i
       end
 
       opts.on("-h", "--help", "Print this help message") do
@@ -120,7 +128,7 @@ module Pedant
     def api_options(opts)
       tags = %w(environments cookbooks data_bags nodes roles sandboxes users
                 clients depsolver search knife validation authentication authorization
-                principals acl containers groups omnibus)
+                principals acl containers groups omnibus organizations)
       export_options(opts, tags)
     end
 
