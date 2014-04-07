@@ -128,7 +128,7 @@ module Pedant
     def api_options(opts)
       tags = %w(environments cookbooks data_bags nodes roles sandboxes users
                 clients depsolver search knife validation authentication authorization
-                principals acl containers groups omnibus organizations)
+                principals acl containers groups association omnibus organizations)
       export_options(opts, tags)
     end
 
