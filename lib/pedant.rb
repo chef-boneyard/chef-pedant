@@ -105,8 +105,8 @@ module Pedant
 
       if Pedant.config.only_internal_orgs
         c.filter_run :internal_orgs
-      else
-        c.filter_run_excluding :internal_orgs => true unless Pedant.config.include_internal_orgs
+      elsif Pedant.config.exclude_internal_orgs
+        c.filter_run_excluding :internal_orgs => true
       end
 
       c.run_all_when_everything_filtered = true
