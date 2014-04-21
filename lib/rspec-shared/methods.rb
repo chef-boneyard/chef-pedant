@@ -4,11 +4,15 @@
 module RSpecShared
   module Methods
     def shared(name, &block)
-      Thread.current[:rspec] ||= {}
-      location = ancestors.last.metadata[:example_group][:location]
-
-      define_method(name) do
-        Thread.current[:rspec][location + name.to_s] ||= instance_eval(&block)
+      # Set these values up to be captured and shared
+      value_defined = false
+      value = nil
+      let(name) do
+        if !value_defined
+          value = instance_eval(&block)
+          value_defined
+        end
+        value
       end
     end
   end
