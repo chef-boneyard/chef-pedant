@@ -26,10 +26,10 @@ describe "Cookbook Versions API endpoint, GET", :cookbooks do
   let(:fake_version){ "1.0.0" }
   let(:latest_cookbook_version_url) { api_url("/cookbooks/#{cookbook_name}/_latest") }
 
-  let(:fetch_cookbook_version_success_exact_response) do
+  let(:fetch_cookbook_version_success_response) do
     {
       :status => 200,
-      :body_exact => retrieved_cookbook(cookbook_name, cookbook_version)
+      :body => retrieved_cookbook(cookbook_name, cookbook_version)
     }
   end
   let(:cookbook_version_not_found_exact_response) do
@@ -67,7 +67,7 @@ describe "Cookbook Versions API endpoint, GET", :cookbooks do
     end
 
     context 'when fetching existing version of cookbook' do
-      let(:expected_response) { fetch_cookbook_version_success_exact_response }
+      let(:expected_response) { fetch_cookbook_version_success_response }
 
       should_respond_with 200, 'and the cookbook version'
     end
@@ -80,7 +80,7 @@ describe "Cookbook Versions API endpoint, GET", :cookbooks do
     end
 
     context 'as a non-admin user' do
-      let(:expected_response) { fetch_cookbook_version_success_exact_response }
+      let(:expected_response) { fetch_cookbook_version_success_response }
       let(:requestor) { normal_user }
 
       should_respond_with 200, 'and the cookbook version'
@@ -94,7 +94,7 @@ describe "Cookbook Versions API endpoint, GET", :cookbooks do
     end
 
     context "when requesting the 'latest' Cookbook version", :smoke do
-      let(:expected_response) { fetch_cookbook_version_success_exact_response }
+      let(:expected_response) { fetch_cookbook_version_success_response }
       let(:request_url) { latest_cookbook_version_url }
       let(:cookbook_version) { latest }
 
@@ -105,7 +105,7 @@ describe "Cookbook Versions API endpoint, GET", :cookbooks do
       let(:expected_response) { cookbook_version_not_found_exact_response }
       let(:cookbook_name) { non_existent_cookbook }
       let(:cookbook_version) { '_latest' }
-      
+
       should_respond_with 404
     end # when requesting the 'latest' version of a non-existent cookbook
   end # with existing cookbook

@@ -411,7 +411,7 @@ describe "Depsolver API endpoint", :depsolver do
               :payload => payload) do |response|
           response.should look_like({
                                       :status => 200,
-                                      :body_exact => {
+                                      :body => {
                                         cookbook_name => cb
                                       }
                                     })
