@@ -26,6 +26,9 @@ module Pedant
     # Grab the the version of Chef / Knife that's on the box in order
     # to properly set the X-Chef-Version header
     KNIFE_VERSION = begin
+                      require 'chef/version'
+                      Chef::VERSION
+                    rescue LoadError
                       # Don't want Bundler to poison the shelling out :(
                       cmd = Mixlib::ShellOut.new("knife --version", :environment => {
                                                    'BUNDLE_GEMFILE' => nil,
@@ -96,10 +99,16 @@ module Pedant
 
       auth_headers = opts[:auth_headers] || requestor.signing_headers(method, url, payload)
 
+      uri = URI.parse(url)
+      if (uri.scheme == 'http' && uri.port == 80) || (uri.scheme == 'https' && uri.port == 443)
+        host = uri.host
+      else
+        host = "#{uri.host}:#{uri.port}"
+      end
       final_headers = standard_headers.
         merge(auth_headers).
         merge(user_headers).
-        merge({'Host' => URI.parse(url).host})
+        merge({'Host' => host})
 
       response_handler = lambda{|response, request, result| response}
 

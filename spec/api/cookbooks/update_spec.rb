@@ -83,7 +83,7 @@ describe "Cookbooks API endpoint", :cookbooks do
           response.
             should look_like({
                                :status => 200,
-                               :body_exact => payload
+                               :body => payload
                              })
         end
       end # it admin user returns 200
@@ -625,7 +625,7 @@ describe "Cookbooks API endpoint", :cookbooks do
           response.
             should look_like({
                                :status => 200,
-                               :body_exact => payload
+                               :body => payload
                              })
         end
       end # it can set frozen? to true
@@ -656,7 +656,7 @@ describe "Cookbooks API endpoint", :cookbooks do
           response.
             should look_like({
                                :status => 200,
-                               :body_exact => payload
+                               :body => payload
                              })
           end
       end # it can not edit cookbook when frozen? is set to true
@@ -685,7 +685,7 @@ describe "Cookbooks API endpoint", :cookbooks do
           response.
             should look_like({
                                :status => 200,
-                               :body_exact => payload
+                               :body => payload
                              })
         end
       end # it can override frozen? with force set to true
@@ -718,7 +718,7 @@ describe "Cookbooks API endpoint", :cookbooks do
           response.
             should look_like({
                                :status => 200,
-                               :body_exact => payload
+                               :body => payload
                              })
         end
       end # it can not override frozen? with force set to false

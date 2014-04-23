@@ -554,140 +554,140 @@ describe 'Search API endpoint', :search do
         delete_role(admin_user, role_name)
       end
 
-    context "many results (roles)" do
-      # TODO: Refactor this to shared() ?
-      ROLE_STASH = Hash.new
-      let(:role_names) { ROLE_STASH[:role_names] ||= 10.times.map(&a_search_item) }
-      let(:description) { ROLE_STASH[:description] ||= "partial-search-role-description-#{rand(10000).to_s}" }
+      context "many results (roles)" do
+        # TODO: Refactor this to shared() ?
+        ROLE_STASH = Hash.new
+        let(:role_names) { ROLE_STASH[:role_names] ||= 10.times.map(&a_search_item) }
+        let(:description) { ROLE_STASH[:description] ||= "partial-search-role-description-#{rand(10000).to_s}" }
 
-      let(:roles) do
-        role_names.each_with_index.map do |name, i|
-          new_role(name, {
-                     :override_attributes => {'top' => {'mid' => {'bottom' => i}}},
-                     :description => description
-                   })
+        let(:roles) do
+          role_names.each_with_index.map do |name, i|
+            new_role(name, {
+                       :override_attributes => {'top' => {'mid' => {'bottom' => i}}},
+                       :description => description
+                     })
+          end
         end
-      end
 
-      before(:all) do
-        roles.each do |r|
-          add_role(admin_user, r)
+        before(:all) do
+          roles.each do |r|
+            add_role(admin_user, r)
+          end
         end
-      end
 
-      after(:all) do
-        role_names.each do |name|
-          delete_role(admin_user, name)
+        after(:all) do
+          role_names.each do |name|
+            delete_role(admin_user, name)
+          end
         end
-      end
 
-      it "should have 10 results" do
-        with_search_polling do
-          payload = {
-            'goal' => ['override_attributes', 'top', 'mid', 'bottom']
-          }
-
-          post(api_url("/search/role?q=description:#{description}"), admin_user,
-               :payload => payload) do |response|
-            want_result = {
-              'url' => /roles/,
-              'data' => { 'goal' => 'found_it' }
+        it "should have 10 results" do
+          with_search_polling do
+            payload = {
+              'goal' => ['override_attributes', 'top', 'mid', 'bottom']
             }
-            want_results = 10.times.map { |i| want_result }
-            response.should look_like({:status => 200,
-                                        :body => {'total' => 10}})
-            got = parse(response)['rows']
-            got_digits = got.map { |o| o['data']['goal'] }.sort
-            got_digits.should == (0..9).to_a
-          end # response
 
+            post(api_url("/search/role?q=description:#{description}"), admin_user,
+                 :payload => payload) do |response|
+              want_result = {
+                'url' => /roles/,
+                'data' => { 'goal' => 'found_it' }
+              }
+              want_results = 10.times.map { |i| want_result }
+              response.should look_like({:status => 200,
+                                          :body => {'total' => 10}})
+              got = parse(response)['rows']
+              got_digits = got.map { |o| o['data']['goal'] }.sort
+              got_digits.should == (0..9).to_a
+            end # response
+
+          end
         end
       end
-    end
 
-    context "nodes" do
-      STASH = Hash.new
-      let(:default_attrs) {
-        {
-          'top' => {'mid' => {'bottom' => 'found_it_default'}},
-          'is_default' => true,
-          'is' => { 'default' => true }
+      context "nodes" do
+        STASH = Hash.new
+        let(:default_attrs) {
+          {
+            'top' => {'mid' => {'bottom' => 'found_it_default'}},
+            'is_default' => true,
+            'is' => { 'default' => true }
+          }
         }
-      }
 
-      let(:normal_attrs) {
-        {
-          'top' => {'mid' => {'bottom' => 'found_it_normal'}},
-          'is_normal' => true,
-          'is' => { 'normal' => true }
+        let(:normal_attrs) {
+          {
+            'top' => {'mid' => {'bottom' => 'found_it_normal'}},
+            'is_normal' => true,
+            'is' => { 'normal' => true }
+          }
         }
-      }
 
-      let(:node_name) { STASH[:node_name] ||= a_search_item.('node') }
+        let(:node_name) { STASH[:node_name] ||= a_search_item.('node') }
 
-      let(:a_node) {
-        n = new_node(node_name)
-        n['default'] = default_attrs
-        n['normal'] = normal_attrs
-        n
-      }
+        let(:a_node) {
+          n = new_node(node_name)
+          n['default'] = default_attrs
+          n['normal'] = normal_attrs
+          n
+        }
 
-      before(:all) do
-        add_node(admin_user, a_node)
-      end
+        before(:all) do
+          add_node(admin_user, a_node)
+        end
 
-      after(:all) do
-        delete_node(admin_user, node_name)
-      end
+        after(:all) do
+          delete_node(admin_user, node_name)
+        end
 
-      it "returns partial results from default attributes of a node" do
-        with_search_polling do
-          payload = {
-            'we_found_default' => ['is', 'default'],
-          }
-          post(api_url("/search/node?q=name:#{node_name}"), admin_user,
-               :payload => payload) do |response|
-            response.should look_like({:status => 200,
-                                        :body => {'total' => 1,
-                                          "rows" => [{ 'url' => api_url("/nodes/#{node_name}"),
-                                                       'data' => {
-                                                         'we_found_default' => true
-                                                       }}]}})
+        it "returns partial results from default attributes of a node" do
+          with_search_polling do
+            payload = {
+              'we_found_default' => ['is', 'default'],
+            }
+            post(api_url("/search/node?q=name:#{node_name}"), admin_user,
+                 :payload => payload) do |response|
+              response.should look_like({:status => 200,
+                                          :body => {'total' => 1,
+                                            "rows" => [{ 'url' => api_url("/nodes/#{node_name}"),
+                                                         'data' => {
+                                                           'we_found_default' => true
+                                                         }}]}})
+            end
           end
         end
-      end
 
-      it "returns partial results from normal attributes of a node" do
-        with_search_polling do
-          payload = {
-            'we_found_normal' => ['is', 'normal'],
-          }
-          post(api_url("/search/node?q=name:#{node_name}"), admin_user,
-               :payload => payload) do |response|
-            response.should look_like({:status => 200,
-                                        :body => {'total' => 1,
-                                          "rows" => [{ 'url' => api_url("/nodes/#{node_name}"),
-                                                       'data' => {
-                                                         'we_found_normal' => true
-                                                       }}]}})
+        it "returns partial results from normal attributes of a node" do
+          with_search_polling do
+            payload = {
+              'we_found_normal' => ['is', 'normal'],
+            }
+            post(api_url("/search/node?q=name:#{node_name}"), admin_user,
+                 :payload => payload) do |response|
+              response.should look_like({:status => 200,
+                                          :body => {'total' => 1,
+                                            "rows" => [{ 'url' => api_url("/nodes/#{node_name}"),
+                                                         'data' => {
+                                                           'we_found_normal' => true
+                                                         }}]}})
+            end
           end
         end
-      end
 
-      it "returns partial results from deep merged node attributes" do
-        with_search_polling do
-          payload = {
-            'goal' => ['top', 'mid', 'bottom'],
-          }
-          post(api_url("/search/node?q=name:#{node_name}"), admin_user,
-               :payload => payload) do |response|
-            response.should look_like({:status => 200,
-                                        :body => {'total' => 1,
-                                          "rows" => [{ 'url' => api_url("/nodes/#{node_name}"),
-                                                       'data' => {
-                                                         'goal' => 'found_it_normal'
-                                                       }}]}})
-          end
+        it "returns partial results from deep merged node attributes" do
+          with_search_polling do
+            payload = {
+              'goal' => ['top', 'mid', 'bottom'],
+            }
+            post(api_url("/search/node?q=name:#{node_name}"), admin_user,
+                 :payload => payload) do |response|
+              response.should look_like({:status => 200,
+                                          :body => {'total' => 1,
+                                            "rows" => [{ 'url' => api_url("/nodes/#{node_name}"),
+                                                         'data' => {
+                                                           'goal' => 'found_it_normal'
+                                                         }}]}})
+            end
           end
         end
 

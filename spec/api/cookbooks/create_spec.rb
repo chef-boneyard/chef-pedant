@@ -328,7 +328,7 @@ describe "Cookbooks API endpoint", :cookbooks do
         admin_user) do |response|
         response.should look_like({
                                    :status => 200,
-                                   :body_exact => retrieved_cookbook(cookbook_name, cookbook_version1)
+                                   :body => retrieved_cookbook(cookbook_name, cookbook_version1)
                                   })
       end
 
@@ -336,7 +336,7 @@ describe "Cookbooks API endpoint", :cookbooks do
         admin_user) do |response|
         response.should look_like({
                                    :status => 200,
-                                   :body_exact => retrieved_cookbook(cookbook_name, cookbook_version2)
+                                   :body => retrieved_cookbook(cookbook_name, cookbook_version2)
                                   })
       end
     end # it allows us to create 2 versions of the same cookbook

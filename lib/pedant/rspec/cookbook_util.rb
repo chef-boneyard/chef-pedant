@@ -499,7 +499,7 @@ module Pedant
                       response.
                         should look_like({
                         :status => 200,
-                        :body_exact => payload
+                        :body => payload
                       })
                     end
           end
@@ -651,7 +651,7 @@ module Pedant
                 get_response["metadata"] = get_metadata
               end
 
-              response.should look_like({:status => 200, :body_exact => get_response})
+              response.should look_like({:status => 200, :body => get_response})
             end
 
           end
