@@ -28,7 +28,7 @@ module Pedant
     KNIFE_VERSION = begin
                       require 'chef/version'
                       Chef::VERSION
-                    rescue
+                    rescue LoadError
                       # Don't want Bundler to poison the shelling out :(
                       cmd = Mixlib::ShellOut.new("knife --version", :environment => {
                                                    'BUNDLE_GEMFILE' => nil,
