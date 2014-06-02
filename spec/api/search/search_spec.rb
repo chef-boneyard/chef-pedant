@@ -476,11 +476,15 @@ describe 'Search API endpoint', :search do
           'foo-bar' => '{ "id": "foo-bar" }'
 
         it 'A search for foo-bar returns foo-bar and nothing else' do
-          search('x', 'id:foo-bar').map { |row| row['name'] }.should =~ [ 'data_bag_item_x_foo-bar' ]
+            with_search_polling do
+                search('x', 'id:foo-bar').map { |row| row['name'] }.should =~ [ 'data_bag_item_x_foo-bar' ]
+            end
         end
 
         it 'A search for foo* AND NOT bar returns foo and foo-bar' do
-          search('x', 'id:foo* AND NOT bar').map { |row| row['name'] }.should =~ [ 'data_bag_item_x_foo', 'data_bag_item_x_foo-bar' ]
+            with_search_polling do
+                search('x', 'id:foo* AND NOT bar').map { |row| row['name'] }.should =~ [ 'data_bag_item_x_foo', 'data_bag_item_x_foo-bar' ]
+            end
         end
       end
     end
