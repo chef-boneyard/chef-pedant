@@ -65,3 +65,4 @@ PLATFORMS
 DEPENDENCIES
   chef-pedant!
   rest-client!
+  rspec (~> 2.14.0)
