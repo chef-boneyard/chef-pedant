@@ -135,7 +135,6 @@ module Pedant
         }
       end
 
-      let(:invalid_cookbook_version_error_message) { fail "Define this in opensource/response_bodies" }
       let(:delete_invalid_cookbook_version_error_message) { invalid_cookbook_version_error_message }
 
       let(:invalid_versions_msg) {
