@@ -1,6 +1,7 @@
 source :rubygems
 
 gemspec
+gem 'rspec', '~>2.14.0'
 gem "rest-client", :git => "git://github.com/opscode/rest-client.git"
 
 # If you want to load debugging tools into the bundle exec sandbox,
