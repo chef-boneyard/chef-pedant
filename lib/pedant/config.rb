@@ -122,5 +122,8 @@ module Pedant
 
     # Emits a console bell when run finishes
     bell_on_completion(false)
+
+    # Default orgname is false by default
+    default_orgname(false)
   end
 end
