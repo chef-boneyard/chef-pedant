@@ -131,7 +131,7 @@ describe "Cookbooks API endpoint", :cookbooks do
           end
         end
 
-        context "with metadata.dependencies", :focus do
+        context "with metadata.dependencies" do
           ["> 1.0", "< 2.1.2", "3.3", "<= 4.6", "~> 5.6.2", ">= 6.0"].each do |dep|
             should_create_with_metadata 'dependencies', {"chef-client" => "> 2.0.0", "apt" => dep}
           end
@@ -139,7 +139,7 @@ describe "Cookbooks API endpoint", :cookbooks do
           ["> 1", "< 2", "3", "<= 4", "~> 5", ">= 6", "= 7", ">= 1.2.3.4", "<= 5.6.7.8.9.0"].each do |dep|
             should_fail_to_create_metadata(
               'dependencies',
-              {"chef-client" => "> 2.0.0", "apt" => dep}, 
+              {"chef-client" => "> 2.0.0", "apt" => dep},
               400, "Invalid value '#{dep}' for metadata.dependencies")
           end
         end
