@@ -131,6 +131,14 @@ describe "Cookbooks API endpoint", :cookbooks do
           end
         end
 
+        context "with metadata.dependencies", :focus do
+          should_create_with_metadata 'dependencies', {"chef-client" => "> 2.0.0","apt" => "> 1.0.0"}
+          should_fail_to_create_metadata(
+            'dependencies',
+            {"chef-client" => "> 2.0.0","apt" => "> 1"}, 
+            400, "Invalid value '> 1' for metadata.dependencies")
+        end
+
         context "with metadata.providing" do
           after(:each) { delete_cookbook admin_user, cookbook_name, cookbook_version }
 
