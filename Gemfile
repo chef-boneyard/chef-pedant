@@ -1,6 +1,8 @@
-source :rubygems
+source 'https://rubygems.org'
 
 gemspec
+gem 'chef', :github => 'opscode/chef'
+
 gem 'rspec', '~>2.14.0'
 gem "rest-client", :git => "git://github.com/opscode/rest-client.git"
 

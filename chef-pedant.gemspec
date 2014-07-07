@@ -22,4 +22,6 @@ Gem::Specification.new do |s|
   s.add_dependency('net-http-spy', '~> 0.2.1')
   s.add_dependency('erubis', '~> 2.7.0')
   s.add_dependency('rspec-rerun', '= 0.1.1')
+
+  s.add_development_dependency 'rake'
 end
