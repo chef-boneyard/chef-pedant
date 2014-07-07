@@ -61,10 +61,6 @@ module Pedant
         let(:default_resource_attributes) { default_client_attributes }
       end # shared context
 
-      # TODO: Pull these from pedant config
-      let(:open_source_validator_client_name){"chef-validator"}
-      let(:open_source_webui_client_name){"chef-webui"}
-      let(:webui_admin_client_name){"chef-webui"}
       let(:pedant_admin_client_name){Pedant.config.requestors[:clients][:admin][:name]}
       let(:pedant_nonadmin_client_name){Pedant.config.requestors[:clients][:non_admin][:name]}
       let(:pedant_nonexistent_client_name){"non-existent"}
@@ -78,10 +74,10 @@ module Pedant
         {
           :status => 200,
           :body_exact => {
-            open_source_validator_client_name => api_url("/clients/#{open_source_validator_client_name}"),
+            open_source_validator_client_name => api_url("/clients/#{platform.validator_client_name}"),
             pedant_admin_client_name => api_url("/clients/#{pedant_admin_client_name}"),
             pedant_nonadmin_client_name => api_url("/clients/#{pedant_nonadmin_client_name}"),
-            webui_admin_client_name => api_url("/clients/#{webui_admin_client_name}")
+            webui_admin_client_name => api_url("/clients/#{platform.admin_client_name}")
           }
         }
       end

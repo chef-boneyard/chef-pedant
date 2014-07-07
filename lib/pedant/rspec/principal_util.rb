@@ -27,7 +27,7 @@ module Pedant
       # all tests should run with both clients and users as
       # requestors.
       let(:user_name){platform.admin_user.name}
-      let(:client_name){"chef-validator"}
+      let(:client_name){platform.validator_client_name}
       let(:nonexistent_principal_name){"non-existent"}
 
       let(:principal_not_found_response) { resource_not_found_response }

@@ -31,8 +31,8 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
   let(:normal_requestor) { normal_user }
   # TODO: Pull this out
 
-  let(:validator_client){ Pedant::Client.new("#{open_source_validator_client_name}",
-                                             "/etc/chef-server/#{open_source_validator_client_name}.pem")}
+  let(:validator_client){ Pedant::Client.new(platform.validator_client_name,
+                                             "/etc/chef-server/chef-validator.pem")}
   let(:requestor)   { admin_requestor }
   let(:client_name) { pedant_admin_client_name }
 
@@ -330,7 +330,7 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
       end
 
       context 'the Pedant validator client' do
-        let(:client_name) { open_source_validator_client_name }
+        let(:client_name) { platform.validator_client_name }
         it { should look_like fetch_validator_client_success_response }
       end
     end

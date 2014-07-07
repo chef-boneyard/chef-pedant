@@ -1,19 +1,20 @@
-# Copyright: Copyright (c) 2012 Opscode, Inc.	
-# License: Apache License, Version 2.0							
-# 												
-# Licensed under the Apache License, Version 2.0 (the "License");				
-# you may not use this file except in compliance with the License.				
-# You may obtain a copy of the License at							
-# 												
-#     http://www.apache.org/licenses/LICENSE-2.0						
-# 												
-# Unless required by applicable law or agreed to in writing, software			
-# distributed under the License is distributed on an "AS IS" BASIS,			
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.			
-# See the License for the specific language governing permissions and			
-# limitations under the License.								
+# Copyright: Copyright (c) 2012 Opscode, Inc.
+# License: Apache License, Version 2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 require 'uri'
+require 'pathname'
 
 module Pedant
 
@@ -38,6 +39,23 @@ module Pedant
 
     def api_url(url_path)
       raise "Must override with an appropriate url generation method!"
+    end
+
+    def org_name
+      path = Pathname(URI(server).path)
+      if !path.root? && !path.parent.root? && path.parent.basename.to_s == 'organizations'
+        path.basename.to_s
+      else
+        'chef'
+      end
+    end
+
+    def validator_client_name
+      "#{org_name}-validator"
+    end
+
+    def admin_client_name
+      "#{org_name}-webui"
     end
 
     # Since Erchef will now return URLs based upon the Host: header, and it receives

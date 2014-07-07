@@ -328,7 +328,7 @@ describe 'Search API endpoint', :search do
 
       context 'searching by admin' do
         let(:request_query_parameters){ "q=admin:true" }
-        let(:search_result_items){ fetch_clients(['pedant_admin_client', 'chef-webui'])}
+        let(:search_result_items){ fetch_clients(['pedant_admin_client', platform.admin_client_name])}
         performing_a_search 'returns the correct clients'
       end # searching by admin
 

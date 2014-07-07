@@ -96,10 +96,10 @@ module Pedant
 
     # Default Values
     ################################################################################
-    
+
     # Default to a config file in the current directory
     config_file "pedant_config.rb"
-    
+
     # Maximum time in seconds that search endpoint requests should be
     # retried before giving up (to accommodate the asynchronous
     # commits of Solr)

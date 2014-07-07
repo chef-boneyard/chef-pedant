@@ -53,7 +53,7 @@ module Pedant
         let(:request_query_parameters){ nil } # This should be a string, like "foo=bar"
 
         # Pedant-created requestors:
-        let(:pedant_clients) { (%w(chef-validator chef-webui) + pedant_created_clients).sort }
+        let(:pedant_clients) { ([ platform.validator_client_name, platform.admin_client_name ] + pedant_created_clients).sort }
         let(:pedant_created_clients) { platform.clients.reject(&:bogus?).map(&:name).sort }
         let(:pedant_users)   { (['admin'] + platform.users.map(&:name)).sort }
 
