@@ -132,6 +132,10 @@ describe "Cookbooks API endpoint", :cookbooks do
         end
 
         context "with metadata.dependencies" do
+          after(:each) do
+            delete_cookbook(admin_user, cookbook_name, cookbook_version)
+          end
+
           ["> 1.0", "< 2.1.2", "3.3", "<= 4.6", "~> 5.6.2", ">= 6.0"].each do |dep|
             should_create_with_metadata 'dependencies', {"chef-client" => "> 2.0.0", "apt" => dep}
           end
