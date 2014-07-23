@@ -17,7 +17,7 @@ Gem::Specification.new do |s|
   s.add_dependency('mixlib-authentication', '~> 1.3.0')
   s.add_dependency('mixlib-config', '~> 2.0')
   s.add_dependency('mixlib-shellout', '~> 1.1')
-  s.add_dependency('rest-client', '= 1.7.0.alpha')
+  s.add_dependency('rest-client', '>= 1.6.7')
   s.add_dependency('rspec_junit_formatter', '~> 0.1.1')
   s.add_dependency('net-http-spy', '~> 0.2.1')
   s.add_dependency('erubis', '~> 2.7.0')
