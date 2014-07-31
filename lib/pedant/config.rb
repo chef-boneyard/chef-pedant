@@ -122,5 +122,11 @@ module Pedant
 
     # Emits a console bell when run finishes
     bell_on_completion(false)
+
+    # Default org mode is false by default
+    use_default_org(false)
+
+    # Default orgname is nil by default
+    default_orgname(nil)
   end
 end
