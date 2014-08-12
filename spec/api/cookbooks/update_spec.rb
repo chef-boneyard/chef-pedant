@@ -785,9 +785,21 @@ describe "Cookbooks API endpoint", :cookbooks do
       should_fail_to_change('metadata', {'new_name' => 'foo'}, 400, "Field 'metadata.version' missing")
 
       context "for name" do
-        ['new_name', :delete].each do |name|
-          should_change_metadata('name', name)
+
+        it "no longer supports varying metadata name independently of the cookbook name" do
+          pending
+          # the name appears in two places in a cookbook request/response body:
+          # { "cookbook_name": "NAME",
+          #   "metadata: { "name": "NAME" } }
+          # This test specifies that you should be able to set the name in the
+          # metadata independently of the name in the top-level cookbook
+          # object, which should be 400.
+          # should_change_metadata("name", "new_name")
         end
+
+
+        should_change_metadata('name', :delete)
+
         [[1, 'number'], [true, 'boolean'], [{}, 'object'],
         [[], 'array']].each do |error|
           json_error = "Field 'metadata.name' invalid"
