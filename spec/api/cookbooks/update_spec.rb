@@ -785,9 +785,8 @@ describe "Cookbooks API endpoint", :cookbooks do
       should_fail_to_change('metadata', {'new_name' => 'foo'}, 400, "Field 'metadata.version' missing")
 
       context "for name" do
-        ['new_name', :delete].each do |name|
-          should_change_metadata('name', name)
-        end
+        should_change_metadata('name', 'new_name', nil, 200, :validation)
+        should_change_metadata('name', :delete)
         [[1, 'number'], [true, 'boolean'], [{}, 'object'],
         [[], 'array']].each do |error|
           json_error = "Field 'metadata.name' invalid"
