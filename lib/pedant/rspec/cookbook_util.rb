@@ -600,8 +600,9 @@ module Pedant
         # and the result checked
         #   key:     key to change
         #   value:   value to use
-        def should_create_metadata(key, value)
-          should_change_metadata(key, value)
+        #   tags:    tags to add to the test
+        def should_create_metadata(key, value, *tags)
+          should_change_metadata(key, value, nil, 200, *tags)
         end
 
         # This is used for testing updates with changes to the default
@@ -611,8 +612,9 @@ module Pedant
         #   key:       key to change
         #   value:     value to pass
         #   new_value: expected value for key
-        def should_not_change_metadata(key, value, new_value)
-          should_change_metadata(key, value, new_value)
+        #   tags: tags to add to the test
+        def should_not_change_metadata(key, value, new_value, *tags)
+          should_change_metadata(key, value, new_value, 200, *tags)
         end
 
         # This is used for testing updates with changes to the default
@@ -622,8 +624,8 @@ module Pedant
         #   value:   value to use
         # new_value shouldn't normally ever be passed -- use
         # should_mot_change_metadata instead
-        def should_change_metadata(key, value, new_value = nil, _expected_status = 200)
-          it "#{key} = #{value} returns #{_expected_status}" do
+        def should_change_metadata(key, value, new_value = nil, _expected_status = 200, *tags)
+          it "#{key} = #{value} returns #{_expected_status}", *tags do
 
             cookbook = new_cookbook(cookbook_name, cookbook_version)
 
