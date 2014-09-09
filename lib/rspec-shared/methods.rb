@@ -4,16 +4,37 @@
 module RSpecShared
   module Methods
     def shared(name, &block)
-      # Set these values up to be captured and shared
-      value_defined = false
-      value = nil
-      let(name) do
-        if !value_defined
-          value = instance_eval(&block)
-          value_defined
-        end
-        value
+      # Set the key to be scoped to the parent example group
+      # This potentially allows overriding shared() values, but I am not
+      # sure of the utility of that.
+      parent = ancestors.last
+      location = if parent.respond_to?(:metadata)
+                   parent.metadata[:example_group][:location]
+                 else
+                   'rspec_global_'
+                 end
+      key = location + name.to_s
+
+      # This might have some thread-safety issues
+      # The original implementation puts this into Thread[:rspec]. We implement
+      # a simple Stash to have better control over it. @jkeiser had noticed
+      # intermittent errors in the original implementation.
+      define_method(name) do
+        Stash[key] ||= instance_eval(&block)
       end
+    end
+  end
+
+  class Stash
+    @@_stash = {}
+
+    def self.[](key)
+      @@_stash[key]
+    end
+
+    # This is implemented as immutable
+    def self.[]=(key, value)
+      @@_stash[key] = value unless @@_stash[key]
     end
   end
 end
