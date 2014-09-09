@@ -559,14 +559,11 @@ describe 'Search API endpoint', :search do
       end
 
       context "many results (roles)" do
-        # TODO: Refactor this to shared() ?
-        ROLE_STASH = Hash.new
-        let(:role_names) { ROLE_STASH[:role_names] ||= 10.times.map(&a_search_item) }
-        let(:description) { ROLE_STASH[:description] ||= "partial-search-role-description-#{rand(10000).to_s}" }
-
-        let(:roles) do
-          role_names.each_with_index.map do |name, i|
-            new_role(name, {
+        shared(:role_names) { roles.map { |role| role['name'] }  }
+        shared(:description) { "partial_search-role-description-#{rand(1000).to_s}" }
+        shared(:roles) do
+          (0..9).map do |i|
+            new_role(a_search_item.(i), {
                        :override_attributes => {'top' => {'mid' => {'bottom' => i}}},
                        :description => description
                      })
@@ -610,8 +607,7 @@ describe 'Search API endpoint', :search do
       end
 
       context "nodes" do
-        STASH = Hash.new
-        let(:default_attrs) {
+        shared(:default_attrs) {
           {
             'top' => {'mid' => {'bottom' => 'found_it_default'}},
             'is_default' => true,
@@ -619,7 +615,7 @@ describe 'Search API endpoint', :search do
           }
         }
 
-        let(:normal_attrs) {
+        shared(:normal_attrs) {
           {
             'top' => {'mid' => {'bottom' => 'found_it_normal'}},
             'is_normal' => true,
@@ -627,9 +623,9 @@ describe 'Search API endpoint', :search do
           }
         }
 
-        let(:node_name) { STASH[:node_name] ||= a_search_item.('node') }
+        shared(:node_name) { a_search_item.('node') }
 
-        let(:a_node) {
+        shared(:a_node) {
           n = new_node(node_name)
           n['default'] = default_attrs
           n['normal'] = normal_attrs
