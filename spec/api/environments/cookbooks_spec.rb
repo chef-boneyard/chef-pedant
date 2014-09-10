@@ -30,11 +30,11 @@ describe "/environments/ENVIRONMENT/cookbooks API endpoint", :environments, :coo
 
   include_context "environment_body_util" # from EnvironmentUtil
 
-  shared(:env){ "test_env" }
-  shared(:default){ "_default" }
+  let(:env){ "test_env" }
+  let(:default){ "_default" }
 
-  before(:all) { add_environment(admin_user, new_environment(env)) }
-  after(:all)  { delete_environment(admin_user, env) }
+  before(:each) { add_environment(admin_user, new_environment(env)) }
+  after(:each)  { delete_environment(admin_user, env) }
 
   context "with no cookbooks" do
 
@@ -79,8 +79,8 @@ describe "/environments/ENVIRONMENT/cookbooks API endpoint", :environments, :coo
   end # with no cookbooks
 
   context "with multiple versions of multiple cookbooks" do
-    before(:all) { setup_cookbooks(cookbooks) }
-    after(:all)  { remove_cookbooks(cookbooks) }
+    before(:each) { setup_cookbooks(cookbooks) }
+    after(:each)  { remove_cookbooks(cookbooks) }
 
     let(:cookbooks) do
       {
@@ -167,13 +167,13 @@ describe "/environments/ENVIRONMENT/cookbooks API endpoint", :environments, :coo
         ## Temporary work-around until I can fix the environment_body_util shared context
         let(:new_environment_name) { env }
 
-        before :all do
+        before :each do
           # Add constraints to environment
           put(api_url("/environments/#{env}"), admin_user,
               :payload => make_payload('cookbook_versions' => constraint_hash))
         end
 
-        after :all do
+        after :each do
           # Remove constraints from the environment
           put(api_url("/environments/#{env}"), admin_user,
               :payload => make_payload('cookbook_versions' => {}))
