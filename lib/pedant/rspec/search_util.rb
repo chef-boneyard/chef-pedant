@@ -25,7 +25,8 @@ module Pedant
       extend Pedant::Concern
 
       included do
-        let(:a_search_item) { ->(x) { "pedant-search-target-#{x}-#{unique_suffix}" } }
+
+        shared(:a_search_item) { ->(x) { "pedant-search-target-#{x}-#{unique_suffix}" } }
       end
 
       module ClassMethods
