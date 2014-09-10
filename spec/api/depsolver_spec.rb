@@ -20,10 +20,10 @@ describe "Depsolver API endpoint", :depsolver do
   include Pedant::RSpec::CookbookUtil
   include Pedant::RSpec::EnvironmentUtil
 
-  let(:env){ "test_depsolver_env"}
-  let(:no_cookbooks_env) { "test_depsolver_no_cookbooks_env" }
-  let(:cookbook_name){"foo"}
-  let(:cookbook_version){"1.2.3"}
+  shared(:env){ "test_depsolver_env"}
+  shared(:no_cookbooks_env) { "test_depsolver_no_cookbooks_env" }
+  shared(:cookbook_name){"foo"}
+  shared(:cookbook_version){"1.2.3"}
   let(:cookbook_name2) {"bar"}
   let(:cookbook_version2) {"2.0.0"}
 
