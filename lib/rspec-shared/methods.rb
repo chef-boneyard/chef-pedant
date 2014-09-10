@@ -29,12 +29,21 @@ module RSpecShared
     @@_stash = {}
 
     def self.[](key)
-      @@_stash[key]
+      mutex.synchronize do
+        @@_stash[key]
+      end
     end
 
     # This is implemented as immutable
     def self.[]=(key, value)
-      @@_stash[key] = value unless @@_stash[key]
+      mutex.synchronize do
+        @@_stash[key] = value unless @@_stash[key]
+      end
+    end
+
+    private
+    def self.mutex
+      @@_mutex ||= Mutex.new
     end
   end
 end
