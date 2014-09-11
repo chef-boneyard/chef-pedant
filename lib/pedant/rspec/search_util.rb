@@ -652,7 +652,9 @@ module Pedant
         # should be enough of a wait.
         sleep direct_solr_query_sleep_time
 
-        RestClient.send :post, url, '', {}
+        RestClient.send :post, url, '', {"Content-Type" => "text/json",
+                                         "Accepts" => "text/json"
+                                        }
       end
 
       # Intelligently execute search requests, taking into account the lag
