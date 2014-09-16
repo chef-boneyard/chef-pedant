@@ -185,8 +185,8 @@ module Pedant
         }
       }
 
-      def make_payload(overwrite_variables)
-        result = default_payload
+      def make_payload(overwrite_variables, defaults = nil)
+        result = defaults || default_payload
         if (overwrite_variables[:skip_delete])
           overwrite_variables.delete(:skip_delete)
           skip_delete = true

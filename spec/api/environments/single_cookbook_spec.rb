@@ -54,12 +54,12 @@ describe "/environments/ENVIRONMENT/cookbooks/COOKBOOK API endpoint", :environme
     }
   end
 
-  shared(:env)       { self.class.env }
-  shared(:default)   { self.class.default }
-  shared(:cookbooks) { self.class.cookbooks }
+  let(:env)       { self.class.env }
+  let(:default)   { self.class.default }
+  let(:cookbooks) { self.class.cookbooks }
 
-  before(:all) { add_environment(admin_user, new_environment(env)) }
-  after(:all)  { delete_environment(admin_user, env) }
+  before(:each) { add_environment(admin_user, new_environment(env)) }
+  after(:each)  { delete_environment(admin_user, env) }
 
   context "with no cookbooks" do
     it "fails if the environment does not exist" do
@@ -105,11 +105,11 @@ describe "/environments/ENVIRONMENT/cookbooks/COOKBOOK API endpoint", :environme
 
   context 'with multiple versions of multiple cookbooks' do
 
-    before :all do
+    before :each do
       setup_cookbooks(cookbooks)
     end
 
-    after :all do
+    after :each do
       remove_cookbooks(cookbooks)
     end
 
@@ -177,13 +177,13 @@ describe "/environments/ENVIRONMENT/cookbooks/COOKBOOK API endpoint", :environme
         ## Temporary work-around until I can fix the environment_body_util shared context
         let(:new_environment_name) { env }
 
-        before :all do
+        before :each do
           # Add constraints to environment
           put(api_url("/environments/#{env}"), admin_user,
               :payload => make_payload('cookbook_versions' => constraint_hash))
         end
 
-        after :all do
+        after :each do
           # Remove constraints from the environment
           put(api_url("/environments/#{env}"), admin_user,
               :payload => make_payload('cookbook_versions' => {}))

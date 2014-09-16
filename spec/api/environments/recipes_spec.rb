@@ -90,8 +90,8 @@ describe "/environments/ENVIRONMENT/recipes API endpoint", :environments do
       }
     end
 
-    before(:all) { setup_cookbooks(cookbooks) }
-    after(:all)  { remove_cookbooks(cookbooks) }
+    before(:each) { setup_cookbooks(cookbooks) }
+    after(:each)  { remove_cookbooks(cookbooks) }
 
     context 'with no environment constraints' do
       let(:expected_recipes) do
@@ -122,13 +122,13 @@ describe "/environments/ENVIRONMENT/recipes API endpoint", :environments do
         ## Temporary work-around until I can fix the environment_body_util shared context
         let(:new_environment_name) { env }
 
-        before :all do
+        before :each do
           # Add constraints to environment
           put(api_url("/environments/#{env}"), admin_user,
               :payload => make_payload('cookbook_versions' => constraint_hash))
         end
 
-        after :all do
+        after :each do
           # Remove constraints from the environment
           put(api_url("/environments/#{env}"), admin_user,
               :payload => make_payload('cookbook_versions' => {}))

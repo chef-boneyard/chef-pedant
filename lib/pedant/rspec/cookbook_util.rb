@@ -15,11 +15,13 @@
 
 require 'pedant/concern'
 require 'rspec/core/shared_context'
+require 'rspec-shared/methods'
 
 module Pedant
   module RSpec
     module CookbookUtil
       extend ::RSpec::Core::SharedContext
+      extend ::RSpecShared::Methods
       extend Pedant::Concern
 
       # Sandbox utils live here as well
@@ -261,11 +263,11 @@ module Pedant
         }
       end
 
-      let(:default_description) { "A fabulous new cookbook" }
-      let(:default_long_description) { "" }
-      let(:default_maintainer) { "Your Name" }
-      let(:default_maintainer_email) { "youremail@example.com" }
-      let(:default_license) { "Apache v2.0" }
+      shared(:default_description) { "A fabulous new cookbook" }
+      shared(:default_long_description) { "" }
+      shared(:default_maintainer) { "Your Name" }
+      shared(:default_maintainer_email) { "youremail@example.com" }
+      shared(:default_license) { "Apache v2.0" }
 
       def full_cookbook(name, version, opts = {})
         {
