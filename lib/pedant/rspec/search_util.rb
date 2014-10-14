@@ -645,14 +645,25 @@ module Pedant
       # subsequently want to search for.  Much preferable to waiting
       # around for a minute.
       def force_solr_commit
-        url = "#{Pedant::Config.search_server}/solr/update?commit=true"
+
         # assuming we're running this after adding
         # some things to Solr, we want to give it a little
         # time to clear the queue.  In a test scenario, this
         # should be enough of a wait.
         sleep direct_solr_query_sleep_time
-
-        RestClient.send :post, url, '', {}
+        if Pedant::Config.chef_12?
+          url = "#{Pedant::Config.search_server}/solr/update?commit=true"
+          body = ''
+          headers = {}
+        else
+          url = "#{Pedant::Config.search_server}/solr/update"
+          body = '<commit waitSearcher="true" waitFlush="true" softCommit="false"/>'
+          headers = {
+            "Content-Type" => "application/xml",
+            "Accept" => "application/xml"
+          }
+        end
+        RestClient.send :post, url, body, headers
       end
 
       # Intelligently execute search requests, taking into account the lag
