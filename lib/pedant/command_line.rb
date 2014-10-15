@@ -17,7 +17,7 @@ require 'optparse'
 
 module Pedant
 
-  class CommandLine < Struct.new(:junit_file, :config_file, :log_file, :include_internal, :only_internal, :run_all, :exclude_internal_orgs, :only_internal_orgs, :verify_error_messages, :bell_on_completion, :rerun, :use_default_org)
+  class CommandLine < Struct.new(:junit_file, :config_file, :log_file, :include_internal, :only_internal, :run_all, :exclude_internal_orgs, :only_internal_orgs, :verify_error_messages, :bell_on_completion, :rerun, :use_default_org, :ssl_version)
 
     def initialize(argv)
       @argv = argv.dup
@@ -108,6 +108,10 @@ module Pedant
 
       opts.on("--rerun", "Run tests that failed the last time") do
         self.rerun = true
+      end
+
+      opts.on("--ssl-version VERSION", "Specify SSL version to use when connecting to an ssl-enabled endpoint. Defaults to TLSv1 if not specified") do |v|
+        self.ssl_version = f.split(/ /).first.to_sym
       end
     end
 
