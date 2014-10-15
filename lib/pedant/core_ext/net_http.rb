@@ -33,6 +33,8 @@ module Net
         end
         @ssl_context = OpenSSL::SSL::SSLContext.new
         @ssl_context.set_params(ssl_parameters)
+
+        @ssl_context.ssl_version = Pedant::Config.ssl_version || :TLSv1
         s = OpenSSL::SSL::SSLSocket.new(s, @ssl_context)
         s.sync_close = true
       end
