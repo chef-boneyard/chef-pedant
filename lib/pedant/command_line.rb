@@ -105,6 +105,10 @@ module Pedant
       opts.on("--rerun", "Run tests that failed the last time") do
         self.rerun = true
       end
+
+      opts.on("--server", "specify the address of the server the API requests will be sent to") do |uri|
+        self.chef_server = uri
+      end
     end
 
     def export_options(opts, tags)
