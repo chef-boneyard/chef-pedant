@@ -17,7 +17,7 @@ require 'optparse'
 
 module Pedant
 
-  class CommandLine < Struct.new(:junit_file, :config_file, :log_file, :include_internal, :only_internal, :run_all, :exclude_internal_orgs, :only_internal_orgs, :verify_error_messages, :bell_on_completion, :rerun)
+  class CommandLine < Struct.new(:junit_file, :config_file, :log_file, :include_internal, :only_internal, :run_all, :exclude_internal_orgs, :only_internal_orgs, :verify_error_messages, :bell_on_completion, :rerun, :chef_server)
 
     def initialize(argv)
       @argv = argv.dup
@@ -106,7 +106,7 @@ module Pedant
         self.rerun = true
       end
 
-      opts.on("--server", "specify the address of the server the API requests will be sent to") do |uri|
+      opts.on("--server ADDRESS", "specify the address of the server the API requests will be sent to") do |uri|
         self.chef_server = uri
       end
     end
