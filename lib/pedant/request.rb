@@ -23,33 +23,36 @@ module Pedant
     require 'mixlib/shellout'
     include Pedant::JSON
 
-    # Grab the the version of Chef / Knife that's on the box in order
-    # to properly set the X-Chef-Version header
-    KNIFE_VERSION = begin
-                      require 'chef/version'
-                      Chef::VERSION
-                    rescue LoadError
-                      # Don't want Bundler to poison the shelling out :(
-                      cmd = Mixlib::ShellOut.new("knife --version", :environment => {
-                                                   'BUNDLE_GEMFILE' => nil,
-                                                   'BUNDLE_BIN_PATH' => nil,
-                                                   'GEM_PATH' => nil,
-                                                   'GEM_HOME' => nil,
-                                                   'RUBYOPT' => nil
-                                                 })
-                      cmd.run_command
-                      cmd.stdout =~ /^Chef: (.*)$/
-                      $1 || raise("Cannot determine Chef version from output of `knife --version`: #{cmd.stdout}")
-                    end
-
     # Headers that are added to all requests
     def standard_headers
-      {
+      @headers ||= {
         'Accept' => 'application/json',
         'Content-Type' => 'application/json',
         'User-Agent' => 'chef-pedant rspec tests',
-        'X-Chef-Version' => KNIFE_VERSION
       }
+
+      unless Pedant.config.ingore_x_chef_version
+        # Grab the the version of Chef / Knife that's on the box in order
+        # to properly set the X-Chef-Version header
+        @headers['X-Chef-Version'] ||= begin
+                                      require 'chef/version'
+                                      Chef::VERSION
+                                    rescue LoadError
+                                      # Don't want Bundler to poison the shelling out :(
+                                      cmd = Mixlib::ShellOut.new("knife --version", :environment => {
+                                                                   'BUNDLE_GEMFILE' => nil,
+                                                                   'BUNDLE_BIN_PATH' => nil,
+                                                                   'GEM_PATH' => nil,
+                                                                   'GEM_HOME' => nil,
+                                                                   'RUBYOPT' => nil
+                                                                 })
+                                      cmd.run_command
+                                      cmd.stdout =~ /^Chef: (.*)$/
+                                      $1 || raise("Cannot determine Chef version from output of `knife --version`: #{cmd.stdout}")
+                                    end
+      end
+
+      @headers
     end
 
     # Execute an authenticated request against a Chef Server

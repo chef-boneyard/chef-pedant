@@ -122,5 +122,7 @@ module Pedant
 
     # Emits a console bell when run finishes
     bell_on_completion(false)
+
+    ignore_x_chef_version(false)
   end
 end
