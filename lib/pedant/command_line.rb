@@ -137,7 +137,7 @@ module Pedant
       tags = %w(environments cookbooks data_bags nodes roles sandboxes users
                 clients depsolver search knife validation authentication authorization
                 principals acl containers groups association omnibus organizations
-                usags internal_orgs rename_org)
+                usags internal_orgs rename_org controls)
       export_options(opts, tags)
     end
 
