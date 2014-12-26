@@ -1,0 +1,10 @@
+script: bundle exec rake pedant
+
+matrix:
+  include:
+    - rvm: 1.8.7
+    - rvm: 1.9.3
+    - rvm: 2.0.0
+    - rvm: 2.1.1
+  allow_failures:
+    - rvm: 1.8.7
