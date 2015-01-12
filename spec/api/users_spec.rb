@@ -107,7 +107,7 @@ describe "Open Source /users endpoint", :users => true, :platform => :open_sourc
         should_respond_with 201, 'and create the user' do
           # Now verify that you can retrieve it again
           persisted_resource_response.should look_like http_200_response.with(:body, request_payload.except('salt').except('password'))
-          authenticate_user(default_user_name, default_user_password).should be_true
+          authenticate_user(default_user_name, default_user_password).should be(true)
         end
       end
 
@@ -157,7 +157,7 @@ describe "Open Source /users endpoint", :users => true, :platform => :open_sourc
       should_respond_with 403, 'and not create the user' do
         # Now verify that the user has not been created
         persisted_resource_response.should look_like http_404_response
-        authenticate_user(default_user_name, default_user_password).should_not be_true
+        authenticate_user(default_user_name, default_user_password).should be(false)
       end
 
       context 'with an empty request body', :validation do
@@ -268,7 +268,7 @@ describe "Open Source /users endpoint", :users => true, :platform => :open_sourc
         should_respond_with 200, 'and update the user' do
           # Now verify that you can retrieve it again
           persisted_resource_response.should look_like http_200_response.with(:body, request_payload.except('salt').except('password'))
-          authenticate_user(default_user_name, default_user_password).should be_true
+          authenticate_user(default_user_name, default_user_password).should be(true)
         end
 
         context 'when turning off admin for another admin' do
@@ -278,7 +278,7 @@ describe "Open Source /users endpoint", :users => true, :platform => :open_sourc
           should_respond_with 200, 'and update the user' do
             # Now verify that you can retrieve it again
             persisted_resource_response.should look_like http_200_response.with(:body, request_payload.except('salt').except('password'))
-            authenticate_user(default_user_name, default_user_password).should be_true
+            authenticate_user(default_user_name, default_user_password).should be(true)
           end
         end
 
@@ -290,7 +290,7 @@ describe "Open Source /users endpoint", :users => true, :platform => :open_sourc
           should_respond_with 200, 'and update the user' do
             # Now verify that you can retrieve it again
             persisted_resource_response.should look_like http_200_response.with(:body, request_payload.except('salt').except('password'))
-            authenticate_user(default_user_name, default_user_password).should be_true
+            authenticate_user(default_user_name, default_user_password).should be(true)
           end
         end
 
@@ -384,7 +384,7 @@ describe "Open Source /users endpoint", :users => true, :platform => :open_sourc
         should_respond_with 200, 'and update the user' do
           # Now verify that you can retrieve it again
           persisted_resource_response.should look_like http_200_response.with(:body, request_payload.except('salt').except('password'))
-          authenticate_user(default_user_name, default_user_password).should be_true
+          authenticate_user(default_user_name, default_user_password).should be(true)
         end
 
         context 'when turning off admin for another admin' do
@@ -394,7 +394,7 @@ describe "Open Source /users endpoint", :users => true, :platform => :open_sourc
           should_respond_with 200, 'and update the user' do
             # Now verify that you can retrieve it again
             persisted_resource_response.should look_like http_200_response.with(:body, request_payload.except('salt').except('password'))
-            authenticate_user(default_user_name, default_user_password).should be_true
+            authenticate_user(default_user_name, default_user_password).should be(true)
           end
         end
 
@@ -406,7 +406,7 @@ describe "Open Source /users endpoint", :users => true, :platform => :open_sourc
           should_respond_with 200, 'and update the user' do
             # Now verify that you can retrieve it again
             persisted_resource_response.should look_like http_200_response.with(:body, request_payload.except('salt').except('password'))
-            authenticate_user(default_user_name, default_user_password).should be_true
+            authenticate_user(default_user_name, default_user_password).should be(true)
           end
         end
 
