@@ -38,7 +38,7 @@ describe 'knife', knife: true, pending: !open_source? do
             should have_outcome :status => 0, :stdout => /name:\s+#{role_name}/
           end
 
-          pending 'should have attributes pulled in from file'
+          skip 'should have attributes pulled in from file'
         end
       end
 

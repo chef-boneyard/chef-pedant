@@ -700,7 +700,7 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
       end
 
       # This give back 401 Unauthorized
-      pending "with a normal user of the same name as the client" do
+      skip "with a normal user of the same name as the client" do
         let(:requestor) { user_requestor }
         after(:each)  { delete api_url("/users/#{client_name}"), admin_user }
 
