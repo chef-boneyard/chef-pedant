@@ -76,9 +76,9 @@ module Pedant
 
         # Cookbook endpoint overrides
         # Open-Source Chef Server uses these defaults values for cookbooks
-        let(:default_maintainer)       { 'YOUR_COMPANY_NAME' }
-        let(:default_maintainer_email) { 'YOUR_EMAIL' }
-        let(:default_license)          { "none" }
+        shared(:default_maintainer)       { 'YOUR_COMPANY_NAME' }
+        shared(:default_maintainer_email) { 'YOUR_EMAIL' }
+        shared(:default_license)          { "none" }
 
         let(:invalid_cookbook_version_error_message) { ["Invalid cookbook version '#{cookbook_version}'."] }
 
