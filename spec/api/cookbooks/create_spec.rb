@@ -314,7 +314,7 @@ describe "Cookbooks API endpoint", :cookbooks do
     let(:cookbook_version1) { "1.2.3" }
     let(:cookbook_version2) { "1.3.0" }
 
-    after :all do
+    after :each do
       [cookbook_version1, cookbook_version2].each do |v|
         delete(api_url("/cookbooks/#{cookbook_name}/#{v}"), admin_user)
       end
