@@ -146,7 +146,7 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
 
           # Ensure it is a non-admin
           get(client_url, requestor) do |response|
-            parse(response)["admin"].should be_false
+            parse(response)["admin"].should be(false)
           end
         end
       end
@@ -158,7 +158,7 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
 
           # Ensure it is an admin
           get(client_url, requestor) do |response|
-            parse(response)["admin"].should be_true
+            parse(response)["admin"].should be(true)
           end
         end
       end
@@ -181,7 +181,7 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
 
           # Ensure it's not an admin
           get(client_url, requestor) do |response|
-            parse(response)["admin"].should be_false
+            parse(response)["admin"].should be(false)
           end
         end
       end
@@ -700,7 +700,7 @@ describe "Open Source Client API endpoint", :platform => :open_source, :clients 
       end
 
       # This give back 401 Unauthorized
-      pending "with a normal user of the same name as the client" do
+      skip "with a normal user of the same name as the client" do
         let(:requestor) { user_requestor }
         after(:each)  { delete api_url("/users/#{client_name}"), admin_user }
 

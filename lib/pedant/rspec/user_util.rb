@@ -127,7 +127,7 @@ module Pedant
 
                 # Now verify that you can retrieve it again
                 persisted_resource_response.should look_like http_200_response.with(:body, updated_resource)
-                authenticate_user(default_user_name, default_user_password).should be_true
+                authenticate_user(default_user_name, default_user_password).should be(true)
 
                 # Now verify we can use the new credentials
                 get(resource_url, updated_requestor).should look_like updated_response
@@ -160,11 +160,11 @@ module Pedant
         # Private macro
         def should_not_generate_new_key_pair
           should_respond_with 200, 'and does not generate a new key pair' do
-            parsed_response['private_key'].should_not be_true
+            parsed_response['private_key'].should be(nil)
 
             # Now verify that you can retrieve it again
             persisted_resource_response.should look_like http_200_response.with(:body, updated_resource)
-            authenticate_user(default_user_name, default_user_password).should be_true
+            authenticate_user(default_user_name, default_user_password).should be(true)
 
             # Now verify we can use the original credentials
             get(resource_url, test_user_requestor).should look_like updated_response
@@ -179,11 +179,11 @@ module Pedant
             let(:updated_resource) { required_attributes.with('public_key', test_user_public_key) }
 
             should_respond_with 400, 'and does not generate a new key pair' do
-              parsed_response['private_key'].should_not be_true
+              parsed_response['private_key'].should be(nil)
 
               # Now verify that you can retrieve it again
               persisted_resource_response.should look_like http_200_response.with(:body, updated_resource)
-              authenticate_user(default_user_name, default_user_password).should be_true
+              authenticate_user(default_user_name, default_user_password).should be(true)
 
               # Now verify we can use the original credentials
               get(resource_url, test_user_requestor).should look_like updated_response
@@ -206,11 +206,11 @@ module Pedant
 
             should_respond_with 201, 'and create the user' do
               parsed_response['public_key'].should_not be_nil
-              parsed_response.member?('private_key').should be_false # Make sure private_key is not returned at all
+              parsed_response.member?('private_key').should be(false) # Make sure private_key is not returned at all
 
               # Now verify that you can retrieve it again
               persisted_resource_response.should look_like updated_response
-              authenticate_user(default_user_name, default_user_password).should be_true
+              authenticate_user(default_user_name, default_user_password).should be(true)
 
               # Verify that we can use the new credentials
               get(resource_url, created_requestor).should look_like updated_response
@@ -227,7 +227,7 @@ module Pedant
 
                 # Now verify that you can retrieve it again
                 persisted_resource_response.should look_like updated_response
-                authenticate_user(default_user_name, default_user_password).should be_true
+                authenticate_user(default_user_name, default_user_password).should be(true)
 
                 # Verify that we can use the new credentials
                 get(resource_url, created_requestor).should look_like updated_response
@@ -246,7 +246,7 @@ module Pedant
 
                 # Now verify that you can retrieve it again
                 persisted_resource_response.should look_like updated_response
-                authenticate_user(default_user_name, default_user_password).should be_true
+                authenticate_user(default_user_name, default_user_password).should be(true)
 
                 # Verify that we can use the new credentials
                 get(resource_url, created_requestor).should look_like updated_response
@@ -284,11 +284,11 @@ module Pedant
 
             should_respond_with 200, 'and update the public key' do
               parsed_response['public_key'].should_not be_nil
-              parsed_response.member?('private_key').should be_false # Make sure private_key is not returned at all
+              parsed_response.member?('private_key').should be(false) # Make sure private_key is not returned at all
 
               # Now verify that you can retrieve it again
               persisted_resource_response.should look_like updated_response
-              authenticate_user(default_user_name, default_user_password).should be_true
+              authenticate_user(default_user_name, default_user_password).should be(true)
 
               # Verify that we can use the new credentials
               get(resource_url, updated_requestor).should look_like updated_response
@@ -302,11 +302,11 @@ module Pedant
 
               should_respond_with 200, 'and does not update the public key' do
                 parsed_response['public_key'].should be_nil # We did not update the public key, so this should not be set
-                parsed_response.member?('private_key').should be_false # Make sure private_key is not returned at all
+                parsed_response.member?('private_key').should be(false) # Make sure private_key is not returned at all
 
                 # Now verify that you can retrieve it again
                 persisted_resource_response.should look_like updated_response
-                authenticate_user(default_user_name, default_user_password).should be_true
+                authenticate_user(default_user_name, default_user_password).should be(true)
 
                 # Verify that we can use the new credentials
                 get(resource_url, test_user_requestor).should look_like updated_response
@@ -322,11 +322,11 @@ module Pedant
 
               should_respond_with 200, 'and does not update the public key' do
                 parsed_response['public_key'].should be_nil # We did not update the public key, so this should not be set
-                parsed_response.member?('private_key').should be_false # Make sure private_key is not returned at all
+                parsed_response.member?('private_key').should be(false) # Make sure private_key is not returned at all
 
                 # Now verify that you can retrieve it again
                 persisted_resource_response.should look_like updated_response
-                authenticate_user(default_user_name, default_user_password).should be_true
+                authenticate_user(default_user_name, default_user_password).should be(true)
 
                 # Verify that we can use the new credentials
                 get(resource_url, test_user_requestor).should look_like updated_response
@@ -361,7 +361,7 @@ module Pedant
               persisted_resource_response.should look_like not_found_response
 
               # Make sure we cannot use this credential
-              authenticate_user(default_user_name, default_user_password).should be_false
+              authenticate_user(default_user_name, default_user_password).should be(false)
               get(resource_url, created_requestor).should look_like unauthorized_response
             end
           end
@@ -375,7 +375,7 @@ module Pedant
             should_respond_with 400, 'and does not update the user' do
               # Verify nothing has changed
               persisted_resource_response.should look_like updated_response
-              authenticate_user(default_user_name, default_user_password).should be_true
+              authenticate_user(default_user_name, default_user_password).should be(true)
 
               # Verify that we can use the original credentials
               get(resource_url, test_user_requestor).should look_like updated_response
@@ -395,7 +395,7 @@ module Pedant
 
               # Now verify that you can retrieve it again
               persisted_resource_response.should look_like http_200_response.with(:body, updated_resource)
-              authenticate_user(default_user_name, default_user_password).should be_true
+              authenticate_user(default_user_name, default_user_password).should be(true)
             end
           end # when setting a password
         end
@@ -414,7 +414,7 @@ module Pedant
 
               # Now verify that you can retrieve it again
               persisted_resource_response.should look_like http_200_response.with(:body, updated_resource)
-              authenticate_user(default_user_name, new_password).should be_true
+              authenticate_user(default_user_name, new_password).should be(true)
             end
           end # when setting a password
         end

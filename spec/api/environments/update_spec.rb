@@ -116,7 +116,7 @@ describe "Environments API Endpoint", :environments do
           let(:request_headers) { { "Content-Type" => "application/xml" } }
           let(:request_payload) { '<environment name="blah"></environment>' }
 
-          pending "webmachine not sucking" do
+          skip "webmachine not sucking" do
             should_respond_with 415
           end
         end
@@ -488,7 +488,7 @@ describe "Environments API Endpoint", :environments do
       end
 
       # TODO: Use OSC permissions tests
-      pending 'permissions', :platform => :open_source
+      skip 'permissions', :platform => :open_source
     end
   end
 end
