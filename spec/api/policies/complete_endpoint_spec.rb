@@ -170,8 +170,41 @@ describe "Policies API endpoint", :policies, :focus do
 
       let(:request_payload) { nil }
 
-      it "retrieves the policy document"
+      it "retrieves the policy document" do
+        expect(response.body).to eq(canonical_policy_payload)
+      end
 
+    end
+
+    context "PUT (update policy document)" do
+
+      def mutate_json(data)
+        parsed = parse(data)
+        yield parsed
+        to_json(parsed)
+      end
+
+      let(:updated_canonical_policy_payload) do
+        mutate_json(canonical_policy_payload) do |policy|
+          policy["cookbook_locks"]["policyfile_demo"]["identifier"] = "2a42abea88dc847bf6d3194af8bf899908642421"
+          policy["cookbook_locks"]["policyfile_demo"]["dotted_decimal_identifier"] = "11895255163526276.34892808658286783.151290363782177"
+        end
+      end
+
+      before(:each) do
+        put(static_named_policy_url, requestor, payload: updated_canonical_policy_payload)
+      end
+
+      it "PUT /policies/:group/:name returns 200" do
+        expect(response.code).to eq(200)
+        expect(response.body).to eq(updated_canonical_policy_payload)
+      end
+
+      it "GET /policies/:group/:name subsequently returns the updated document" do
+        retrieved_doc = get(static_named_policy_url, requestor)
+        expect(retrieved_doc.code).to eq(200)
+        expect(retrieved_doc.body).to eq(updated_canonical_policy_payload)
+      end
     end
 
   end
