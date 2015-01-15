@@ -66,3 +66,4 @@ DEPENDENCIES
   chef-pedant!
   rest-client!
   rspec (~> 2.0)
+
