@@ -16,6 +16,12 @@
 # TODO: no focus
 describe "Policies API endpoint", :policies, :focus do
 
+  def mutate_json(data)
+    parsed = parse(data)
+    yield parsed
+    to_json(parsed)
+  end
+
   # Just until we rename the requestors
   let(:admin_requestor){ admin_user }
 
@@ -37,7 +43,7 @@ describe "Policies API endpoint", :policies, :focus do
         "cookbook_locks": {
           "policyfile_demo": {
             "identifier": "f04cc40faf628253fe7d9566d66a1733fb1afbe9",
-            "dotted_decimal_identifier": "67638399371010690.23642238397896298.25512023620585",
+            "dotted_decimal_identifier": "67638399371010690.23642238397896298.25512023620585"
           }
         }
       }
@@ -147,12 +153,123 @@ describe "Policies API endpoint", :policies, :focus do
         # * `cookbook_locks[item]["identifier"]`: varchar(255) ?
         # * `cookbook_locks[item]["dotted_decimal_identifier"]` ChefCompatibleVersionNumber
 
-        # Missing mandatory fields
-        # invalid fields?
-        it "PUT /policies/:group/:name returns 400"
+        context "because of missing name field" do
+
+          let(:request_payload) do
+            mutate_json(minimum_valid_policy_payload) { |p| p.delete("name") }
+          end
+
+          it "PUT /policies/:group/:name returns 400" do
+            expect(response.code).to eq(400)
+            # TODO: message?
+          end
+
+        end
+
+        # TODO: invalid names (what are they?)
+
+        context "because of missing run_list field" do
+
+          let(:request_payload) do
+            mutate_json(minimum_valid_policy_payload) { |p| p.delete("run_list") }
+          end
+
+          it "PUT /policies/:group/:name returns 400" do
+            expect(response.code).to eq(400)
+            # TODO: message?
+          end
+
+        end
+
+        context "because run_list field is the wrong type" do
+
+          let(:request_payload) do
+            mutate_json(minimum_valid_policy_payload) { |p| p["run_list"] = {} }
+          end
+
+          it "PUT /policies/:group/:name returns 400" do
+            expect(response.code).to eq(400)
+            # TODO: message?
+          end
+
+        end
+
+        # TODO: invalid run list items
+
+        context "because cookbook_locks field is missing" do
+
+          let(:request_payload) do
+            mutate_json(minimum_valid_policy_payload) { |p| p.delete("cookbook_locks") }
+          end
+
+          it "PUT /policies/:group/:name returns 400" do
+            expect(response.code).to eq(400)
+            # TODO: message?
+          end
+
+        end
+
+        context "because cookbook_locks field is the wrong type" do
+
+          let(:request_payload) do
+            mutate_json(minimum_valid_policy_payload) { |p| p["cookbook_locks"] = [] }
+          end
+
+          it "PUT /policies/:group/:name returns 400" do
+            expect(response.code).to eq(400)
+            # TODO: message?
+          end
+
+        end
+
+        context "because cookbook_locks contains an entry of the wrong type" do
+
+          let(:request_payload) do
+            mutate_json(minimum_valid_policy_payload) { |p| p["cookbook_locks"]["invalid_member"] = [] }
+          end
+
+          it "PUT /policies/:group/:name returns 400" do
+            expect(response.code).to eq(400)
+            # TODO: message?
+          end
+
+        end
+
+        context "because cookbook_locks contains an entry that is missing the identifier field" do
+
+          let(:request_payload) do
+            mutate_json(minimum_valid_policy_payload) do |policy|
+              policy["cookbook_locks"]["invalid_member"] = { "dotted_decimal_identifier" => "1.2.3" }
+            end
+          end
+
+          it "PUT /policies/:group/:name returns 400" do
+            expect(response.code).to eq(400)
+            # TODO: message?
+          end
+
+        end
+
+        # TODO: what is validation on identifier? Max size?
+
+        context "because cookbook_locks contains an entry that is missing the dotted_decimal_identifier field" do
+
+          let(:request_payload) do
+            mutate_json(minimum_valid_policy_payload) do |policy|
+              policy["cookbook_locks"]["invalid_member"] = { "identifier" => "123def" }
+            end
+          end
+
+          it "PUT /policies/:group/:name returns 400" do
+            expect(response.code).to eq(400)
+            # TODO: message?
+          end
+
+        end
+
+        # TODO: dotted_decimal_identifier should validate the same as cookbook version numbers
 
       end
-
 
     end
 
@@ -178,12 +295,6 @@ describe "Policies API endpoint", :policies, :focus do
 
     context "PUT (update policy document)" do
 
-      def mutate_json(data)
-        parsed = parse(data)
-        yield parsed
-        to_json(parsed)
-      end
-
       let(:updated_canonical_policy_payload) do
         mutate_json(canonical_policy_payload) do |policy|
           policy["cookbook_locks"]["policyfile_demo"]["identifier"] = "2a42abea88dc847bf6d3194af8bf899908642421"
@@ -191,8 +302,13 @@ describe "Policies API endpoint", :policies, :focus do
         end
       end
 
+      let(:request_payload) { updated_canonical_policy_payload }
+
+      let(:request_method) { :PUT }
+
       before(:each) do
-        put(static_named_policy_url, requestor, payload: updated_canonical_policy_payload)
+        # Force the update PUT to occur
+        response
       end
 
       it "PUT /policies/:group/:name returns 200" do
