@@ -191,6 +191,24 @@ describe "Policies API endpoint", :policies, :focus do
 
         end
 
+        context "because the name is larger than 255 characters" do
+
+          let(:long_name_is_long) { "z" * 256 }
+
+          # Have to override the URL or else we might only hit validation that
+          # name in document matches the one in URL
+          let(:static_named_policy_url) { api_url("/policies/some_policy_group/#{long_name_is_long}") }
+
+          let(:request_payload) do
+            mutate_json(minimum_valid_policy_payload) { |p| p["name"] = long_name_is_long }
+          end
+
+          it "PUT /policies/:group/:name returns 400" do
+            expect(response.code).to eq(400)
+          end
+
+        end
+
         # TODO: invalid names (what are they?)
         # :( cookbook create spec does not exercise name validation.
 
