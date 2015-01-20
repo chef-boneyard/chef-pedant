@@ -293,9 +293,9 @@ describe "Policies API endpoint", :policies, :focus do
 
         end
 
-        # TODO: invalid run list items
-        # Roles endpoint tests run list items `123` (Int) and "recipe[" (Malformed run list item String)
-        [123, "recipe["].each do |invalid_run_list_item|
+        # Run list items in policies are required to be fully normalized recipe names, e.g,
+        # "recipe[mysql::default]"
+        [123, "recipe[", "role[foo]", "recipe[foo]"].each do |invalid_run_list_item|
 
           context "because the run_list has invalid item '#{invalid_run_list_item}'" do
 
@@ -303,7 +303,7 @@ describe "Policies API endpoint", :policies, :focus do
               mutate_json(minimum_valid_policy_payload) { |p| p["run_list"] = [ invalid_run_list_item ] }
             end
 
-            let(:expected_error_message) { "Items in run_list must be strings matching run_list item format" }
+            let(:expected_error_message) { "Items in run_list must be strings in fully qualified recipe format, like recipe[cookbook::recipe]" }
 
             include_examples "an invalid policy document"
 
