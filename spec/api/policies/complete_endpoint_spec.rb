@@ -361,7 +361,29 @@ describe "Policies API endpoint", :policies, :focus do
 
         end
 
-        # TODO: what is validation on identifier? Max size?
+        context "because cookbook_locks contains an entry with an identifier larger than 255 characters" do
+
+          let(:long_identifier) { "a" * 256 }
+
+          let(:invalid_lock) do
+            {
+              "identifier" => long_identifier,
+              "dotted_decimal_identifier" => "1.2.3"
+            }
+          end
+
+          let(:request_payload) do
+            mutate_json(minimum_valid_policy_payload) do |policy|
+              policy["cookbook_locks"]["invalid_member"] = invalid_lock
+            end
+          end
+
+          let(:expected_error_message) { "cookbook_lock entries 'identifier' field must be 255 or fewer characters" }
+
+          include_examples "an invalid policy document"
+
+        end
+
 
         context "because cookbook_locks contains an entry that is missing the dotted_decimal_identifier field" do
 
