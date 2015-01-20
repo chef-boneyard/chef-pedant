@@ -95,7 +95,6 @@ describe "Policies API endpoint", :policies do
     PAYLOAD
   end
 
-  # TODO: remove hack
   let(:request_payload) { raise "define payload" }
 
   context "when no policies exist on the server" do
