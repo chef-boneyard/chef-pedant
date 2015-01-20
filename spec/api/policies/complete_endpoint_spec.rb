@@ -36,7 +36,7 @@ describe "Policies API endpoint", :policies, :focus do
   let(:minimum_valid_policy_payload) do
     <<-PAYLOAD
       {
-        "name": "jenkins",
+        "name": "some_policy_name",
         "run_list": [
           "recipe[policyfile_demo::default]"
         ],
@@ -53,7 +53,7 @@ describe "Policies API endpoint", :policies, :focus do
   let(:canonical_policy_payload) do
     <<-PAYLOAD
       {
-        "name": "jenkins",
+        "name": "some_policy_name",
         "run_list": [
           "recipe[policyfile_demo::default]"
         ],
@@ -113,6 +113,18 @@ describe "Policies API endpoint", :policies, :focus do
 
     end
 
+    context "DELETE" do
+
+      let(:request_payload) { nil }
+
+      let(:request_method) { :DELETE }
+
+      it "DELETE /policies/:group/:name returns 404" do
+        expect(response.code).to eq(404)
+      end
+
+    end
+
     context "PUT" do
 
       let(:request_method) { :PUT }
@@ -128,6 +140,7 @@ describe "Policies API endpoint", :policies, :focus do
         it "PUT /policies/:group/:name returns 201" do
           expect(response.code).to eq(201)
         end
+
 
       end
 
@@ -166,7 +179,20 @@ describe "Policies API endpoint", :policies, :focus do
 
         end
 
+        context "because of an mismatched name field" do
+
+          let(:request_payload) do
+            mutate_json(minimum_valid_policy_payload) { |p| p["name"] = "monkeypants" }
+          end
+
+          it "PUT /policies/:group/:name returns 400" do
+            expect(response.code).to eq(400)
+          end
+
+        end
+
         # TODO: invalid names (what are they?)
+        # :( cookbook create spec does not exercise name validation.
 
         context "because of missing run_list field" do
 
@@ -195,6 +221,7 @@ describe "Policies API endpoint", :policies, :focus do
         end
 
         # TODO: invalid run list items
+        # Roles endpoint tests run list items `123` (Int) and "recipe[" (Malformed run list item String)
 
         context "because cookbook_locks field is missing" do
 
@@ -321,6 +348,31 @@ describe "Policies API endpoint", :policies, :focus do
         expect(retrieved_doc.code).to eq(200)
         expect(retrieved_doc.body).to eq(updated_canonical_policy_payload)
       end
+    end
+
+    context "DELETE" do
+
+      let(:request_payload) { nil }
+
+      let(:request_method) { :DELETE }
+
+      before(:each) do
+        # Force the DELETE to occur
+        response
+      end
+
+
+      it "DELETE /policies/:group/:name returns the deleted document" do
+        expect(response.code).to eq(200)
+        expect(response.body).to eq(canonical_policy_payload)
+      end
+
+      it "DELETE /policies/:group/:name removes the policy from the data store" do
+        subsequent_get = get(static_named_policy_url, requestor)
+        expect(subsequent_get.code).to eq(404)
+      end
+
+
     end
 
   end
