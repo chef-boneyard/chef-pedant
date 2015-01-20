@@ -156,6 +156,27 @@ describe "Policies API endpoint", :policies, :focus do
 
       context "when the request body is invalid" do
 
+        shared_examples_for "an invalid policy document" do
+
+          let(:error_message) do
+            response_obj = parse(response.body)
+            expect(response_obj).to be_a_kind_of(Hash)
+            expect(response_obj).to have_key("error")
+            expect(response_obj["error"]).to be_a_kind_of(Array)
+            expect(response_obj["error"].size).to eq(1)
+            response_obj["error"].first
+          end
+
+          it "PUT /policies/:group/:name returns 400" do
+            expect(response.code).to eq(400)
+          end
+
+          it "PUT /policies/:group/:name body contains a well-formed error message" do
+            expect(error_message).to eq(expected_error_message)
+          end
+
+        end
+
         ## MANDATORY FIELDS AND FORMATS
         # * `name`: String, other validation?
         # * `run_list`: Array
@@ -172,10 +193,9 @@ describe "Policies API endpoint", :policies, :focus do
             mutate_json(minimum_valid_policy_payload) { |p| p.delete("name") }
           end
 
-          it "PUT /policies/:group/:name returns 400" do
-            expect(response.code).to eq(400)
-            # TODO: message?
-          end
+          let(:expected_error_message) { "Must specify 'name' in JSON" }
+
+          include_examples "an invalid policy document"
 
         end
 
@@ -185,9 +205,9 @@ describe "Policies API endpoint", :policies, :focus do
             mutate_json(minimum_valid_policy_payload) { |p| p["name"] = "monkeypants" }
           end
 
-          it "PUT /policies/:group/:name returns 400" do
-            expect(response.code).to eq(400)
-          end
+          let(:expected_error_message) { "'name' field in JSON must match the policy name in the URL" }
+
+          include_examples "an invalid policy document"
 
         end
 
@@ -203,9 +223,9 @@ describe "Policies API endpoint", :policies, :focus do
             mutate_json(minimum_valid_policy_payload) { |p| p["name"] = long_name_is_long }
           end
 
-          it "PUT /policies/:group/:name returns 400" do
-            expect(response.code).to eq(400)
-          end
+          let(:expected_error_message) { "'name' field in JSON must be 255 characters or fewer" }
+
+          include_examples "an invalid policy document"
 
         end
 
@@ -218,10 +238,9 @@ describe "Policies API endpoint", :policies, :focus do
             mutate_json(minimum_valid_policy_payload) { |p| p.delete("run_list") }
           end
 
-          it "PUT /policies/:group/:name returns 400" do
-            expect(response.code).to eq(400)
-            # TODO: message?
-          end
+          let(:expected_error_message) { "Must specify 'run_list' in JSON" }
+
+          include_examples "an invalid policy document"
 
         end
 
@@ -231,10 +250,9 @@ describe "Policies API endpoint", :policies, :focus do
             mutate_json(minimum_valid_policy_payload) { |p| p["run_list"] = {} }
           end
 
-          it "PUT /policies/:group/:name returns 400" do
-            expect(response.code).to eq(400)
-            # TODO: message?
-          end
+          let(:expected_error_message) { "'run_list' must be an Array of run list items" }
+
+          include_examples "an invalid policy document"
 
         end
 
@@ -247,10 +265,9 @@ describe "Policies API endpoint", :policies, :focus do
             mutate_json(minimum_valid_policy_payload) { |p| p.delete("cookbook_locks") }
           end
 
-          it "PUT /policies/:group/:name returns 400" do
-            expect(response.code).to eq(400)
-            # TODO: message?
-          end
+          let(:expected_error_message) { "Must specify 'cookbook_locks' in JSON" }
+
+          include_examples "an invalid policy document"
 
         end
 
@@ -260,10 +277,9 @@ describe "Policies API endpoint", :policies, :focus do
             mutate_json(minimum_valid_policy_payload) { |p| p["cookbook_locks"] = [] }
           end
 
-          it "PUT /policies/:group/:name returns 400" do
-            expect(response.code).to eq(400)
-            # TODO: message?
-          end
+          let(:expected_error_message) { "'cookbook_locks' must be a JSON object of cookbook_name: lock_data pairs" }
+
+          include_examples "an invalid policy document"
 
         end
 
@@ -273,10 +289,9 @@ describe "Policies API endpoint", :policies, :focus do
             mutate_json(minimum_valid_policy_payload) { |p| p["cookbook_locks"]["invalid_member"] = [] }
           end
 
-          it "PUT /policies/:group/:name returns 400" do
-            expect(response.code).to eq(400)
-            # TODO: message?
-          end
+          let(:expected_error_message) { "cookbook_lock entries must be a JSON object" }
+
+          include_examples "an invalid policy document"
 
         end
 
@@ -288,10 +303,9 @@ describe "Policies API endpoint", :policies, :focus do
             end
           end
 
-          it "PUT /policies/:group/:name returns 400" do
-            expect(response.code).to eq(400)
-            # TODO: message?
-          end
+          let(:expected_error_message) { "cookbook_lock entries must contain an 'identifier' field" }
+
+          include_examples "an invalid policy document"
 
         end
 
@@ -305,10 +319,9 @@ describe "Policies API endpoint", :policies, :focus do
             end
           end
 
-          it "PUT /policies/:group/:name returns 400" do
-            expect(response.code).to eq(400)
-            # TODO: message?
-          end
+          let(:expected_error_message) { "cookbook_lock entries must contain an 'dotted_decimal_identifier' field" }
+
+          include_examples "an invalid policy document"
 
         end
 
