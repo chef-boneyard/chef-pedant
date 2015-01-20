@@ -399,8 +399,6 @@ describe "Policies API endpoint", :policies, :focus do
 
         end
 
-        # TODO: dotted_decimal_identifier should validate the same as cookbook version numbers
-
       end
 
     end
