@@ -154,6 +154,24 @@ describe "Policies API endpoint", :policies, :focus do
 
       end
 
+      context "with a payload demonstrating validation edge conditions for 'name'" do
+
+        let(:name_with_all_valid_chars) { 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqurstuvwxyz0123456789-_:.' }
+
+        # Have to override the URL or else we will hit validation that name in
+        # document matches the one in URL
+        let(:static_named_policy_url) { api_url("/policies/some_policy_group/#{name_with_all_valid_chars}") }
+
+        let(:request_payload) do
+          mutate_json(minimum_valid_policy_payload) { |p| p["name"] = name_with_all_valid_chars }
+        end
+
+        it "PUT /policies/:group/:name returns 201" do
+          expect(response.code).to eq(201)
+        end
+
+      end
+
       context "when the request body is invalid" do
 
         shared_examples_for "an invalid policy document" do
@@ -229,8 +247,27 @@ describe "Policies API endpoint", :policies, :focus do
 
         end
 
-        # TODO: invalid names (what are they?)
-        # :( cookbook create spec does not exercise name validation.
+        [ ' ', '+', '!' ].each do |invalid_char|
+          context "because the name contains invalid character #{invalid_char}" do
+
+            let(:invalid_policy_name) { "invalid" + invalid_char + "invalid" }
+
+            let(:encoded_invalid_name) { URI.encode(invalid_policy_name) }
+
+            # Have to override the URL or else we might only hit validation that
+            # name in document matches the one in URL
+            let(:static_named_policy_url) { api_url("/policies/some_policy_group/#{encoded_invalid_name}") }
+
+            let(:request_payload) do
+              mutate_json(minimum_valid_policy_payload) { |p| p["name"] = invalid_policy_name }
+            end
+
+            let(:expected_error_message) { "'name' field in JSON must be contain only alphanumeric, hypen, underscore, and dot characters" }
+
+            include_examples "an invalid policy document"
+
+          end
+        end
 
         context "because of missing run_list field" do
 
