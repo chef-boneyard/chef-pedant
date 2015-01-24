@@ -1,10 +1,10 @@
 Gem::Specification.new do |s|
   s.name          = 'chef-pedant'
-  s.version       = '1.0.38'
-  s.date          = '2014-01-13'
-  s.summary       = "Opscode Chef API Testing Framework"
-  s.authors       = ["Opscode Software Engineering"]
-  s.email         = 'dev@opscode.com'
+  s.version       = '1.0.39'
+  s.date          = '2014-01-24'
+  s.summary       = "Chef API Testing Framework"
+  s.authors       = ["Chef Software Engineering"]
+  s.email         = 'dev@chef.io'
   s.require_paths = ['lib', 'spec']
   s.files         = Dir['lib/**/*'] + Dir['spec/**/*'] + Dir['bin/*'] + Dir['fixtures/**/*']
   s.homepage      = 'http://opscode.com'
