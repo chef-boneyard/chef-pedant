@@ -267,8 +267,20 @@ uQIDAQAB
     delete("#{platform.server}/organizations/#{$org['name']}/clients/#{client['name']}", superuser)
   end
 
+  context "when a new user is created via POST /users" do
+    it "should insert a new default keys table that is retrievable via the keys API" do
+      `chef-server-ctl list-user-keys #{user['name']}`.should include("default")
+    end
+  end
+
+  context "when a new client is created via POST /organizations/:org/clients" do
+    it "should insert a new default keys table that is retrievable via the keys API" do
+      `chef-server-ctl list-client-keys #{$org['name']} #{client['name']}`.should include("default")
+    end
+  end
+
   context "when a single key exists for a user" do
-    context "when the key is uploaded via POST /user" do
+    context "when the key is uploaded via POST /users" do
       it "should authenticate against the single key" do
         get("#{platform.server}/users/#{user['name']}", Pedant::Requestor.new(user['name'], user['private_key'])).should look_like({:status => 200})
       end
@@ -313,7 +325,7 @@ uQIDAQAB
     before(:each) do
       system("chef-server-ctl add-user-key #{user['name']} #{$alt_public_key_filepath} --key-name key-#{Time.now.to_i}")
     end
-    it "should not longer be returned by the API" do
+    it "should not longer be returned by the keys API" do
       system("chef-server-ctl delete-user-key #{user['name']} key-#{Time.now.to_i}")
       `chef-server-ctl list-user-keys #{user['name']}`.should_not include("key-#{Time.now.to_i}")
     end
@@ -327,7 +339,7 @@ uQIDAQAB
     before(:each) do
       system("chef-server-ctl add-client-key #{$org['name']} #{client['name']} #{$alt_public_key_filepath} --key-name key-#{Time.now.to_i}")
     end
-    it "should not longer be returned by the API" do
+    it "should not longer be returned by the keys API" do
       system("chef-server-ctl delete-client-key #{$org['name']} #{client['name']} key-#{Time.now.to_i}")
       `chef-server-ctl list-client-keys #{$org['name']} #{client['name']}`.should_not include("key-#{Time.now.to_i}")
     end
@@ -373,6 +385,41 @@ uQIDAQAB
     end
     it "should authenticate against the key" do
       get("#{platform.server}/users/#{user['name']}", Pedant::Requestor.new(user['name'], $private_key)).should look_like({:status => 200})
+    end
+  end
+
+  context "when a user's default key has an expiration date", :focus do
+    before(:each) do
+      system("chef-server-ctl delete-user-key #{user['name']} default")
+      system("chef-server-ctl add-user-key #{user['name']} #{$public_key_filepath} --key-name default --expiration-date 2017-12-24T21:00:00")
+    end
+    context "and is updated via a PUT to /users/:user" do
+      before(:each) do
+        original_data = JSON.parse(get("#{platform.server}/users/#{user['name']}", superuser))
+        original_data['public_key'] = $alt_public_key
+
+        put("#{platform.server}/users/#{user['name']}", superuser, :payload => JSON.generate(original_data))
+      end
+      it "should no longer have an expiration date when queried via the keys API" do
+        `chef-server-ctl list-user-keys #{user['name']}`.should include("Infinity")
+      end
+    end
+  end
+
+  context "when a client's default key has an expiration date", :focus do
+    before(:each) do
+      system("chef-server-ctl delete-client-key #{$org['name']} #{client['name']} default")
+      system("chef-server-ctl add-client-key #{$org['name']} #{client['name']} #{$public_key_filepath} --key-name default --expiration-date 2017-12-24T21:00:00")
+    end
+    context "and is updated via a PUT to /organizations/:org/clients/:client" do
+      before(:each) do
+        original_data = JSON.parse(get("#{platform.server}/organizations/#{$org['name']}/clients/#{client['name']}", superuser))
+        original_data['public_key'] = $alt_public_key
+        put("#{platform.server}/organizations/#{$org['name']}/clients/#{client['name']}", superuser, :payload => JSON.generate(original_data))
+      end
+      it "should no longer have an expiration date when queried via the keys API" do
+        `chef-server-ctl list-client-keys #{$org['name']} #{client['name']}`.should include("Infinity")
+      end
     end
   end
 
@@ -423,29 +470,113 @@ uQIDAQAB
     end
   end
 
-  context "when the default key is updated for a user via a PUT to /users" do
+
+  context "when a user's default key is updated via the keys API" do
     before(:each) do
+      system("chef-server-ctl delete-user-key #{user['name']} default")
+      system("chef-server-ctl add-user-key #{user['name']} #{$public_key_filepath} --key-name default")
+    end
+
+    it "should return the proper, updated key via /users/:user" do
+      JSON.parse(get("#{platform.server}/users/#{user['name']}", superuser))['public_key'].should include($public_key)
+    end
+  end
+
+  context "when a user's default key is deleted via the keys API" do
+    before(:each) do
+      system("chef-server-ctl delete-user-key #{user['name']} default")
+    end
+
+    it "public field returned by /users/:user should be null" do
+      JSON.parse(get("#{platform.server}/users/#{user['name']}", superuser))['public_key'].should == nil
+    end
+    it "the keys API should not return a key named default" do
+      `chef-server-ctl list-user-keys #{user['name']}`.should_not include("default")
+    end
+  end
+
+  context "when a clients's default key is deleted via the keys API" do
+    before(:each) do
+      system("chef-server-ctl delete-client-key #{$org['name']} #{client['name']} default")
+    end
+
+    it "public field returned by /organizations/:org/clients/:client should be null" do
+      JSON.parse(get("#{platform.server}/organizations/#{$org['name']}/clients/#{client['name']}", superuser))['public_key'].should == nil
+    end
+    it "the keys API should not return a key named default" do
+      `chef-server-ctl list-client-keys #{$org['name']} #{client['name']}`.should_not include("default")
+    end
+  end
+
+  context "when a user is updated via PUT but the public_key is omitted" do
+    before(:each) do
+      original_data = JSON.parse(get("#{platform.server}/users/#{user['name']}", superuser))
+      original_data.delete("public_key")
+      put("#{platform.server}/users/#{user['name']}", superuser, :payload => JSON.generate(original_data))
+    end
+    it "should not modify the public key returned via GET /users/:user" do
+      JSON.parse(get("#{platform.server}/users/#{user['name']}", superuser))['public_key'].should == user['public_key']
+    end
+    it "should not modify the default key returned via the keys API" do
+      `chef-server-ctl list-user-keys #{user['name']}`.should include(user['public_key'])
+    end
+  end
+
+  context "when a client is updated via PUT but the public_key is omitted" do
+    before(:each) do
+      original_data = JSON.parse(get("#{platform.server}/organizations/#{$org['name']}/clients/#{client['name']}", superuser))
+      original_data.delete("public_key")
+      put("#{platform.server}/organizations/#{$org['name']}/clients/#{client['name']}", superuser, :payload => JSON.generate(original_data))
+    end
+    it "not modify the public key returned via GET /organizations/:org/clients/:client" do
+      JSON.parse(get("#{platform.server}/organizations/#{$org['name']}/clients/#{client['name']}", superuser))['public_key'].should == client['public_key']
+    end
+    it "should not modify the default key returned via the keys API" do
+      `chef-server-ctl list-client-keys #{$org['name']} #{client['name']}`.should include(client['public_key'])
+    end
+  end
+
+  context "when a user's default key has already been deleted via the keys API and then re-added via PUT to /users/:user" do
+    before(:each) do
+      system("chef-server-ctl delete-user-key #{user['name']} default")
       original_data = JSON.parse(get("#{platform.server}/users/#{user['name']}", superuser))
       original_data['public_key'] = $public_key
       put("#{platform.server}/users/#{user['name']}", superuser, :payload => JSON.generate(original_data))
     end
-    context "when the default key has already been deleted" do
-      before(:each) do
-        system("chef-server-ctl delete-user-key #{user['name']} default")
-        original_data = JSON.parse(get("#{platform.server}/users/#{user['name']}", superuser))
-        original_data['public_key'] = $public_key
-        put("#{platform.server}/users/#{user['name']}", superuser, :payload => JSON.generate(original_data))
-      end
-      # TODO: this is the current behavior but is probably wrong
-      it "should still (wrongly) be shown in the user's record" do
-        JSON.parse(get("#{platform.server}/users/#{user['name']}", superuser))['public_key'].should include($public_key)
-      end
-      it "should not be shown via data from keys table" do
-        `chef-server-ctl list-user-keys #{user['name']}`.should_not include($public_key)
-      end
-      it "should not be able to authenticate with the default key" do
-        get("#{platform.server}/users/#{user['name']}", Pedant::Requestor.new(user['name'], $private_key)).should look_like({:status => 401})
-      end
+    it "should be shown in the user's record via GET /users/:user" do
+      JSON.parse(get("#{platform.server}/users/#{user['name']}", superuser))['public_key'].should include($public_key)
+    end
+    it "should be shown via data from keys table" do
+      `chef-server-ctl list-user-keys #{user['name']}`.should include($public_key)
+    end
+    it "should be able to authenticate with the updated default key" do
+      get("#{platform.server}/users/#{user['name']}", Pedant::Requestor.new(user['name'], $private_key)).should look_like({:status => 200})
+    end
+  end
+
+  context "when a client's default key has already been deleted via the keys API and then re-added via PUT to /organizations/:org/clients/:client" do
+    before(:each) do
+      system("chef-server-ctl delete-client-key #{$org['name']} #{client['name']} default")
+      original_data = JSON.parse(get("#{platform.server}/organizations/#{$org['name']}/clients/#{client['name']}", superuser))
+      original_data['public_key'] = $public_key
+      put("#{platform.server}/organizations/#{$org['name']}/clients/#{client['name']}", superuser, :payload => JSON.generate(original_data))
+    end
+    it "should be shown in the clients's record" do
+      JSON.parse(get("#{platform.server}/organizations/#{$org['name']}/clients/#{client['name']}", superuser))['public_key'].should include($public_key)
+    end
+    it "should be shown via data from keys table" do
+      `chef-server-ctl list-client-keys #{$org['name']} #{client['name']}`.should include($public_key)
+    end
+    it "should be able to authenticate with the updated default key" do
+      get("#{platform.server}/organizations/#{$org['name']}/clients/#{client['name']}", Pedant::Requestor.new(client['name'], $private_key)).should look_like({:status => 200})
+    end
+  end
+
+  context "when the default key is updated for a user via a PUT to /users/:user" do
+    before(:each) do
+      original_data = JSON.parse(get("#{platform.server}/users/#{user['name']}", superuser))
+      original_data['public_key'] = $public_key
+      put("#{platform.server}/users/#{user['name']}", superuser, :payload => JSON.generate(original_data))
     end
     context "when the default key exists" do
       it "should update the default key in the keys table" do
@@ -460,29 +591,11 @@ uQIDAQAB
     end
   end
 
-  context "when the default key is updated for a client via a PUT to /organizations/:org/clients" do
+  context "when the default key is updated for a client via a PUT to /organizations/:org/clients/:client" do
     before(:each) do
       original_data = JSON.parse(get("#{platform.server}/organizations/#{$org['name']}/clients/#{client['name']}", superuser))
       original_data['public_key'] = $public_key
       put("#{platform.server}/organizations/#{$org['name']}/clients/#{client['name']}", superuser, :payload => JSON.generate(original_data))
-    end
-    context "when the default key has already been deleted" do
-      before(:each) do
-        system("chef-server-ctl delete-client-key #{$org['name']} #{client['name']} default")
-        original_data = JSON.parse(get("#{platform.server}/organizations/#{$org['name']}/clients/#{client['name']}", superuser))
-        original_data['public_key'] = $public_key
-        put("#{platform.server}/organizations/#{$org['name']}/clients/#{client['name']}", superuser, :payload => JSON.generate(original_data))
-      end
-      # TODO: this is the current behavior but is probably wrong
-      it "should still (wrongly) be shown in the clients's record" do
-        JSON.parse(get("#{platform.server}/organizations/#{$org['name']}/clients/#{client['name']}", superuser))['public_key'].should include($public_key)
-      end
-      it "should not be shown via data from keys table" do
-        `chef-server-ctl list-client-keys #{$org['name']} #{client['name']}`.should_not include($public_key)
-      end
-      it "should not be able to authenticate with the default key" do
-        get("#{platform.server}/organizations/#{$org['name']}/clients/#{client['name']}", Pedant::Requestor.new(client['name'], $private_key)).should look_like({:status => 401})
-      end
     end
     context "when the default key exists" do
       it "should update the default key in the keys table" do
@@ -494,6 +607,36 @@ uQIDAQAB
       it "should return the new key from the /users endpoint" do
         JSON.parse(get("#{platform.server}/organizations/#{$org['name']}/clients/#{client['name']}", superuser))['public_key'].should include($public_key)
       end
+    end
+  end
+
+  context "when a user is PUT with public_key:null via /users/:user" do
+    before(:each) do
+      original_data = JSON.parse(get("#{platform.server}/users/#{user['name']}", superuser))
+      original_data['public_key'] = nil
+      put("#{platform.server}/users/#{user['name']}", superuser, :payload => JSON.generate(original_data))
+    end
+
+    it "the key should remain unchanged via GET /users/:user" do
+      JSON.parse(get("#{platform.server}/users/#{user['name']}", superuser))['public_key'].should include(user['public_key'])
+    end
+    it "should leave the default key from the keys API list unmodified for that user" do
+      `chef-server-ctl list-user-keys #{user['name']}`.should include("default")
+    end
+  end
+
+  context "when a client is PUT with public_key:null to /organizations/:org/clients/:client" do
+    before(:each) do
+      original_data = JSON.parse(get("#{platform.server}/organizations/#{$org['name']}/clients/#{client['name']}", superuser))
+      original_data['public_key'] = nil
+      put("#{platform.server}/organizations/#{$org['name']}/clients/#{client['name']}", superuser, :payload => JSON.generate(original_data))
+    end
+
+    it "the key should remain unchanged via GET /organizations/:org/clients/:client" do
+      JSON.parse(get("#{platform.server}/organizations/#{$org['name']}/clients/#{client['name']}", superuser))['public_key'].should include(client['public_key'])
+    end
+    it "should leave the default key from the keys API list unmodified for that client" do
+      `chef-server-ctl list-client-keys #{$org['name']} #{client['name']}`.should include("default")
     end
   end
 
