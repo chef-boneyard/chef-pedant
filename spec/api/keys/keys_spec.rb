@@ -1,4 +1,4 @@
-# Copyright: Copyright (c) 2015 Chef, Inc.
+# Copyright: Copyright (c) 2015 Chef Software, Inc.
 # License: Apache License, Version 2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -138,6 +138,19 @@ GnjKGKxGVGgUyV0K1c/VM7em4I3zH5XK8aZFPm7hzi3G4SWnnffR
     Pedant::Requestor.new(client['name'], client['private_key'])
   end
 
+  let(:new_user_list_keys_response) do
+    {
+      [ { "name" => "default", "uri" => "#{platform_server}/users/#{user['name']}/keys/default" } ]
+    }
+  end
+  let(:new_client_list_keys_response) do
+    {
+      [ { "name" => "default", "uri" => "#{platform_server}/organizations/#{$org['name']}/clients/#{client['name']}/keys/default" } ]
+    }
+  end
+
+
+  end
   let(:client_payload) do
     {
       "name" => client['name'],
@@ -269,7 +282,7 @@ uQIDAQAB
 
   context "when a new user is created via POST /users" do
     it "should insert a new default keys table that is retrievable via the keys API" do
-      `chef-server-ctl list-user-keys #{user['name']}`.should include("default")
+      get("#{platform.server}/users/#{user['name']}/keys").should look_like( { :status=> 200, :body => new_user_default_key_body } )
     end
   end
 
