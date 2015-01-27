@@ -388,7 +388,7 @@ uQIDAQAB
     end
   end
 
-  context "when a user's default key has an expiration date", :focus do
+  context "when a user's default key has an expiration date" do
     before(:each) do
       system("chef-server-ctl delete-user-key #{user['name']} default")
       system("chef-server-ctl add-user-key #{user['name']} #{$public_key_filepath} --key-name default --expiration-date 2017-12-24T21:00:00")
@@ -406,7 +406,7 @@ uQIDAQAB
     end
   end
 
-  context "when a client's default key has an expiration date", :focus do
+  context "when a client's default key has an expiration date" do
     before(:each) do
       system("chef-server-ctl delete-client-key #{$org['name']} #{client['name']} default")
       system("chef-server-ctl add-client-key #{$org['name']} #{client['name']} #{$public_key_filepath} --key-name default --expiration-date 2017-12-24T21:00:00")
