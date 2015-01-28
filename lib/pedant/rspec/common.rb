@@ -457,7 +457,7 @@ module Pedant
 
         # If we're logging traffic, delimit the traffic from each test example
         if Pedant::Config.log_file
-          before :each do
+          before :each do |example|
             File.open(Pedant::Config.log_file, 'a') do |f1|
               f1.puts("<-<-<-<-<-<-<-<")
               f1.puts("BEGIN: " + example.description)
@@ -465,7 +465,7 @@ module Pedant
             end
           end
 
-          after :each do
+          after :each do |example|
             File.open(Pedant::Config.log_file, 'a') do |f1|
               f1.puts
               f1.puts("END: " + example.description)
