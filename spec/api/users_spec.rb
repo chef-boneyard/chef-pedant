@@ -414,8 +414,8 @@ describe "Open Source /users endpoint", :users => true, :platform => :open_sourc
         # if it succeeds in deleting the user (it shouldn't) other tests could fail
         # Note that this test will fail if other admin users exist on the system for some reason
         # ensure the only other admin in the system doesn't exist
-        # BUG: Marked as pending: admin clients can turn off the last user admin
-        context 'when turning off admin for last admin', pending: "CHEF-3658: admin clients should not be able to de-admin admin user", smoke: false do
+        # BUG: Marked as skip: admin clients can turn off the last user admin
+        context 'when turning off admin for last admin', skip: "CHEF-3658: admin clients should not be able to de-admin admin user", smoke: false do
           before(:each) { delete_user(test_user) }
 
           let(:expected_response) { forbidden_response }

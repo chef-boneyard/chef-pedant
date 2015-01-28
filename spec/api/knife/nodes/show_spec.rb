@@ -39,7 +39,7 @@ describe 'knife', knife: true, skip: !open_source? do
         context 'as an admin' do
           let(:requestor) { knife_admin }
 
-          it 'should succeed' do #, pending: "ERROR: Method not allowed when using node from file?" do
+          it 'should succeed' do #, skip: "ERROR: Method not allowed when using node from file?" do
             assume_existing_node!
 
             # Runs knife node from file
