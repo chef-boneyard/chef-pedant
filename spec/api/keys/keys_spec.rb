@@ -308,7 +308,7 @@ uQIDAQAB
       end
     end
 
-    context "when the default key has been changed via the keys API" do
+    context "when the default key has been changed via the keys API", :authentication do
       before(:each) do
         system("chef-server-ctl delete-user-key #{user['name']} default")
         system("chef-server-ctl add-user-key #{user['name']} #{$alt_public_key_filepath} --key-name default")
@@ -329,7 +329,7 @@ uQIDAQAB
       end
     end
 
-    context "when the default key has been changed via the keys API" do
+    context "when the default key has been changed via the keys API", :authentication do
       before(:each) do
         system("chef-server-ctl delete-client-key #{$org['name']} #{client['name']} default")
         system("chef-server-ctl add-client-key #{$org['name']} #{client['name']} #{$public_key_filepath} --key-name default")
@@ -454,7 +454,7 @@ uQIDAQAB
     end
   end
 
-  context "when a key is expired for a user" do
+  context "when a key is expired for a user", :authentication do
     before(:each) do
       system("chef-server-ctl add-user-key #{user['name']} #{$public_key_filepath} --key-name #{key_name} --expiration-date 2012-12-24T21:00:00")
     end
@@ -466,7 +466,7 @@ uQIDAQAB
     end
   end
 
-  context "when a key is expired for a client" do
+  context "when a key is expired for a client", :authentication do
     before(:each) do
       system("chef-server-ctl add-client-key #{$org['name']} #{client['name']} #{$public_key_filepath} --key-name #{key_name} --expiration-date 2012-12-24T21:00:00")
     end
@@ -662,7 +662,7 @@ uQIDAQAB
     end
   end
 
-  context "when a user and client with the same name exist" do
+  context "when a user and client with the same name exist", :authentication do
     before(:each) do
       # give user same name as client
       delete("#{platform.server}/users/#{user['name']}", superuser)
@@ -685,6 +685,8 @@ uQIDAQAB
     end
     # note that clients cannot read from /users/:user by default
     it "should not allow client to query /users/:user" do
+      # TODO this may be a bit off - we're saying 'client, as the client, should not be allowed to...' which should be 403
+      # 401 means that this isn't a valid client - something I'd expect to see if we did client['name'] w/ user['private_key'] and vice-versa
       get("#{platform.server}/users/#{user['name']}", Pedant::Requestor.new(client['name'], client['private_key'])).should look_like({:status => 401})
     end
     it "should allow user to query /users/:user" do
@@ -692,4 +694,59 @@ uQIDAQAB
     end
   end
 
+  context "listing keys" do
+    context "for a valid user by an invalid user", :authentication do
+      it "fails with a 401" do
+
+      end
+    end
+
+    context "for an invalid user " do
+      it "fails with a 404" do
+
+      end
+    end
+
+    context "by an org admin", :authorization do
+      it "for a client that is a member of the same org succeeds with a 200" do
+
+      end
+      it "for a client that is a member of a different org fails with a 403" do
+
+      end
+      it "for a user that is a member of the same org succeeds with a 200" do
+
+      end
+      it "for a user that is not a member of the same org fails with a 403" do
+
+      end
+    end
+
+    context "by an org member who is not an admin", :authorization do
+      it "for a client that is a member of the same org succeeds with a 200" do
+
+      end
+      it "for a client that is a member of a different org fails with a 403" do
+
+      end
+      it "for a user that is a member of the same org fails with a 403" do
+
+      end
+      it "for a user that is not a member of the same org fails with a 403" do
+
+      end
+    end
+
+    context "by an unaffiliated user", :authorization do
+      it "attempting to see their own keys succeeds with a 200" do
+
+      end
+      it "attempting to see someone else's keys fails with a 403" do
+
+      end
+      it "attempting to see an org client's keys fails with a 403" do
+
+      end
+    end
+  end
 end
