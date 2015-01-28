@@ -91,7 +91,13 @@ module Pedant
 
   def self.configure_rspec
     ::RSpec.configure do |c|
-      c.treat_symbols_as_metadata_keys_with_true_values = true
+      c.expect_with :rspec do |expectation|
+        expectation.syntax = [:should, :expect]
+      end
+
+      c.mock_with :rspec do |mock|
+        mock.syntax = [:should, :expect]
+      end
 
       # If you just want to run one (or a few) tests in development,
       # add :focus metadata

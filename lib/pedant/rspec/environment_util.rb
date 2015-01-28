@@ -208,7 +208,7 @@ module Pedant
       def self.fails_with_value(variable, value, expected_error, existing_environment = nil,
                                 pending = false)
         if (pending)
-          it "with #{variable} = #{value} it reports 400", :validation, :pending do
+          it "with #{variable} = #{value} it reports 400", :validation, :skip do
           end
         else
           it "with #{variable} = #{value} it reports 400", :validation do
@@ -228,7 +228,7 @@ module Pedant
                                    existing_environment = nil, pending = false)
         expected_value ||= value
         if (pending)
-          it "with #{variable} = #{value} it succeeds", :pending do
+          it "with #{variable} = #{value} it succeeds", :skip do
           end
         else
           it "with #{variable} = #{value} it succeeds" do

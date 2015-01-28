@@ -21,7 +21,7 @@ require 'securerandom'
 # method
 require 'pedant/rspec/search_util'
 
-describe 'knife', knife: true, pending: !open_source? do
+describe 'knife', knife: true, skip: !open_source? do
   context 'role' do
     context 'bulk delete REGEX' do
       include Pedant::RSpec::KnifeUtil
