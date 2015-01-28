@@ -125,6 +125,7 @@ module Pedant
         def self.with_modified_auth_headers(desc, expected_status, auth_header_options)
           context_options = auth_header_options[:focus] ? [:focus] : []
           context_options += auth_header_options[:pending] ? [:pending] : []
+          context_options += auth_header_options[:skip] ? [:skip] : []
           context_options << :validation if expected_status == 400
           context_options << :authentication if expected_status == 401
           context_options << :authorization if expected_status == 403
