@@ -105,7 +105,7 @@ module RSpec
         end
       end
 
-      def failure_message_for_should
+      def failure_message
         """
 Expected a #{strict? ? "full" : "partial"} match of the result
 
@@ -119,7 +119,7 @@ to succeed, but it didn't!
 """
       end
 
-      def failure_message_for_should_not
+      def failure_message_when_negated
         """
 Expected a #{strict? ? "full" : "partial"} match of the result
 
@@ -158,7 +158,7 @@ RSpec::Matchers.define :have_status_code do |code|
     "respond with #{code} #{codes[code]}"
   end
 
-  failure_message_for_should do |response|
+  failure_message do |response|
     "Response should have HTTP status code #{code} ('#{codes[code]}'), but it was actually #{response.code} ('#{codes[response.code]}')"
   end
 end
@@ -184,7 +184,7 @@ RSpec::Matchers.define :have_error do |code, message|
     "respond with #{code} #{codes[code]} and an error message of '#{message}'"
   end
 
-  failure_message_for_should do |response|
+  failure_message do |response|
     <<-EOM
 1) HTTP status code should have been #{code} ('#{codes[code]}'); it was #{response.code}.
 
@@ -298,7 +298,7 @@ RSpec::Matchers.define :look_like do |expected_response_spec|
     "respond with #{code} #{Pedant::RSpec::HTTP::STATUS_CODES[code]}"
   end
 
-  failure_message_for_should do |response|
+  failure_message do |response|
     @error_message
   end
 end
@@ -336,7 +336,7 @@ RSpec::Matchers.define :have_outcome do |outcome_spec|
 
   # Could just spit out `executed_shellout_command.inspect`, but I
   # find the formatting suboptimal for testing error messages.
-  failure_message_for_should do |executed_shellout_command|
+  failure_message do |executed_shellout_command|
     "Executed command should have matched the outcome spec #{outcome_spec.inspect}, but it didn't!\n
 \tFailed Command: #{executed_shellout_command.command}\n
 \tCommand Setting: #{Pedant::Knife.command_setting(executed_shellout_command).inspect}\n
