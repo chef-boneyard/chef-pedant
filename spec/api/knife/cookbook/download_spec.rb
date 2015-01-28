@@ -16,7 +16,7 @@
 require 'pedant/rspec/knife_util'
 require 'pedant/rspec/cookbook_util'
 
-describe 'knife', knife: true, pending: !open_source? do
+describe 'knife', knife: true, skip: !open_source? do
   context 'cookbook' do
     context 'download' do
       include Pedant::RSpec::KnifeUtil

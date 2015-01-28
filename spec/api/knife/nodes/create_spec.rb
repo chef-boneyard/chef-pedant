@@ -15,7 +15,7 @@
 
 require 'pedant/rspec/knife_util'
 
-describe 'knife', knife: true, pending: !open_source? do
+describe 'knife', knife: true, skip: !open_source? do
   context 'node' do
     context 'create' do
       include Pedant::RSpec::KnifeUtil
@@ -39,14 +39,13 @@ describe 'knife', knife: true, pending: !open_source? do
           let(:requestor) { knife_admin }
 
           it 'should fail' do
-            pending 'CHEF-982: `knife node create` does not report name conflicts' do
-              # Create a node with the same name
-              #knife "node create #{node_name} -c #{knife_config} --disable-editing"
-              post(api_url("/nodes"), platform.admin_user, payload: { "name" => node_name })
+            pending 'CHEF-982: `knife node create` does not report name conflicts'
+            # Create a node with the same name
+            #knife "node create #{node_name} -c #{knife_config} --disable-editing"
+            post(api_url("/nodes"), platform.admin_user, payload: { "name" => node_name })
 
-              # Run knife a second time
-              should have_outcome :status => 0, :stdout => /Node #{node_name} already exists/
-            end
+            # Run knife a second time
+            should have_outcome :status => 0, :stdout => /Node #{node_name} already exists/
           end
         end
       end
