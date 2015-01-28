@@ -99,8 +99,6 @@ module Pedant
         mock.syntax = [:should, :expect]
       end
 
-      c.treat_symbols_as_metadata_keys_with_true_values = true
-
       # If you just want to run one (or a few) tests in development,
       # add :focus metadata
       c.filter_run :focus => true
