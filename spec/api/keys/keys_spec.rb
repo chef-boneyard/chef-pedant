@@ -14,7 +14,7 @@
 # limitations under the License.
 
 
-# TODO All this can be replaced by API instead of ctl once
+# TODO WIP All this can be replaced by API instead of ctl once
 # the API is implemented.
 #
 # Anywhere you see "API" in the rspec descriptions and contexts are currently using
@@ -138,19 +138,10 @@ GnjKGKxGVGgUyV0K1c/VM7em4I3zH5XK8aZFPm7hzi3G4SWnnffR
     Pedant::Requestor.new(client['name'], client['private_key'])
   end
 
-  let(:new_user_list_keys_response) do
-    {
-      [ { "name" => "default", "uri" => "#{platform_server}/users/#{user['name']}/keys/default" } ]
-    }
-  end
-  let(:new_client_list_keys_response) do
-    {
-      [ { "name" => "default", "uri" => "#{platform_server}/organizations/#{$org['name']}/clients/#{client['name']}/keys/default" } ]
-    }
+  let(:key_name) do
+    "key-#{TIme.now.to_i}"
   end
 
-
-  end
   let(:client_payload) do
     {
       "name" => client['name'],
@@ -187,7 +178,7 @@ uAXeHqAfpf/Cr3/kiSVAGKHjKNbvSsIrtjVkDm8aYtCmCOpGsg1YHTsHw6YD5xIs
 lHaC2DyJKo7h2v0gzAD9C2LLhDYecFyniCEceNNu7pSqRuLFyuJAOQ==
 -----END RSA PRIVATE KEY-----"
 
-  $private_key_filepath = "/tmp/private-key-#{Time.now.to_i}"
+  $private_key_filepath = "/tmp/private-#{key_name}"
 
   $public_key = "-----BEGIN PUBLIC KEY-----
 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAw/XmEHkKJW/g9W13EBoR
@@ -199,7 +190,7 @@ HRbKpu7+0sdd9tGxC5b6yI5e2+SetZkNScbEsu1y5yvpwQJ5MBK9CbPWnsdgU6Y1
 oQIDAQAB
 -----END PUBLIC KEY-----"
 
-  $public_key_filepath = "/tmp/public-key-#{Time.now.to_i}.pub"
+  $public_key_filepath = "/tmp/public-#{key_name}.pub"
 
   $alt_private_key = "-----BEGIN RSA PRIVATE KEY-----
 MIIEowIBAAKCAQEA2YewTVJI52IrzCwv5KzXvufn6QQkqiwEdh3OPdaeolfciywZ
@@ -229,7 +220,7 @@ eA5QMFm93kJERfGTQz4hyKDJWaaiXZQyG63cAxrZcBBGVqB6fxT3WaQAvKYaQpSV
 slFU7wOOLWfOPho31gOm1siG675SXTg8efNm/koyU0LK4KuT8WJE
 -----END RSA PRIVATE KEY-----"
 
-  $alt_private_key_filepath = "/tmp/alt-private-key-#{Time.now.to_i}"
+  $alt_private_key_filepath = "/tmp/alt-private-#{key_name}"
 
   $alt_public_key = "-----BEGIN PUBLIC KEY-----
 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA2YewTVJI52IrzCwv5KzX
@@ -241,7 +232,25 @@ d6t3m7JfBIZft6U4ZtPY5LGK1qPSPDGu8bwn6vJ62Tcf3fzuI2i6x3WWiM9XQilO
 uQIDAQAB
 -----END PUBLIC KEY-----"
 
-  $alt_public_key_filepath = "/tmp/alt-public-key-#{Time.now.to_i}.pub"
+  $alt_public_key_filepath = "/tmp/alt-public-#{key_name}.pub"
+
+  let(:new_user_list_keys_response) do
+    [
+      { "name" => "default", "uri" => "#{platform_server}/users/#{user['name']}/keys/default" }
+    ]
+  end
+  let(:new_client_list_keys_response) do
+    [
+      { "name" => "default", "uri" => "#{platform_server}/organizations/#{$org['name']}/clients/#{client['name']}/keys/default" }
+    ]
+  end
+  let(:list_user_keys) do
+      get("#{platform.server}/users/#{user['name']}/keys", superuser)
+  end
+  let(:list_client_keys) do
+      get("#{platform.server}/#{platform_server}/organizations/#{$org['name']}/clients/#{client['name']}/keys", superuser)
+  end
+
 
   # TODO remove this after we have APIs in place, since we can just pass
   # strings then
@@ -282,13 +291,13 @@ uQIDAQAB
 
   context "when a new user is created via POST /users" do
     it "should insert a new default keys table that is retrievable via the keys API" do
-      get("#{platform.server}/users/#{user['name']}/keys").should look_like( { :status=> 200, :body => new_user_default_key_body } )
+      list_user_keys.should look_like( { :status=> 200, :body => new_user_list_keys_response} )
     end
   end
 
   context "when a new client is created via POST /organizations/:org/clients" do
     it "should insert a new default keys table that is retrievable via the keys API" do
-      `chef-server-ctl list-client-keys #{$org['name']} #{client['name']}`.should include("default")
+      list_client_keys.should look_like( { :status=> 200, :body => new_client_list_keys_response} )
     end
   end
 
@@ -336,36 +345,36 @@ uQIDAQAB
 
   context "when a key is deleted for a user" do
     before(:each) do
-      system("chef-server-ctl add-user-key #{user['name']} #{$alt_public_key_filepath} --key-name key-#{Time.now.to_i}")
+      system("chef-server-ctl add-user-key #{user['name']} #{$alt_public_key_filepath} --key-name #{key_name}")
     end
     it "should not longer be returned by the keys API" do
-      system("chef-server-ctl delete-user-key #{user['name']} key-#{Time.now.to_i}")
-      `chef-server-ctl list-user-keys #{user['name']}`.should_not include("key-#{Time.now.to_i}")
+      system("chef-server-ctl delete-user-key #{user['name']} #{key_name}")
+      list_user_keys.should_not include(key_name)
     end
     it "should still contain other keys not yet deleted" do
-      system("chef-server-ctl delete-user-key #{user['name']} key-#{Time.now.to_i}")
-      `chef-server-ctl list-user-keys #{user['name']}`.should include("default")
+      system("chef-server-ctl delete-user-key #{user['name']} #{key_name}")
+      list_user_keys.should include("default")
     end
   end
 
   context "when a key is deleted for a client" do
     before(:each) do
-      system("chef-server-ctl add-client-key #{$org['name']} #{client['name']} #{$alt_public_key_filepath} --key-name key-#{Time.now.to_i}")
+      system("chef-server-ctl add-client-key #{$org['name']} #{client['name']} #{$alt_public_key_filepath} --key-name #{key_name}")
     end
     it "should not longer be returned by the keys API" do
-      system("chef-server-ctl delete-client-key #{$org['name']} #{client['name']} key-#{Time.now.to_i}")
-      `chef-server-ctl list-client-keys #{$org['name']} #{client['name']}`.should_not include("key-#{Time.now.to_i}")
+      system("chef-server-ctl delete-client-key #{$org['name']} #{client['name']} #{key_name}")
+      list_client_keys.should_not include(key_name)
     end
     it "should still contain other keys not yet deleted" do
-      system("chef-server-ctl delete-client-key #{$org['name']} #{client['name']} key-#{Time.now.to_i}")
-      `chef-server-ctl list-client-keys #{$org['name']} #{client['name']}`.should include("default")
+      system("chef-server-ctl delete-client-key #{$org['name']} #{client['name']} #{key_name}")
+      list_client_keys.should include("default")
     end
   end
 
   context "when multiple keys exist for a user" do
     before(:each) do
-      system("chef-server-ctl add-user-key #{user['name']} #{$alt_public_key_filepath} --key-name alt-key-#{Time.now.to_i}")
-      system("chef-server-ctl add-user-key #{user['name']} #{$public_key_filepath} --key-name key-#{Time.now.to_i}")
+      system("chef-server-ctl add-user-key #{user['name']} #{$alt_public_key_filepath} --key-name alt-#{key_name}")
+      system("chef-server-ctl add-user-key #{user['name']} #{$public_key_filepath} --key-name #{key_name}")
     end
     context "should properly authenticate against either keys" do
       it "should properly authenticate against the second key" do
@@ -379,8 +388,8 @@ uQIDAQAB
 
   context "when multiple keys exist for a client" do
     before(:each) do
-      system("chef-server-ctl add-client-key #{$org['name']} #{client['name']} #{$alt_public_key_filepath} --key-name alt-key-#{Time.now.to_i}")
-      system("chef-server-ctl add-client-key #{$org['name']} #{client['name']} #{$public_key_filepath} --key-name key-#{Time.now.to_i}")
+      system("chef-server-ctl add-client-key #{$org['name']} #{client['name']} #{$alt_public_key_filepath} --key-name alt-#{key_name}")
+      system("chef-server-ctl add-client-key #{$org['name']} #{client['name']} #{$public_key_filepath} --key-name #{key_name}")
     end
     context "should properly authenticate against either keys" do
       it "should properly authenticate against the first key" do
@@ -394,7 +403,7 @@ uQIDAQAB
 
   context "when a user key has an expiration date and isn't expired" do
     before(:each) do
-      system("chef-server-ctl add-user-key #{user['name']} #{$public_key_filepath} --key-name key-#{Time.now.to_i} --expiration-date 2017-12-24T21:00:00")
+      system("chef-server-ctl add-user-key #{user['name']} #{$public_key_filepath} --key-name #{key_name} --expiration-date 2017-12-24T21:00:00")
     end
     it "should authenticate against the key" do
       get("#{platform.server}/users/#{user['name']}", Pedant::Requestor.new(user['name'], $private_key)).should look_like({:status => 200})
@@ -438,7 +447,7 @@ uQIDAQAB
 
   context "when a client key has an expiration date and isn't expired" do
     before(:each) do
-      system("chef-server-ctl add-client-key #{$org['name']} #{client['name']} #{$public_key_filepath} --key-name key-#{Time.now.to_i} --expiration-date 2017-12-24T21:00:00")
+      system("chef-server-ctl add-client-key #{$org['name']} #{client['name']} #{$public_key_filepath} --key-name #{key_name} --expiration-date 2017-12-24T21:00:00")
     end
     it "should authenticate against the key" do
       get("#{platform.server}/organizations/#{$org['name']}/clients/#{client['name']}", Pedant::Requestor.new(client['name'], $private_key)).should look_like({:status => 200})
@@ -447,7 +456,7 @@ uQIDAQAB
 
   context "when a key is expired for a user" do
     before(:each) do
-      system("chef-server-ctl add-user-key #{user['name']} #{$public_key_filepath} --key-name key-#{Time.now.to_i} --expiration-date 2012-12-24T21:00:00")
+      system("chef-server-ctl add-user-key #{user['name']} #{$public_key_filepath} --key-name #{key_name} --expiration-date 2012-12-24T21:00:00")
     end
     it "should fail against the expired key" do
       get("#{platform.server}/users/#{user['name']}", Pedant::Requestor.new(user['name'], $private_key)).should look_like({:status => 401})
@@ -459,7 +468,7 @@ uQIDAQAB
 
   context "when a key is expired for a client" do
     before(:each) do
-      system("chef-server-ctl add-client-key #{$org['name']} #{client['name']} #{$public_key_filepath} --key-name key-#{Time.now.to_i} --expiration-date 2012-12-24T21:00:00")
+      system("chef-server-ctl add-client-key #{$org['name']} #{client['name']} #{$public_key_filepath} --key-name #{key_name} --expiration-date 2012-12-24T21:00:00")
     end
     it "should fail against the expired key" do
       get("#{platform.server}/organizations/#{$org['name']}/clients/#{client['name']}", Pedant::Requestor.new(client['name'], $private_key)).should look_like({:status => 401})
@@ -504,7 +513,7 @@ uQIDAQAB
       JSON.parse(get("#{platform.server}/users/#{user['name']}", superuser))['public_key'].should == nil
     end
     it "the keys API should not return a key named default" do
-      `chef-server-ctl list-user-keys #{user['name']}`.should_not include("default")
+      list_user_keys.should_not include("default")
     end
   end
 
@@ -517,7 +526,7 @@ uQIDAQAB
       JSON.parse(get("#{platform.server}/organizations/#{$org['name']}/clients/#{client['name']}", superuser))['public_key'].should == nil
     end
     it "the keys API should not return a key named default" do
-      `chef-server-ctl list-client-keys #{$org['name']} #{client['name']}`.should_not include("default")
+      list_client_keys.should_not include("default")
     end
   end
 
@@ -556,11 +565,11 @@ uQIDAQAB
       original_data['public_key'] = $public_key
       put("#{platform.server}/users/#{user['name']}", superuser, :payload => JSON.generate(original_data))
     end
-    it "should be shown in the user's record via GET /users/:user" do
+    it "the correct key should be shown in the user's record via GET /users/:user" do
       JSON.parse(get("#{platform.server}/users/#{user['name']}", superuser))['public_key'].should include($public_key)
     end
-    it "should be shown via data from keys table" do
-      `chef-server-ctl list-user-keys #{user['name']}`.should include($public_key)
+    it "should be present in the keys list" do
+      list_user_keys.should include("default")
     end
     it "should be able to authenticate with the updated default key" do
       get("#{platform.server}/users/#{user['name']}", Pedant::Requestor.new(user['name'], $private_key)).should look_like({:status => 200})
@@ -574,11 +583,11 @@ uQIDAQAB
       original_data['public_key'] = $public_key
       put("#{platform.server}/organizations/#{$org['name']}/clients/#{client['name']}", superuser, :payload => JSON.generate(original_data))
     end
-    it "should be shown in the clients's record" do
+    it "should be shown in the clients's record via GET of the named client" do
       JSON.parse(get("#{platform.server}/organizations/#{$org['name']}/clients/#{client['name']}", superuser))['public_key'].should include($public_key)
     end
-    it "should be shown via data from keys table" do
-      `chef-server-ctl list-client-keys #{$org['name']} #{client['name']}`.should include($public_key)
+    it "should be present in the keys list" do
+      list_client_keys.should include("default")
     end
     it "should be able to authenticate with the updated default key" do
       get("#{platform.server}/organizations/#{$org['name']}/clients/#{client['name']}", Pedant::Requestor.new(client['name'], $private_key)).should look_like({:status => 200})
@@ -633,8 +642,8 @@ uQIDAQAB
     it "the key should remain unchanged via GET /users/:user" do
       JSON.parse(get("#{platform.server}/users/#{user['name']}", superuser))['public_key'].should include(user['public_key'])
     end
-    it "should leave the default key from the keys API list unmodified for that user" do
-      `chef-server-ctl list-user-keys #{user['name']}`.should include("default")
+    it "should leave the default key from the keys API list present for that user" do
+      list_user_keys.should include("default")
     end
   end
 
@@ -649,7 +658,7 @@ uQIDAQAB
       JSON.parse(get("#{platform.server}/organizations/#{$org['name']}/clients/#{client['name']}", superuser))['public_key'].should include(client['public_key'])
     end
     it "should leave the default key from the keys API list unmodified for that client" do
-      `chef-server-ctl list-client-keys #{$org['name']} #{client['name']}`.should include("default")
+      list_client_keys.should include("default")
     end
   end
 
@@ -682,4 +691,5 @@ uQIDAQAB
       get("#{platform.server}/users/#{user['name']}", Pedant::Requestor.new(client['name'], user['private_key'])).should look_like({:status => 200})
     end
   end
+
 end
