@@ -230,7 +230,6 @@ RSpec::Matchers.define :look_like do |expected_response_spec|
 
   match do |response|
     begin
-      last_matcher, last_should = RSpec::Matchers.last_matcher, RSpec::Matchers.last_should
       things_to_check = expected_response_spec.keys
       json_tests = [:body, :body_exact]
 
@@ -286,9 +285,6 @@ RSpec::Matchers.define :look_like do |expected_response_spec|
         end
       end
 
-      # if we get down here without throwing an exception, we pass!
-      # Reset last matchers and should to this one
-      RSpec::Matchers.last_matcher, RSpec::Matchers.last_should = last_matcher, last_should
       true
     rescue RSpec::Expectations::ExpectationNotMetError => e
       @error_message = e.message
