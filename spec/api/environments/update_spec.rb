@@ -180,7 +180,7 @@ describe "Environments API Endpoint", :environments do
             fails_with_value("name", "abc\u0000123",
                              "Field 'name' invalid", true)
           else
-            context 'ejson:decode eats nulls', :pending do
+            context 'ejson:decode eats nulls', :skip do
               fails_with_value("name", "abc\u0000123",
                                "Field 'name' invalid", true)
             end

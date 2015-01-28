@@ -154,10 +154,10 @@ module Pedant
 
           # X-Ops-Userid
           with_modified_auth_headers('missing X-Ops-Userid', 400, :user_id => nil,
-                                     :pending => true)
+                                     :skip => true)
           # an empty header should be treated as missing by the server
           with_modified_auth_headers('empty X-Ops-Userid', 400, :user_id => '',
-                                     :pending => true)
+                                     :skip => true)
           with_modified_auth_headers('nonexistent username in X-Ops-Userid', 401,
                                      :user_id => 'nowaythisexists')
           context "when X-Ops-Userid does not match signature", :authentication do
@@ -169,7 +169,7 @@ module Pedant
               response.should look_like({ :status => 401 })
             end
           end
-          with_modified_auth_headers('absolutely immense X-Ops-Userid', 401, :user_id => 'x'*2000, :pending => true)
+          with_modified_auth_headers('absolutely immense X-Ops-Userid', 401, :user_id => 'x'*2000, :skip => true)
 
           # X-Ops-Timestamp
           with_modified_auth_headers('missing X-Ops-Timestamp', 400, :timestamp => nil)
@@ -311,14 +311,14 @@ module Pedant
 
             context 'impersonating successful user' do
               it 'succeeds',
-                :pending => 'no webui_key defined in pedant config' do
+                :skip => 'no webui_key defined in pedant config' do
                 ;
               end
             end
 
             context 'impersonating failed user', :authentication do
               it 'fails',
-                :pending => 'no webui_key defined in pedant config' do
+                :skip => 'no webui_key defined in pedant config' do
                 ;
               end
             end
@@ -326,7 +326,7 @@ module Pedant
         end
 
         # X-Ops-Webkey-Tag
-        context 'X-Ops-Webkey-Tag', :pending => "Write X-Ops-Webkey-Tag tests" do
+        context 'X-Ops-Webkey-Tag', :skip => "Write X-Ops-Webkey-Tag tests" do
         end
 
         context "with other successful user" do
