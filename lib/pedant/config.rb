@@ -17,6 +17,8 @@ require 'mixlib/config'
 require 'pedant/command_line'
 require 'pedant/gem'
 
+# RSpec ReRun requires this until some version after 0.2.0
+require 'rspec/legacy_formatters'
 require 'rspec-rerun/formatters/failures_formatter'
 
 module Pedant
