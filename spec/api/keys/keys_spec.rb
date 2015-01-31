@@ -95,7 +95,7 @@ describe "/keys endpoint" do
       get("#{platform.server}/users/#{user['name']}/keys", superuser)
   end
   let(:list_client_keys) do
-      get("#{platform.server}/#{org_base_url}/clients/#{client['name']}/keys", superuser)
+      get("#{org_base_url}/clients/#{client['name']}/keys", superuser)
   end
 
 
