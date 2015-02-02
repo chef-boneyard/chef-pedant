@@ -68,7 +68,7 @@ RSpec.shared_examples "Cookbook Update" do
         metadata["description"] = "hi there"
         payload["metadata"] = metadata
 
-        put(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
+        put(api_url("/#{cookbook_url_base}/#{cookbook_name}/#{cookbook_version}"),
             admin_user, :payload => payload) do |response|
           response.
             should look_like({
@@ -78,7 +78,7 @@ RSpec.shared_examples "Cookbook Update" do
         end
 
         # verify change happened
-        get(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
+        get(api_url("/#{cookbook_url_base}/#{cookbook_name}/#{cookbook_version}"),
             admin_user) do |response|
           response.
             should look_like({
@@ -104,12 +104,12 @@ RSpec.shared_examples "Cookbook Update" do
         let(:expected_response) { invalid_credential_exact_response }
 
         it "returns 401 and does not update cookbook" do
-          put(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"), invalid_user, :payload => updated_cookbook) do |response|
+          put(api_url("/#{cookbook_url_base}/#{cookbook_name}/#{cookbook_version}"), invalid_user, :payload => updated_cookbook) do |response|
             response.should look_like expected_response
           end
 
           # Verified change did not happen
-          get(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"), admin_user) do |response|
+          get(api_url("/#{cookbook_url_base}/#{cookbook_name}/#{cookbook_version}"), admin_user) do |response|
             response.
               should look_like({
               :status => 200,
@@ -152,7 +152,7 @@ RSpec.shared_examples "Cookbook Update" do
 
         verify_checksum_cleanup(:files) do
 
-          put(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
+          put(api_url("/#{cookbook_url_base}/#{cookbook_name}/#{cookbook_version}"),
               admin_user, :payload => payload) do |response|
             response.
               should look_like({
@@ -163,7 +163,7 @@ RSpec.shared_examples "Cookbook Update" do
 
           # verify change happened
           # TODO make this match on body when URLs are parsable
-          get(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
+          get(api_url("/#{cookbook_url_base}/#{cookbook_name}/#{cookbook_version}"),
               admin_user) do |response|
             response.
               should look_like({
@@ -184,7 +184,7 @@ RSpec.shared_examples "Cookbook Update" do
                               "checksum" => checksums[1],
                               "specificity" => "default"}]
 
-        put(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
+        put(api_url("/#{cookbook_url_base}/#{cookbook_name}/#{cookbook_version}"),
             admin_user, :payload => payload) do |response|
           response.
             should look_like({
@@ -195,7 +195,7 @@ RSpec.shared_examples "Cookbook Update" do
 
         # verify change happened
         # TODO make this match on body when URLs are parsable
-        get(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
+        get(api_url("/#{cookbook_url_base}/#{cookbook_name}/#{cookbook_version}"),
             admin_user) do |response|
           response.
             should look_like({
@@ -214,7 +214,7 @@ RSpec.shared_examples "Cookbook Update" do
                               "checksum" => "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
                               "specificity" => "default"}]
 
-        put(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
+        put(api_url("/#{cookbook_url_base}/#{cookbook_name}/#{cookbook_version}"),
             admin_user, :payload => payload) do |response|
 
           error = ["Manifest has checksum aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa but it hasn't yet been uploaded"]
@@ -230,7 +230,7 @@ RSpec.shared_examples "Cookbook Update" do
         # Verify change did not happen
         payload.delete("files")
 
-        get(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
+        get(api_url("/#{cookbook_url_base}/#{cookbook_name}/#{cookbook_version}"),
             admin_user) do |response|
           response.
             should look_like({
@@ -259,7 +259,7 @@ RSpec.shared_examples "Cookbook Update" do
 
         # Verified initial cookbook
         # TODO make this match on body when URLs are parsable
-        get(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
+        get(api_url("/#{cookbook_url_base}/#{cookbook_name}/#{cookbook_version}"),
             admin_user) do |response|
           response.
             should look_like({
@@ -271,7 +271,7 @@ RSpec.shared_examples "Cookbook Update" do
         verify_checksum_cleanup(:files) do
 
           payload.delete("files")
-          put(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
+          put(api_url("/#{cookbook_url_base}/#{cookbook_name}/#{cookbook_version}"),
               admin_user, :payload => payload) do |response|
             response.
               should look_like({
@@ -282,7 +282,7 @@ RSpec.shared_examples "Cookbook Update" do
 
           # verify change happened
           # TODO make this match on body when URLs are parsable
-          get(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
+          get(api_url("/#{cookbook_url_base}/#{cookbook_name}/#{cookbook_version}"),
               admin_user) do |response|
             response.
               should look_like({
@@ -314,7 +314,7 @@ RSpec.shared_examples "Cookbook Update" do
 
         # Verified initial cookbook
         # TODO make this match on body when URLs are parsable
-        get(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
+        get(api_url("/#{cookbook_url_base}/#{cookbook_name}/#{cookbook_version}"),
             admin_user) do |response|
           response.
             should look_like({
@@ -331,7 +331,7 @@ RSpec.shared_examples "Cookbook Update" do
                               {"name" => "name2", "path" => "path/name2",
                                 "checksum" => checksums[1],
                                 "specificity" => "default"}]
-          put(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
+          put(api_url("/#{cookbook_url_base}/#{cookbook_name}/#{cookbook_version}"),
               admin_user, :payload => payload) do |response|
             response.
               should look_like({
@@ -342,7 +342,7 @@ RSpec.shared_examples "Cookbook Update" do
 
           # verify change happened
           # TODO make this match on body when URLs are parsable
-          get(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
+          get(api_url("/#{cookbook_url_base}/#{cookbook_name}/#{cookbook_version}"),
               admin_user) do |response|
             response.
               should look_like({
@@ -366,7 +366,7 @@ RSpec.shared_examples "Cookbook Update" do
 
         # Verified initial cookbook
         # TODO make this match on body when URLs are parsable
-        get(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
+        get(api_url("/#{cookbook_url_base}/#{cookbook_name}/#{cookbook_version}"),
             admin_user) do |response|
           response.
             should look_like({
@@ -383,7 +383,7 @@ RSpec.shared_examples "Cookbook Update" do
                               {"name" => "name4", "path" => "path/name4",
                                 "checksum" => checksums[3],
                                 "specificity" => "default"}]
-          put(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
+          put(api_url("/#{cookbook_url_base}/#{cookbook_name}/#{cookbook_version}"),
               admin_user, :payload => payload) do |response|
             response.
               should look_like({
@@ -394,7 +394,7 @@ RSpec.shared_examples "Cookbook Update" do
 
           # verify change happened
           # TODO make this match on body when URLs are parsable
-          get(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
+          get(api_url("/#{cookbook_url_base}/#{cookbook_name}/#{cookbook_version}"),
               admin_user) do |response|
             response.
               should look_like({
@@ -421,7 +421,7 @@ RSpec.shared_examples "Cookbook Update" do
 
         # Verified initial cookbook
         # TODO make this match on body when URLs are parsable
-        get(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
+        get(api_url("/#{cookbook_url_base}/#{cookbook_name}/#{cookbook_version}"),
             admin_user) do |response|
           response.
             should look_like({
@@ -441,7 +441,7 @@ RSpec.shared_examples "Cookbook Update" do
                               {"name" => "name4", "path" => "path/name4",
                                 "checksum" => checksums[3],
                                 "specificity" => "default"}]
-          put(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
+          put(api_url("/#{cookbook_url_base}/#{cookbook_name}/#{cookbook_version}"),
               admin_user, :payload => payload) do |response|
             response.
               should look_like({
@@ -452,7 +452,7 @@ RSpec.shared_examples "Cookbook Update" do
 
           # verify change happened
           # TODO make this match on body when URLs are parsable
-          get(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
+          get(api_url("/#{cookbook_url_base}/#{cookbook_name}/#{cookbook_version}"),
               admin_user) do |response|
             response.
               should look_like({
@@ -480,7 +480,7 @@ RSpec.shared_examples "Cookbook Update" do
 
         # Verified initial cookbook
         # TODO make this match on body when URLs are parsable
-        get(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
+        get(api_url("/#{cookbook_url_base}/#{cookbook_name}/#{cookbook_version}"),
             admin_user) do |response|
           response.
             should look_like({
@@ -498,7 +498,7 @@ RSpec.shared_examples "Cookbook Update" do
                             {"name" => "name4", "path" => "path/name4",
                               "checksum" => "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
                               "specificity" => "default"}]
-        put(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
+        put(api_url("/#{cookbook_url_base}/#{cookbook_name}/#{cookbook_version}"),
             admin_user, :payload => payload) do |response|
 
           error = ["Manifest has checksum aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa but it hasn't yet been uploaded"]
@@ -523,7 +523,7 @@ RSpec.shared_examples "Cookbook Update" do
                               "specificity" => "default"}]
 
         # TODO make this match on body when URLs are parsable
-        get(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
+        get(api_url("/#{cookbook_url_base}/#{cookbook_name}/#{cookbook_version}"),
             admin_user) do |response|
           response.
             should look_like({
@@ -607,7 +607,7 @@ RSpec.shared_examples "Cookbook Update" do
         payload = new_cookbook(cookbook_name, cookbook_version)
         payload["frozen?"] = true
 
-        put(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
+        put(api_url("/#{cookbook_url_base}/#{cookbook_name}/#{cookbook_version}"),
             admin_user, :payload => payload) do |response|
           response.
             should look_like({
@@ -620,7 +620,7 @@ RSpec.shared_examples "Cookbook Update" do
       it "can set frozen? to true" do
         payload = new_cookbook(cookbook_name, cookbook_version)
         payload["frozen?"] = true
-        get(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
+        get(api_url("/#{cookbook_url_base}/#{cookbook_name}/#{cookbook_version}"),
             admin_user) do |response|
           response.
             should look_like({
@@ -637,7 +637,7 @@ RSpec.shared_examples "Cookbook Update" do
         metadata["description"] = "this is different"
         payload["metadata"] = metadata
 
-        put(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
+        put(api_url("/#{cookbook_url_base}/#{cookbook_name}/#{cookbook_version}"),
             admin_user, :payload => payload) do |response|
           response.
             should look_like({
@@ -651,7 +651,7 @@ RSpec.shared_examples "Cookbook Update" do
         # Verify that change did not occur
         payload = new_cookbook(cookbook_name, cookbook_version)
         payload["frozen?"] = true
-        get(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
+        get(api_url("/#{cookbook_url_base}/#{cookbook_name}/#{cookbook_version}"),
             admin_user) do |response|
           response.
             should look_like({
@@ -668,7 +668,7 @@ RSpec.shared_examples "Cookbook Update" do
         metadata["description"] = "this is different"
         payload["metadata"] = metadata
 
-        put(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}?force=true"),
+        put(api_url("/#{cookbook_url_base}/#{cookbook_name}/#{cookbook_version}?force=true"),
             admin_user, :payload => payload) do |response|
           # You can modify things, but you can't unfreeze the cookbook
           payload["frozen?"] = true
@@ -680,7 +680,7 @@ RSpec.shared_examples "Cookbook Update" do
         end
 
         # Verify that change did occur
-        get(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
+        get(api_url("/#{cookbook_url_base}/#{cookbook_name}/#{cookbook_version}"),
             admin_user) do |response|
           response.
             should look_like({
@@ -697,7 +697,7 @@ RSpec.shared_examples "Cookbook Update" do
         metadata["description"] = "this is different"
         payload["metadata"] = metadata
 
-        put(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}?force=false"),
+        put(api_url("/#{cookbook_url_base}/#{cookbook_name}/#{cookbook_version}?force=false"),
             admin_user, :payload => payload) do |response|
           # You can modify things, but you can't unfreeze the cookbook
           payload["frozen?"] = true
@@ -711,7 +711,7 @@ RSpec.shared_examples "Cookbook Update" do
         end
 
         # Verify that change did occur
-        get(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
+        get(api_url("/#{cookbook_url_base}/#{cookbook_name}/#{cookbook_version}"),
             admin_user) do |response|
           payload = new_cookbook(cookbook_name, cookbook_version)
           payload["frozen?"] = true

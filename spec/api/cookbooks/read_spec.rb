@@ -22,6 +22,8 @@ require 'api/cookbooks_shared/read'
 
 describe "Cookbooks API endpoint", :cookbooks do
 
+  let(:cookbook_url_base) { "cookbooks" }
+
   include_examples "Cookbook Read"
 
 end # describe Cookbooks API endpoint

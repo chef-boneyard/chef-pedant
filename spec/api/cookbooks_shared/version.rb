@@ -24,7 +24,7 @@ RSpec.shared_examples "Cookbook Versions API" do
 
   let(:non_existent_cookbook){ "fakecookbook" }
   let(:fake_version){ "1.0.0" }
-  let(:latest_cookbook_version_url) { api_url("/cookbooks/#{cookbook_name}/_latest") }
+  let(:latest_cookbook_version_url) { api_url("/#{cookbook_url_base}/#{cookbook_name}/_latest") }
 
   let(:fetch_cookbook_version_success_response) do
     {

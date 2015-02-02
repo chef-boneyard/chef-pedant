@@ -28,6 +28,8 @@ require 'api/cookbooks_shared/update'
 
 describe "Cookbooks API endpoint", :cookbooks do
 
+  let(:cookbook_url_base) { "cookbooks" }
+
   include_examples "Cookbook Update"
 
 end

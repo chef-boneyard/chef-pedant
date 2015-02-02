@@ -17,6 +17,8 @@ require 'api/cookbooks_shared/version'
 
 describe "Cookbook Versions API endpoint, GET", :cookbooks do
 
+  let(:cookbook_url_base) { "cookbooks" }
+
   include_examples "Cookbook Versions API"
 
 end

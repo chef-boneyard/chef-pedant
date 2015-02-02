@@ -25,6 +25,11 @@ describe 'Environments Endpoint Open Source Permission Checks', :platform => :op
   include Pedant::OpenSource::PermissionChecks
   include_context 'environment_body_util'
 
+  # Cookbook tests are parameterized to support common testing of both
+  # /cookbooks and /cookbook_artifacts, so we need to specify that we want to
+  # talk to /cookbooks
+  let(:cookbook_url_base) { "cookbooks" }
+
   # Until we rename the requestors
   let(:admin_requestor){admin_user}
 

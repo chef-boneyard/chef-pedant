@@ -17,6 +17,8 @@ require 'api/cookbooks_shared/named_filters'
 
 describe "Cookbooks API endpoint, named filters", :cookbooks do
 
+  let(:cookbook_url_base) { "cookbooks" }
+
   include_examples "Cookbook Named Filters"
 
 end

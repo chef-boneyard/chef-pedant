@@ -17,6 +17,8 @@ require 'api/cookbooks_shared/open_source_permission'
 
 describe 'Cookbooks Endpoint Open Source Permission Checks', :platform => :open_source do
 
+  let(:cookbook_url_base) { "cookbooks" }
+
   include_examples "Cookbook API Open Source Permissions"
 
 end

@@ -19,7 +19,7 @@ RSpec.shared_examples "Cookbook Named Filters" do
   include Pedant::RSpec::CookbookUtil
 
   let(:request_method) { :GET }
-  let(:request_url)    { api_url "/cookbooks/#{named_filter}" }
+  let(:request_url)    { api_url "/#{cookbook_url_base}/#{named_filter}" }
   let(:requestor)      { admin_user }
 
   # Generates a hash of cookbook name -> cookbook version url for the
@@ -30,7 +30,7 @@ RSpec.shared_examples "Cookbook Named Filters" do
       name, version_specs  = cookbook_spec
       latest_version = version_specs.first
       version_string, _recipe_names = latest_version
-      body[name] = api_url("/cookbooks/#{name}/#{version_string}")
+      body[name] = api_url("/#{cookbook_url_base}/#{name}/#{version_string}")
       body
     end
   end
@@ -42,10 +42,10 @@ RSpec.shared_examples "Cookbook Named Filters" do
     cookbook.inject({}) do |body, cookbook_spec|
       name, version_specs  = cookbook_spec
       body[name] = {
-        "url" => api_url("/cookbooks/#{name}"),
+        "url" => api_url("/#{cookbook_url_base}/#{name}"),
         "versions" => version_specs.map do |version, recipes|
           { "version" => version,
-            "url" => api_url("/cookbooks/#{name}/#{version}")
+            "url" => api_url("/#{cookbook_url_base}/#{name}/#{version}")
           }
         end
       }

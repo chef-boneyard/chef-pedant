@@ -23,7 +23,7 @@ RSpec.shared_examples "Cookbook Create" do
   context "PUT /cookbooks/<name>/<version> [create]" do
     include Pedant::RSpec::Validations::Create
     let(:request_method){:PUT}
-    let(:request_url){api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}")}
+    let(:request_url){api_url("/#{cookbook_url_base}/#{cookbook_name}/#{cookbook_version}")}
     shared(:requestor){admin_user}
 
     let(:default_resource_attributes){ new_cookbook(cookbook_name, cookbook_version)}
@@ -35,7 +35,9 @@ RSpec.shared_examples "Cookbook Create" do
       let(:cookbook_name) { "pedant_basic" }
       let(:cookbook_version) { "1.0.0" }
       let(:created_resource) { default_resource_attributes }
-      it { should look_like created_exact_response }
+      it "creates a basic cookbook" do
+        should look_like created_exact_response
+      end
     end
 
     # Start using the new validation macros
@@ -44,7 +46,7 @@ RSpec.shared_examples "Cookbook Create" do
       let(:cookbook_name) { "cookbook_name" }
       let(:cookbook_version) { "1.2.3" }
 
-      let(:resource_url){api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}")}
+      let(:resource_url){api_url("/#{cookbook_url_base}/#{cookbook_name}/#{cookbook_version}")}
       let(:persisted_resource_response){ get(resource_url, requestor) }
 
       after(:each){ delete_cookbook(requestor, cookbook_name, cookbook_version)}
@@ -182,7 +184,7 @@ RSpec.shared_examples "Cookbook Create" do
 
       it "invalid cookbook name in URL is a 400" do
         payload = {}
-        put(api_url("/cookbooks/first@second/1.2.3"), admin_user,
+        put(api_url("/#{cookbook_url_base}/first@second/1.2.3"), admin_user,
             :payload => payload) do |response|
           error = "Invalid cookbook name 'first@second' using regex: 'Malformed cookbook name. Must only contain A-Z, a-z, 0-9, _ or -'."
           response.should look_like({
@@ -196,7 +198,7 @@ RSpec.shared_examples "Cookbook Create" do
 
       it "mismatched metadata.cookbook_version is a 400" do
         payload = new_cookbook(cookbook_name, "0.0.1")
-        put(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"), admin_user,
+        put(api_url("/#{cookbook_url_base}/#{cookbook_name}/#{cookbook_version}"), admin_user,
             :payload => payload) do |response|
           error = "Field 'name' invalid"
           response.should look_like({
@@ -210,7 +212,7 @@ RSpec.shared_examples "Cookbook Create" do
 
       it "mismatched cookbook_name is a 400" do
         payload = new_cookbook("foobar", cookbook_version)
-        put(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"), admin_user,
+        put(api_url("/#{cookbook_url_base}/#{cookbook_name}/#{cookbook_version}"), admin_user,
             :payload => payload) do |response|
           error = "Field 'name' invalid"
           response.should look_like({
@@ -236,7 +238,7 @@ RSpec.shared_examples "Cookbook Create" do
                                   "specificity" => "default"
                                 }
                                ]
-          put(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
+          put(api_url("/#{cookbook_url_base}/#{cookbook_name}/#{cookbook_version}"),
               admin_user, :payload => payload) do |response|
             error = "Manifest has a checksum that hasn't been uploaded."
             response.should look_like({
@@ -283,7 +285,7 @@ RSpec.shared_examples "Cookbook Create" do
         # elsewhere in the test suite.
         payload = retrieved_cookbook(cookbook_name, cookbook_version)
 
-        put(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
+        put(api_url("/#{cookbook_url_base}/#{cookbook_name}/#{cookbook_version}"),
             admin_user,
             :payload => payload) do |response|
           response.
@@ -296,7 +298,7 @@ RSpec.shared_examples "Cookbook Create" do
 
       it "allows override of defaults" do
         payload = new_cookbook(cookbook_name, cookbook_version, opts)
-        put(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
+        put(api_url("/#{cookbook_url_base}/#{cookbook_name}/#{cookbook_version}"),
             admin_user, :payload => payload) do |response|
           response.
             should look_like({
@@ -316,13 +318,13 @@ RSpec.shared_examples "Cookbook Create" do
 
     after :each do
       [cookbook_version1, cookbook_version2].each do |v|
-        delete(api_url("/cookbooks/#{cookbook_name}/#{v}"), admin_user)
+        delete(api_url("/#{cookbook_url_base}/#{cookbook_name}/#{v}"), admin_user)
       end
     end
 
     it "allows us to create 2 versions of the same cookbook" do
       payload = new_cookbook(cookbook_name, cookbook_version1, {})
-      put(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version1}"),
+      put(api_url("/#{cookbook_url_base}/#{cookbook_name}/#{cookbook_version1}"),
         admin_user,
         :payload => payload) do |response|
         response.should look_like({
@@ -332,7 +334,7 @@ RSpec.shared_examples "Cookbook Create" do
       end
 
       payload2 = new_cookbook(cookbook_name, cookbook_version2, {})
-      put(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version2}"),
+      put(api_url("/#{cookbook_url_base}/#{cookbook_name}/#{cookbook_version2}"),
         admin_user,
         :payload => payload2) do |response|
         response.should look_like({
@@ -341,7 +343,7 @@ RSpec.shared_examples "Cookbook Create" do
           })
       end
 
-      get(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version1}"),
+      get(api_url("/#{cookbook_url_base}/#{cookbook_name}/#{cookbook_version1}"),
         admin_user) do |response|
         response.should look_like({
                                    :status => 200,
@@ -349,7 +351,7 @@ RSpec.shared_examples "Cookbook Create" do
                                   })
       end
 
-      get(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version2}"),
+      get(api_url("/#{cookbook_url_base}/#{cookbook_name}/#{cookbook_version2}"),
         admin_user) do |response|
         response.should look_like({
                                    :status => 200,

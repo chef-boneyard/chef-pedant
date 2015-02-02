@@ -24,7 +24,7 @@ RSpec.shared_examples "Cookbook API Open Source Permissions" do
   let(:admin_requestor){admin_user}
 
   context '/cookbooks' do
-    let(:request_url){api_url("/cookbooks")}
+    let(:request_url){api_url("/#{cookbook_url_base}")}
 
     context 'GET' do
       let(:request_method){:GET}
@@ -40,7 +40,7 @@ RSpec.shared_examples "Cookbook API Open Source Permissions" do
   end
 
   context '/cookbooks/_latest' do
-    let(:request_url){api_url("/cookbooks/_latest")}
+    let(:request_url){api_url("/#{cookbook_url_base}/_latest")}
 
     context 'GET' do
       let(:request_method){:GET}
@@ -56,7 +56,7 @@ RSpec.shared_examples "Cookbook API Open Source Permissions" do
   end
 
   context '/cookbooks/_recipes' do
-    let(:request_url){api_url("/cookbooks/_recipes")}
+    let(:request_url){api_url("/#{cookbook_url_base}/_recipes")}
 
     context 'GET' do
       let(:request_method){:GET}
@@ -73,7 +73,7 @@ RSpec.shared_examples "Cookbook API Open Source Permissions" do
 
   context '/cookbooks/<cookbook>' do
     include_context 'with temporary testing cookbook'
-    let(:request_url){api_url("/cookbooks/#{cookbook_name}")}
+    let(:request_url){api_url("/#{cookbook_url_base}/#{cookbook_name}")}
 
     context 'GET' do
       let(:request_method){:GET}
@@ -90,7 +90,7 @@ RSpec.shared_examples "Cookbook API Open Source Permissions" do
 
 
   context '/cookbooks/<cookbook>/<version>' do
-    let(:request_url){api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}")}
+    let(:request_url){api_url("/#{cookbook_url_base}/#{cookbook_name}/#{cookbook_version}")}
     include_context 'with temporary testing cookbook'
 
     context 'GET' do
