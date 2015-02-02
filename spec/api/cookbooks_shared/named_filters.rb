@@ -15,7 +15,7 @@
 
 require 'pedant/rspec/cookbook_util'
 
-describe "Cookbooks API endpoint, named filters", :cookbooks do
+RSpec.shared_examples "Cookbook Named Filters" do
   include Pedant::RSpec::CookbookUtil
 
   let(:request_method) { :GET }
@@ -29,7 +29,7 @@ describe "Cookbooks API endpoint, named filters", :cookbooks do
     latest.inject({}) do |body, cookbook_spec|
       name, version_specs  = cookbook_spec
       latest_version = version_specs.first
-      version_string, recipe_names = latest_version
+      version_string, _recipe_names = latest_version
       body[name] = api_url("/cookbooks/#{name}/#{version_string}")
       body
     end
@@ -60,7 +60,7 @@ describe "Cookbooks API endpoint, named filters", :cookbooks do
     nested = latest.map do |cookbook_spec|
       cookbook_name, version_specs = cookbook_spec
       latest_version = version_specs.first
-      version_string, recipe_names =latest_version
+      _version_string, recipe_names =latest_version
 
       # don't sort the recipes for the Ruby endpoint; CouchDB keeps them in insertion order
       recipe_names.sort!

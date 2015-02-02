@@ -26,7 +26,7 @@ require 'pedant/rspec/cookbook_util'
 # to actually match on the generate response body as well
 #
 
-describe "Cookbooks API endpoint", :cookbooks do
+RSpec.shared_examples "Cookbook Update" do
   include Pedant::RSpec::CookbookUtil
 
   context "PUT /cookbooks/<name>/<version> [update]" do

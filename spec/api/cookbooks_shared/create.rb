@@ -17,7 +17,7 @@
 require 'pedant/rspec/cookbook_util'
 require 'pedant/rspec/validations'
 
-describe "Cookbooks API endpoint", :cookbooks do
+RSpec.shared_examples "Cookbook Create" do
   include Pedant::RSpec::CookbookUtil
 
   context "PUT /cookbooks/<name>/<version> [create]" do

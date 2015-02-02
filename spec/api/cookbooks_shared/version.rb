@@ -15,7 +15,7 @@
 
 require 'pedant/rspec/cookbook_util'
 
-describe "Cookbook Versions API endpoint, GET", :cookbooks do
+RSpec.shared_examples "Cookbook Versions API" do
   include Pedant::RSpec::CookbookUtil
 
   let(:request_method) { :GET }

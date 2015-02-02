@@ -20,7 +20,7 @@ require 'pedant/rspec/cookbook_util'
 # of the S3 URLs that should be returned for all the files in the
 # cookbook
 
-describe "Cookbooks API endpoint", :cookbooks do
+RSpec.shared_examples "Cookbook Read" do
   include Pedant::RSpec::CookbookUtil
 
   context "GET /cookbooks" do

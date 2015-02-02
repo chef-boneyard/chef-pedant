@@ -16,7 +16,7 @@
 require 'pedant/rspec/cookbook_util'
 require 'pedant/opensource/permission_checks'
 
-describe 'Cookbooks Endpoint Open Source Permission Checks', :platform => :open_source do
+RSpec.shared_examples "Cookbook API Open Source Permissions" do
   include Pedant::RSpec::CookbookUtil
   include Pedant::OpenSource::PermissionChecks
 

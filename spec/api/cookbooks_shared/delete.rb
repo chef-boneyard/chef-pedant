@@ -15,7 +15,7 @@
 
 require 'pedant/rspec/cookbook_util'
 
-describe "Cookbooks API endpoint", :cookbooks do
+RSpec.shared_examples "Cookbook Delete" do
   include Pedant::RSpec::CookbookUtil
 
   context "DELETE /cookbooks/<name>/<version>" do
