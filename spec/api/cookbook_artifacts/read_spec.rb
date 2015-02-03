@@ -13,12 +13,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-require 'api/cookbooks_shared/named_filters'
+require 'api/cookbooks_shared/read'
 
-describe "Cookbooks API endpoint, named filters", :cookbooks do
+# FIXME  We don't test GET /cookbooks/NAME/VERSION when we have
+# any files in the segments.  Thus we're not checking the creation
+# of the S3 URLs that should be returned for all the files in the
+# cookbook
 
-  let(:cookbook_url_base) { "cookbooks" }
+describe "Cookbook Artifacts API endpoint", cookbook_artifacts: true, skip: !Pedant::Config.policies? do
 
-  include_examples "Cookbook Named Filters"
+  let(:cookbook_url_base) { "cookbook_artifacts" }
+
+  include_examples "Cookbook Read"
 
 end

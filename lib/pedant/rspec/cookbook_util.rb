@@ -112,7 +112,7 @@ module Pedant
       # module ClassMethods
 
       let(:named_cookbook_url) { api_url(named_cookbook_path) }
-      let(:named_cookbook_path) { "/cookbooks/#{cookbook_name}/#{cookbook_version}" }
+      let(:named_cookbook_path) { "/#{cookbook_url_base}/#{cookbook_name}/#{cookbook_version}" }
 
       let(:cookbook_version_not_found_exact_response) do
         {
@@ -215,15 +215,15 @@ module Pedant
       end
 
       def cookbook_url(cookbook_name)
-        api_url("/cookbooks/#{cookbook_name}")
+        api_url("/#{cookbook_url_base}/#{cookbook_name}")
       end
 
       def cookbook_version_url(cookbook_name, cookbook_version)
-        api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}")
+        api_url("/#{cookbook_url_base}/#{cookbook_name}/#{cookbook_version}")
       end
 
       def delete_cookbook(requestor, name, version)
-        delete(api_url("/cookbooks/#{name}/#{version}"),
+        delete(api_url("/#{cookbook_url_base}/#{name}/#{version}"),
                requestor)
       end
 
@@ -233,7 +233,7 @@ module Pedant
       end
 
       def upload_cookbook(requestor, name, version, payload)
-        put(api_url("/cookbooks/#{name}/#{version}"),
+        put(api_url("/#{cookbook_url_base}/#{name}/#{version}"),
             requestor, :payload => payload)
       end
 
@@ -432,7 +432,7 @@ module Pedant
       #   }
       #
       def checksums_for_segment_type(segment_type, cb_version=cookbook_version)
-        get(api_url("/cookbooks/#{cookbook_name}/#{cb_version}"),
+        get(api_url("/#{cookbook_url_base}/#{cookbook_name}/#{cb_version}"),
           admin_user) do |response|
           segment_contents = parse(response)[segment_type.to_s] || []
           segment_contents.inject({}) do |return_hash, segment_member|
@@ -482,7 +482,7 @@ module Pedant
             else
               payload[key] = value
             end
-            put(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
+            put(api_url("/#{cookbook_url_base}/#{cookbook_name}/#{cookbook_version}"),
                  admin_user, :payload => payload) do |response|
                   if (ignores_value)
                     payload[key] = actual_value
@@ -495,7 +495,7 @@ module Pedant
                 end
 
                 # Verified change (or creation) happened
-                get(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
+                get(api_url("/#{cookbook_url_base}/#{cookbook_name}/#{cookbook_version}"),
                     admin_user) do |response|
                       response.
                         should look_like({
@@ -559,7 +559,7 @@ module Pedant
             else
               payload[key] = value
             end
-            put(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
+            put(api_url("/#{cookbook_url_base}/#{cookbook_name}/#{cookbook_version}"),
                 admin_user, :payload => payload) do |response|
                   if (server_error)
                     response.should =~ /^HTTP\/1.1 500 Internal Server Error/
@@ -576,7 +576,7 @@ module Pedant
 
                 # Verified change (or creation) did not happen
                 if (create)
-                  get(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
+                  get(api_url("/#{cookbook_url_base}/#{cookbook_name}/#{cookbook_version}"),
                       admin_user) do |response|
                         response.
                           should look_like({
@@ -584,7 +584,7 @@ module Pedant
                         })
                       end
                 else
-                  get(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
+                  get(api_url("/#{cookbook_url_base}/#{cookbook_name}/#{cookbook_version}"),
                       admin_user) do |response|
                         payload = new_cookbook(cookbook_name, cookbook_version)
                         response.
@@ -640,13 +640,13 @@ module Pedant
             end
             put_payload["metadata"] = put_metadata
 
-            put(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"), admin_user, :payload => put_payload) do |response|
+            put(api_url("/#{cookbook_url_base}/#{cookbook_name}/#{cookbook_version}"), admin_user, :payload => put_payload) do |response|
               # The PUT response returns the payload exactly as it was sent
               response.should look_like({:status => _expected_status, :body_exact => put_payload})
             end
 
             # Verified change (or creation) happened
-            get(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"), admin_user) do |response|
+            get(api_url("/#{cookbook_url_base}/#{cookbook_name}/#{cookbook_version}"), admin_user) do |response|
               get_response = cookbook.dup
               if (new_value)
                 get_metadata = get_response["metadata"]
@@ -715,7 +715,7 @@ module Pedant
               metadata[key] = value
             end
             payload["metadata"] = metadata
-            put(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
+            put(api_url("/#{cookbook_url_base}/#{cookbook_name}/#{cookbook_version}"),
                 admin_user, :payload => payload) do |response|
                   if (server_error)
                     response.should =~ /^HTTP\/1.1 500 Internal Server Error/
@@ -732,7 +732,7 @@ module Pedant
 
                 # Verified change (or creation) did not happen
                 if (create)
-                  get(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
+                  get(api_url("/#{cookbook_url_base}/#{cookbook_name}/#{cookbook_version}"),
                       admin_user) do |response|
                         response.
                           should look_like({
@@ -740,7 +740,7 @@ module Pedant
                         })
                       end
                 else
-                  get(api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}"),
+                  get(api_url("/#{cookbook_url_base}/#{cookbook_name}/#{cookbook_version}"),
                       admin_user) do |response|
                         payload = new_cookbook(cookbook_name, cookbook_version)
                         response.

@@ -12,13 +12,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
 
-require 'api/cookbooks_shared/named_filters'
+require 'api/cookbooks_shared/create'
 
-describe "Cookbooks API endpoint, named filters", :cookbooks do
+describe "Cookbook Artifacts API endpoint", cookbook_artifacts: true, skip: !Pedant::Config.policies? do
 
-  let(:cookbook_url_base) { "cookbooks" }
+  let(:cookbook_url_base) { "cookbook_artifacts" }
 
-  include_examples "Cookbook Named Filters"
+  include_examples "Cookbook Create"
 
 end

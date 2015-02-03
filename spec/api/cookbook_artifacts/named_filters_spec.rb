@@ -15,9 +15,9 @@
 
 require 'api/cookbooks_shared/named_filters'
 
-describe "Cookbooks API endpoint, named filters", :cookbooks do
+describe "Cookbook Artifacts API endpoint, named filters", cookbook_artifacts: true, skip: !Pedant::Config.policies? do
 
-  let(:cookbook_url_base) { "cookbooks" }
+  let(:cookbook_url_base) { "cookbook_artifacts" }
 
   include_examples "Cookbook Named Filters"
 

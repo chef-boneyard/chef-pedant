@@ -13,12 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-require 'api/cookbooks_shared/named_filters'
+require 'api/cookbooks_shared/open_source_permission'
 
-describe "Cookbooks API endpoint, named filters", :cookbooks do
+describe 'Cookbook Artifacts Endpoint Open Source Permission Checks', platform: :open_source, cookbook_artifacts: true, skip: !Pedant::Config.policies? do
 
-  let(:cookbook_url_base) { "cookbooks" }
+  let(:cookbook_url_base) { "cookbook_artifacts" }
 
-  include_examples "Cookbook Named Filters"
+  include_examples "Cookbook API Open Source Permissions"
 
 end

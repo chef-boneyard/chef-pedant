@@ -1,4 +1,4 @@
-# Copyright: Copyright (c) 2012 Opscode, Inc.
+# Copyright: Copyright (c) 2015 Chef Software, Inc.
 # License: Apache License, Version 2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,128 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-require 'pedant/rspec/cookbook_util'
-require 'pedant/opensource/permission_checks'
+require 'api/cookbooks_shared/open_source_permission'
 
 describe 'Cookbooks Endpoint Open Source Permission Checks', :platform => :open_source do
-  include Pedant::RSpec::CookbookUtil
-  include Pedant::OpenSource::PermissionChecks
 
-  # Until we rename the requestors
-  let(:admin_requestor){admin_user}
+  let(:cookbook_url_base) { "cookbooks" }
 
-  context '/cookbooks' do
-    let(:request_url){api_url("/cookbooks")}
-
-    context 'GET' do
-      let(:request_method){:GET}
-      include_context 'permission checks' do
-        let(:admin_response){ok_response}
-        let(:non_admin_response){ok_response}
-      end
-    end
-
-    should_not_allow_method :POST
-    should_not_allow_method :PUT
-    should_not_allow_method :DELETE
-  end
-
-  context '/cookbooks/_latest' do
-    let(:request_url){api_url("/cookbooks/_latest")}
-
-    context 'GET' do
-      let(:request_method){:GET}
-      include_context 'permission checks' do
-        let(:admin_response){ok_response}
-        let(:non_admin_response){ok_response}
-      end
-    end
-
-    should_not_allow_method :POST
-    should_not_allow_method :PUT
-    should_not_allow_method :DELETE
-  end
-
-  context '/cookbooks/_recipes' do
-    let(:request_url){api_url("/cookbooks/_recipes")}
-
-    context 'GET' do
-      let(:request_method){:GET}
-      include_context 'permission checks' do
-        let(:admin_response){ok_response}
-        let(:non_admin_response){ok_response}
-      end
-    end
-
-    should_not_allow_method :POST
-    should_not_allow_method :PUT
-    should_not_allow_method :DELETE
-  end
-
-  context '/cookbooks/<cookbook>' do
-    include_context 'with temporary testing cookbook'
-    let(:request_url){api_url("/cookbooks/#{cookbook_name}")}
-
-    context 'GET' do
-      let(:request_method){:GET}
-      include_context 'permission checks' do
-        let(:admin_response){ok_response}
-        let(:non_admin_response){ok_response}
-      end
-    end
-
-    should_not_allow_method :POST
-    should_not_allow_method :PUT
-    should_not_allow_method :DELETE
-  end
-
-
-  context '/cookbooks/<cookbook>/<version>' do
-    let(:request_url){api_url("/cookbooks/#{cookbook_name}/#{cookbook_version}")}
-    include_context 'with temporary testing cookbook'
-
-    context 'GET' do
-      let(:request_method){:GET}
-      include_context 'permission checks' do
-        let(:admin_response){ok_response}
-        let(:non_admin_response){ok_response}
-      end
-    end
-
-    should_not_allow_method :POST
-
-    # Cookbook creation
-    context 'PUT' do
-      let(:request_method){:PUT}
-      # Since cookbook creation is via a PUT directly to the cookbook
-      # resource, rather than a POST to a "container" resource (like
-      # everything else), we aren't using the temporary cookbook
-      # introduced by the 'with temporary testing cookbook' shared
-      # context for these tests.
-      #
-      # Instead, we are generating our own cookbook for these PUT
-      # tests, and cleaning up after ourselves.
-      let(:cookbook_name){"foo"}
-      let(:cookbook_version){"6.6.6"}
-      let(:request_payload){new_cookbook(cookbook_name, cookbook_version)}
-
-      after(:each) do
-        delete_cookbook(admin_user, cookbook_name, cookbook_version)
-      end
-
-      include_context 'permission checks' do
-        let(:admin_response){created_response}
-        let(:non_admin_response){forbidden_response}
-      end
-    end
-
-    context 'DELETE' do
-      let(:request_method){:DELETE}
-      include_context 'permission checks' do
-        let(:admin_response){ok_response}
-        let(:non_admin_response){forbidden_response}
-      end
-    end
-  end
+  include_examples "Cookbook API Open Source Permissions"
 
 end

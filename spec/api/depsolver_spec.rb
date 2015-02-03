@@ -20,6 +20,14 @@ describe "Depsolver API endpoint", :depsolver do
   include Pedant::RSpec::CookbookUtil
   include Pedant::RSpec::EnvironmentUtil
 
+  # Cookbook tests are parameterized to support common testing of both
+  # /cookbooks and /cookbook_artifacts, so we need to specify that we want to
+  # talk to /cookbooks. Have to define this as a method rather than a `let`
+  # because we access it in `before(:all)` hooks
+  def cookbook_url_base
+    "cookbooks"
+  end
+
   shared(:env){ "test_depsolver_env"}
   shared(:no_cookbooks_env) { "test_depsolver_no_cookbooks_env" }
   shared(:cookbook_name){"foo"}
