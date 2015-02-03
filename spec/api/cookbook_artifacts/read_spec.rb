@@ -20,7 +20,7 @@ require 'api/cookbooks_shared/read'
 # of the S3 URLs that should be returned for all the files in the
 # cookbook
 
-describe "Cookbook Artifacts API endpoint", :cookbook_artifacts do
+describe "Cookbook Artifacts API endpoint", cookbook_artifacts: true, skip: !Pedant::Config.policies? do
 
   let(:cookbook_url_base) { "cookbook_artifacts" }
 

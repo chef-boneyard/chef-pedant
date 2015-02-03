@@ -15,7 +15,7 @@
 
 require 'api/cookbooks_shared/version'
 
-describe "Cookbook Artifacts Versions API endpoint, GET", :cookbook_artifacts do
+describe "Cookbook Artifacts Versions API endpoint, GET", cookbook_artifacts: true, skip: !Pedant::Config.policies? do
 
   let(:cookbook_url_base) { "cookbook_artifacts" }
 

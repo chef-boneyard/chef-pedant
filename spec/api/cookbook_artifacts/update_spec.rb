@@ -26,7 +26,7 @@ require 'api/cookbooks_shared/update'
 # to actually match on the generate response body as well
 #
 
-describe "Cookbook Artifacts API endpoint", :cookbook_artifacts do
+describe "Cookbook Artifacts API endpoint", cookbook_artifacts: true, skip: !Pedant::Config.policies? do
 
   let(:cookbook_url_base) { "cookbook_artifacts" }
 

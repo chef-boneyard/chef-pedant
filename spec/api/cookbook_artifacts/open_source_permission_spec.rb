@@ -15,7 +15,7 @@
 
 require 'api/cookbooks_shared/open_source_permission'
 
-describe 'Cookbook Artifacts Endpoint Open Source Permission Checks', :platform => :open_source, :cookbook_artifacts => true do
+describe 'Cookbook Artifacts Endpoint Open Source Permission Checks', platform: :open_source, cookbook_artifacts: true, skip: !Pedant::Config.policies? do
 
   let(:cookbook_url_base) { "cookbook_artifacts" }
 
