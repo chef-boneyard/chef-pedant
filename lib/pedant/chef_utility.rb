@@ -21,7 +21,6 @@ module Pedant
     # Generate a knife.rb file from a template for a given user.
     # Prefer calling +populate_dot_chef+ over calling this directly.
     def self.generate_knife(user_name, server_url, key_dir, destination)
-      puts "Generating knife files: #{destination} ..."
       # The template file is currently located right next to this
       # source file... seemed like the sanest place for it at the time
       template = File.read(Pathname.new(__FILE__).dirname.join("knife.rb.erb"))
@@ -31,7 +30,6 @@ module Pedant
                                 key_dir:    key_dir,
                                 server_url: server_url))
       end
-      puts "Done."
     end
 
     # Takes a Pedant::Requestor object and a path to a directory and
@@ -51,7 +49,6 @@ module Pedant
     # allows for us to create multiple knife.rb files for different
     # users / testing scenarios.
     def self.populate_dot_chef(user, server_url, dot_chef_dir, knife_rb_file_name="knife.rb")
-      puts "Populating dot_chef for knife user: #{user}"
       self.generate_knife(user.name, server_url, dot_chef_dir, "#{dot_chef_dir}/#{knife_rb_file_name}")
       self.write_user_pem(user, dot_chef_dir)
     end
