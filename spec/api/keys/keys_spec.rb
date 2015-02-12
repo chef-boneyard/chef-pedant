@@ -152,7 +152,7 @@ describe "/keys endpoint", :keys do
   end
 
   after(:all) do
-    @keys.each do |key|
+    @keys.each do |name, key|
       key[:pubkey_file].close
       key[:pubkey_file].unlink
       key[:privkey_file].close
@@ -581,7 +581,7 @@ describe "/keys endpoint", :keys do
     end
   end
 
-  context "listing keys", :focus do
+  context "listing keys" do
     # TODO Consider making these globals instead of lets - it's painfully slow to have this, and org association re-run
     # with every example, and since we don't change the data we care about in these tests, there's no real benefit in terms
     # of having these users/clients/associations recreated per test.
