@@ -74,7 +74,6 @@ module Pedant
     # Generate a knife.rb file from a template for a given user.
     # Prefer calling +populate_dot_chef+ over calling this directly.
     def generate_knife_files!
-      puts "Generating knife files: #{knife_rb_path}"
 
       # The template file is currently located right next to this
       # source file... seemed like the sanest place for it at the time
@@ -101,7 +100,6 @@ module Pedant
     # allows for us to create multiple knife.rb files for different
     # users / testing scenarios.
     def populate_dot_chef!
-      puts "Populating dot_chef for knife user: #{name}"
       generate_knife_files!
       generate_user_pem!
     end
