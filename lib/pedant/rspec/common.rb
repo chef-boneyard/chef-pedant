@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+require 'rspec-shared/methods'
+
 require 'pedant/concern'
 require 'pedant/json'
 require 'pedant/request'
@@ -27,11 +29,15 @@ end
 module Pedant
   module RSpec
     module Common
+
       extend Pedant::Concern
       # We use a concern instead of a shared context in order to access
       # the complete Rspec DSL, plus extensions (metadata, shared(), etc.)
 
-      included do
+      included do |base|
+
+        base.extend(RSpecShared::Methods)
+
         include Pedant::JSON
         include Pedant::Request
         include Pedant::RSpec::CommonResponses
