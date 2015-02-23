@@ -670,6 +670,7 @@ describe "/keys endpoint", :keys do
       delete("#{platform.server}/organizations/#{$other_org_name}/clients/#{$other_org_name}-validator", superuser).should look_like({:status => 200})
       delete("#{platform.server}/organizations/#{$other_org_name}", superuser).should look_like({:status => 200})
     end
+
     context "posting keys" do
       context "for a client" do
         before(:each) do
@@ -708,6 +709,48 @@ describe "/keys endpoint", :keys do
             payload = payload.merge(setup[:replace]) if setup[:replace]
             setup[:delete] and setup[:delete].each { |field| payload.delete(field) }
             post("#{org_base_url}/clients/#{org_client_name}/keys", superuser, :payload => payload).should look_like({:status => setup[:response_code]})
+          end
+        end
+        it "that doesn't exist" do
+            post("#{org_base_url}/clients/bob/keys", superuser, :payload => key_payload).should look_like({:status => 404})
+        end
+        context "as...", :authorization do
+          it "an invalid user fails with 401", :authentication do
+            post("#{org_base_url}/clients/#{org_client_name}/keys", requestor("bob", user['private_key']), :payload => key_payload).should look_like({:status => 401})
+          end
+          it "the org client itself succeeds" do
+            post("#{org_base_url}/clients/#{org_client_name}/keys", org_client, :payload => key_payload).should look_like({:status => 201})
+          end
+          context "an unrelated user" do
+            before do
+              post("#{platform.server}/users", superuser, :payload => make_user_payload(org_user_payload)).should look_like({:status => 201})
+              post("#{org_base_url}/users", superuser, :payload => { "username" => org_user_name} ).should look_like({:status => 201})
+            end
+            after do
+              delete("#{org_base_url}/users/#{org_user_name}", superuser).should look_like({:status => 200})
+              delete("#{platform.server}/users/#{org_user_name}", superuser).should look_like({:status => 200})
+            end
+            it "fails with 403" do
+              post("#{org_base_url}/clients/#{org_client_name}/keys", org_user, :payload => key_payload).should look_like({:status =>  403})
+            end
+          end
+          it "the superuser succeeds" do
+            post("#{org_base_url}/clients/#{org_client_name}/keys", superuser, :payload => key_payload).should look_like({:status => 201})
+          end
+          context "as an org admin of a member org" do
+            before(:each) do
+              post("#{platform.server}/users", superuser, :payload => make_user_payload(org_admin_payload)).should look_like({:status => 201} )
+              post("#{org_base_url}/users", superuser, :payload => { "username" => org_admin_name} ).should look_like({:status => 201})
+              platform.add_user_to_group($org['name'], org_admin, "admins")
+            end
+            after(:each) do
+              platform.remove_user_from_group($org['name'], org_admin, "admins", superuser)
+              delete("#{org_base_url}/users/#{org_admin_name}", superuser).should look_like({:status => 200})
+              delete("#{platform.server}/users/#{org_admin_name}", superuser).should look_like({:status => 200})
+            end
+            it "succeeds" do
+              post("#{org_base_url}/clients/#{org_client_name}/keys", org_admin, :payload => key_payload).should look_like({:status => 201})
+            end
           end
         end
       end
