@@ -159,7 +159,10 @@ RSpec::Matchers.define :have_status_code do |code|
   end
 
   failure_message do |response|
-    "Response should have HTTP status code #{code} ('#{codes[code]}'), but it was actually #{response.code} ('#{codes[response.code]}')"
+    parsed = parse(response)
+    message = "Response should have HTTP status code #{code} ('#{codes[code]}'), but it was actually #{response.code} ('#{codes[response.code]}')"
+    message << "\n  Reponse Body: #{response}" if parsed and parsed["error"]
+    message
   end
 end
 
