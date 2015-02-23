@@ -93,27 +93,29 @@ describe "/keys endpoint", :keys do
   def delete_client_key(org, client, keyname)
     system("chef-server-ctl delete-client-key #{org} #{client} #{keyname}")
   end
+
   def delete_user_key(user, keyname)
     system("chef-server-ctl delete-user-key #{user} #{keyname}")
   end
 
-  def add_client_key(org, client, key, options = {})
-    # POST { public_key => keys[key][:public] }
-    # name => options[:key_name]
-    command = "chef-server-ctl add-client-key #{org} #{client} #{keys[key][:path]}"
-    command << " --key-name #{options[:key_name]}" unless options[:key_name].nil?
-    command << " --expiration-date #{options[:expires]}" unless options[:expires].nil?
-    system(command)
+  def add_client_key(org, client, key, key_name, options = {})
+    request =  { "name" => key_name, "public_key" => keys[key][:public],
+                 "expiration_date" => options[:expires] || "infinity" }
+    requestor = options[:requestor].nil? ? superuser : options[:requestor]
+    post("#{platform.server}/organizations/#{org}/clients/#{client}/keys",  requestor, :payload => request)
   end
-  def add_user_key(user, key, options = {})
-    command = "chef-server-ctl add-user-key #{user} #{keys[key][:path]}"
-    command << " --key-name #{options[:key_name]}" unless options[:key_name].nil?
-    command << " --expiration-date #{options[:expires]}" unless options[:expires].nil?
-    system(command)
+
+  def add_user_key(user, key, key_name, options = {})
+    request =  { "name" => key_name, "public_key" => keys[key][:public],
+                 "expiration_date" => options[:expires] || "infinity"  }
+    requestor = options[:requestor].nil? ? superuser : options[:requestor]
+    post("#{platform.server}/users/#{user}/keys",  requestor, :payload => request)
   end
+
   def list_user_keys(user, requestor)
     get("#{platform.server}/users/#{user}/keys", requestor)
   end
+
   def list_client_keys(org, client, requestor)
     get("#{platform.server}/organizations/#{org}/clients/#{client}/keys", requestor)
   end
@@ -199,7 +201,7 @@ describe "/keys endpoint", :keys do
     context "when the default key has been changed via the keys API", :authentication do
       before(:each) do
         delete_user_key(user['name'], "default")
-        add_user_key(user['name'], :alt_key, :key_name => "default")
+        add_user_key(user['name'], :alt_key, "default").should look_like({:status => 201})
       end
       it "should authenticate against the updated key" do
         get("#{platform.server}/users/#{user['name']}", requestor(user['name'], keys[:alt_key][:private])).should look_like({:status => 200})
@@ -220,7 +222,7 @@ describe "/keys endpoint", :keys do
     context "when the default key has been changed via the keys API", :authentication do
       before(:each) do
         delete_client_key($org['name'], client['name'], "default")
-        add_client_key($org['name'], client['name'], :key, :key_name => "default")
+        add_client_key($org['name'], client['name'], :key, "default").should look_like({:status=>201})
       end
       it "should authenticate against the updated key" do
         get("#{org_base_url}/clients/#{client['name']}", requestor(client['name'], keys[:key][:private])).should look_like({:status => 200})
@@ -233,7 +235,7 @@ describe "/keys endpoint", :keys do
 
   context "when a key is deleted for a user" do
     before(:each) do
-        add_user_key(user['name'], :alt_key, :key_name => key_name)
+        add_user_key(user['name'], :alt_key, key_name).should look_like({:status => 201})
     end
     it "should not longer be returned by the keys API" do
       delete_user_key(user['name'], key_name)
@@ -247,7 +249,7 @@ describe "/keys endpoint", :keys do
 
   context "when a key is deleted for a client" do
     before(:each) do
-        add_client_key($org['name'], client['name'], :alt_key, :key_name => key_name)
+        add_client_key($org['name'], client['name'], :alt_key, key_name).should look_like({:status=>201})
     end
     it "should not longer be returned by the keys API" do
       delete_client_key($org['name'], client['name'], key_name)
@@ -261,8 +263,8 @@ describe "/keys endpoint", :keys do
 
   context "when multiple keys exist for a user" do
     before(:each) do
-      add_user_key(user['name'], :alt_key, :key_name => "alt-#{key_name}")
-      add_user_key(user['name'], :key, :key_name => key_name)
+      add_user_key(user['name'], :alt_key, "alt-#{key_name}").should look_like({:status => 201})
+      add_user_key(user['name'], :key, key_name).should look_like({:status => 201})
     end
     context "should properly authenticate against either keys" do
       it "should properly authenticate against the second key" do
@@ -276,8 +278,8 @@ describe "/keys endpoint", :keys do
 
   context "when multiple keys exist for a client" do
     before(:each) do
-        add_client_key($org['name'], client['name'], :alt_key, :key_name => "alt-#{key_name}")
-        add_client_key($org['name'], client['name'], :key, :key_name => key_name)
+        add_client_key($org['name'], client['name'], :alt_key, "alt-#{key_name}").should look_like({:status=>201})
+        add_client_key($org['name'], client['name'], :key, key_name).should look_like({:status=>201})
     end
     context "should properly authenticate against either keys" do
       it "should properly authenticate against the first key" do
@@ -291,7 +293,7 @@ describe "/keys endpoint", :keys do
 
   context "when a user key has an expiration date and isn't expired" do
     before(:each) do
-      add_user_key(user['name'], :key, :key_name => key_name, :expires => "2017-12-24T21:00:00")
+      add_user_key(user['name'], :key, key_name, :expires => "2017-12-24T21:00:00").should look_like({:status => 201})
     end
     it "should authenticate against the key" do
       get("#{platform.server}/users/#{user['name']}", requestor(user['name'], keys[:key][:private])).should look_like({:status => 200})
@@ -301,7 +303,7 @@ describe "/keys endpoint", :keys do
   context "when a user's default key has an expiration date" do
     before(:each) do
       delete_user_key(user['name'], "default")
-      add_user_key(user['name'], :key, :key_name => "default", :expires => "2017-12-24T21:00:00")
+      add_user_key(user['name'], :key, "default", :expires => "2017-12-24T21:00:00").should look_like({:status => 201})
     end
     context "and is updated via a PUT to /users/:user" do
       before(:each) do
@@ -318,7 +320,7 @@ describe "/keys endpoint", :keys do
   context "when a client's default key has an expiration date" do
     before(:each) do
       delete_client_key($org['name'], client['name'], "default")
-      add_client_key($org['name'], client['name'], :key, :key_name => "default", :expires => "2017-12-24T21:00:00")
+      add_client_key($org['name'], client['name'], :key, "default", :expires => "2017-12-24T21:00:00").should look_like({:status=>201})
     end
     context "and is updated via a PUT to /organizations/:org/clients/:client" do
       before(:each) do
@@ -334,7 +336,7 @@ describe "/keys endpoint", :keys do
 
   context "when a client key has an expiration date and isn't expired" do
     before(:each) do
-      add_client_key($org['name'], client['name'], :key, :key_name => key_name, :expires => "2017-12-24T21:00:00")
+      add_client_key($org['name'], client['name'], :key, key_name, :expires => "2017-12-24T21:00:00").should look_like({:status=>201})
     end
     it "should authenticate against the key" do
       get("#{org_base_url}/clients/#{client['name']}", requestor(client['name'], keys[:key][:private])).should look_like({:status => 200})
@@ -343,7 +345,7 @@ describe "/keys endpoint", :keys do
 
   context "when a key is expired for a user", :authentication do
     before(:each) do
-      add_user_key(user['name'], :key, :key_name => key_name, :expires => "2012-12-24T21:00:00")
+      add_user_key(user['name'], :key, key_name, :expires => "2012-12-24T21:00:00").should look_like({:status => 201})
     end
     it "should fail against the expired key" do
       get("#{platform.server}/users/#{user['name']}", requestor(user['name'], keys[:key][:private])).should look_like({:status => 401})
@@ -355,7 +357,7 @@ describe "/keys endpoint", :keys do
 
   context "when a key is expired for a client", :authentication do
     before(:each) do
-      add_client_key($org['name'], client['name'], :key, :key_name => key_name, :expires => "2012-12-24T21:00:00" )
+      add_client_key($org['name'], client['name'], :key, key_name, :expires => "2012-12-24T21:00:00" ).should look_like({:status=>201})
     end
     it "should fail against the expired key" do
       get("#{org_base_url}/clients/#{client['name']}", requestor(client['name'], keys[:key][:private])).should look_like({:status => 401})
@@ -383,7 +385,7 @@ describe "/keys endpoint", :keys do
   context "when a user's default key is updated via the keys API" do
     before(:each) do
       delete_user_key(user['name'], "default")
-      add_user_key(user['name'], :key, :key_name => "default")
+      add_user_key(user['name'], :key, "default").should look_like({:status => 201})
     end
 
     it "should return the proper, updated key via /users/:user" do
@@ -666,8 +668,8 @@ describe "/keys endpoint", :keys do
       context "for a client" do
         before(:each) do
           post("#{org_base_url}/clients", superuser, :payload => org_client_payload).should look_like({:status => 201})
-          add_client_key($org['name'], org_client_name, :key, :key_name => "key1", :expires => "2017-12-24T21:00" )
-          add_client_key($org['name'], org_client_name, :alt_key, :key_name => "key2", :expires => "2012-01-01T00:00" )
+          add_client_key($org['name'], org_client_name, :key, "key1", :expires => "2017-12-24T21:00" ).should look_like({:status=>201})
+          add_client_key($org['name'], org_client_name, :alt_key, "key2", :expires => "2012-01-01T00:00" ).should look_like({:status=>201})
         end
         after(:each) do
           delete("#{org_base_url}/clients/#{org_client_name}", superuser).should look_like({:status => 200})
@@ -687,8 +689,8 @@ describe "/keys endpoint", :keys do
         before(:each) do
           post("#{platform.server}/users", superuser, :payload => make_user_payload(org_user_payload)).should look_like({:status => 201} )
           post("#{org_base_url}/users", superuser, :payload => { "username" => org_user_name} ).should look_like({:status => 201})
-          add_user_key(org_user_name, :key, :key_name => "key1", :expires => "2017-12-24T21:00:00")
-          add_user_key(org_user_name, :alt_key, :key_name => "key2", :expires => "2012-01-01T00:00")
+          add_user_key(org_user_name, :key, "key1", :expires => "2017-12-24T21:00:00").should look_like({:status => 201})
+          add_user_key(org_user_name, :alt_key, "key2", :expires => "2012-01-01T00:00").should look_like({:status => 201})
         end
         after(:each) do
           delete("#{org_base_url}/users/#{org_user_name}", superuser).should look_like({:status => 200})
