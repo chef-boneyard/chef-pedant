@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-describe "Policies API endpoint", :policies do
+describe "Policies API endpoint", :policies, :focus do
 
   def mutate_json(data)
     parsed = parse(data)
@@ -35,6 +35,7 @@ describe "Policies API endpoint", :policies do
   let(:minimum_valid_policy_payload) do
     <<-PAYLOAD
       {
+        "revision_id": "909c26701e291510eacdc6c06d626b9fa5350d25",
         "name": "some_policy_name",
         "run_list": [
           "recipe[policyfile_demo::default]"
@@ -52,6 +53,7 @@ describe "Policies API endpoint", :policies do
   let(:canonical_policy_payload) do
     <<-PAYLOAD
       {
+        "revision_id": "cf0885f3f2f5edaa44bf8d5e5de4c4d0efa51411",
         "name": "some_policy_name",
         "run_list": [
           "recipe[policyfile_demo::default]"
@@ -186,21 +188,18 @@ describe "Policies API endpoint", :policies do
             end
 
             it "PUT /policies/:group/:name returns 400" do
-              skip "Bad request not implemented yet" do
-                expect(response.code).to eq(400)
-              end
+              expect(response.code).to eq(400)
             end
 
             it "PUT /policies/:group/:name body contains a well-formed error message" do
-              skip "Bad request not implemented yet" do
-                expect(error_message).to eq(expected_error_message)
-              end
+              expect(error_message).to eq(expected_error_message)
             end
 
           end
 
           ## MANDATORY FIELDS AND FORMATS
-          # * `name`: String, other validation?
+          # * `revision_id`: String; Must be < 255 chars, matches /^[\-[:alnum:]_\.\:]+$/
+          # * `name`: String; Must match name in URI; Must be < 255 chars, matches /^[\-[:alnum:]_\.\:]+$/
           # * `run_list`: Array
           # * `run_list[i]`: Fully Qualified Recipe Run List Item
           # * `cookbook_locks`: JSON Object
@@ -208,6 +207,61 @@ describe "Policies API endpoint", :policies do
           # * `cookbook_locks[item]`: JSON Object, mandatory keys: "identifier", "dotted_decimal_identifier"
           # * `cookbook_locks[item]["identifier"]`: varchar(255) ?
           # * `cookbook_locks[item]["dotted_decimal_identifier"]` ChefCompatibleVersionNumber
+
+          context "because of missing revision id field" do
+
+            let(:request_payload) do
+              mutate_json(minimum_valid_policy_payload) { |p| p.delete("revision_id") }
+            end
+
+            let(:expected_error_message) { "Must specify 'revision_id' in JSON" }
+
+            include_examples "an invalid policy document"
+
+          end
+
+          context "because revision id field is an empty string" do
+
+            let(:request_payload) do
+              mutate_json(minimum_valid_policy_payload) { |p| p["revision_id"] = "" }
+            end
+
+            let(:expected_error_message) { "'revision_id' field in JSON cannot be an empty string" }
+
+            include_examples "an invalid policy document"
+
+          end
+
+          context "because revision id field is larger than 255 characters" do
+
+            let(:long_revision_id_is_long) { "f" * 256 }
+
+            let(:request_payload) do
+              mutate_json(minimum_valid_policy_payload) { |p| p["revision_id"] = long_revision_id_is_long }
+            end
+
+            let(:expected_error_message) { "'revision_id' field in JSON must be 255 characters or fewer" }
+
+            include_examples "an invalid policy document"
+
+          end
+
+          [ ' ', '+', '!' ].each do |invalid_char|
+            context "because the revision_id contains invalid character #{invalid_char}" do
+
+              let(:invalid_revision_id) { "invalid" + invalid_char + "invalid" }
+
+              let(:request_payload) do
+                mutate_json(minimum_valid_policy_payload) { |p| p["revision_id"] = invalid_revision_id }
+              end
+
+              let(:expected_error_message) { "'revision_id' field in JSON must be contain only alphanumeric, hypen, underscore, and dot characters" }
+
+              include_examples "an invalid policy document"
+
+            end
+          end
+
 
           context "because of missing name field" do
 
