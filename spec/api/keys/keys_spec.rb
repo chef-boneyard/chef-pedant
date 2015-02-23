@@ -78,7 +78,6 @@ describe "/keys endpoint", :keys do
     }
   end
 
-  let(:org_base_url) { "#{platform.server}/organizations/#{$org['name']}" }
   let(:new_user_list_keys_response) do
     [
       { "name" => "default", "uri" => "#{platform.server}/users/#{user['name']}/keys/default", "expired" => false}
@@ -88,6 +87,10 @@ describe "/keys endpoint", :keys do
     [
       { "name" => "default", "uri" => "#{org_base_url}/clients/#{client['name']}/keys/default", "expired" => false }
     ]
+  end
+
+  def org_base_url()
+    "#{platform.server}/organizations/#{$org['name']}"
   end
 
   def delete_client_key(org, client, keyname)
@@ -124,8 +127,6 @@ describe "/keys endpoint", :keys do
     base_user_payload.dup.merge(payload)
   end
 
-  # TODO we won't need to keep the pubkey file after the API is in place, since
-  # we will then just pass strings.
   before(:all) do
     @keys = {}
     begin
@@ -137,12 +138,13 @@ describe "/keys endpoint", :keys do
         `openssl genrsa -out #{priv.path} 2048 1>/dev/null 2>&1`
         `openssl rsa -in #{priv.path} -pubout -out #{pub.path} 2>/dev/null`
         @keys[x] = {
-          :pubkey_file => pub,
           :privkey_file => priv,
           :path => "#{pub.path}",
           :private => File.read(priv.path),
           :public => File.read(pub.path)
            }
+        pub.close
+        pub.unlink
         end
     rescue Exception => e
       puts "Error creating keys: #{e.message}"
@@ -155,8 +157,6 @@ describe "/keys endpoint", :keys do
 
   after(:all) do
     @keys.each do |name, key|
-      key[:pubkey_file].close
-      key[:pubkey_file].unlink
       key[:privkey_file].close
       key[:privkey_file].unlink
 
@@ -642,7 +642,7 @@ describe "/keys endpoint", :keys do
         "admin" =>false
       }
     end
-    let (:org_client_alt_key_payload) do
+    let (:key_payload) do
       {
         "public_key" => keys[:alt_key][:public],
         "name" => "alt_key",
@@ -669,7 +669,7 @@ describe "/keys endpoint", :keys do
       delete("#{platform.server}/organizations/#{$other_org_name}/clients/#{$other_org_name}-validator", superuser).should look_like({:status => 200})
       delete("#{platform.server}/organizations/#{$other_org_name}", superuser).should look_like({:status => 200})
     end
-    context "posting keys", :focus do
+    context "posting keys" do
       context "for a client" do
         before(:each) do
           post("#{org_base_url}/clients", superuser, :payload => org_client_payload).should look_like({:status => 201})
@@ -677,10 +677,10 @@ describe "/keys endpoint", :keys do
         after(:each) do
           delete("#{org_base_url}/clients/#{org_client_name}", superuser).should look_like({:status => 200})
         end
-        context "when all fields are present and valid", :focus do
+        context "when all fields are present and valid" do
           it "should create a key and with proper response and Location header" do
-            expected_location = "#{org_base_url}/clients/#{org_client_name}/keys/#{org_client_alt_key_payload['name']}"
-            response = post("#{org_base_url}/clients/#{org_client_name}/keys", superuser, :payload => org_client_alt_key_payload)
+            expected_location = "#{org_base_url}/clients/#{org_client_name}/keys/#{key_payload['name']}"
+            response = post("#{org_base_url}/clients/#{org_client_name}/keys", superuser, :payload => key_payload)
             response.should look_like(
               {
                 :status => 201,
@@ -689,6 +689,8 @@ describe "/keys endpoint", :keys do
               })
           end
         end
+
+        # TODO these are identical for clients and users, and test the same code paths...
         # Generate validation tests
         { "when name is empty" => {:replace => {"name" => ""}, :response_code => 400 },
           "when name is invalid" => {:replace => {"name" => "key the first"}, :response_code => 400 },
@@ -702,10 +704,51 @@ describe "/keys endpoint", :keys do
           "when a key of the same name already exists" => {:replace => {"name" => "default"}, :response_code => 409}
         }.each do |desc, setup|
             it "#{desc} it responds with #{setup[:response_code]}" do
-              payload = org_client_alt_key_payload.dup
+              payload = key_payload.dup
               payload = payload.merge(setup[:replace]) if setup[:replace]
               setup[:delete] and setup[:delete].each { |field| payload.delete(field) }
               post("#{org_base_url}/clients/#{org_client_name}/keys", superuser, :payload => payload).should look_like({:status => setup[:response_code]})
+            end
+        end
+      end
+
+      context "for a user" do
+        before(:each) do
+          post("#{platform.server}/users", superuser, :payload => make_user_payload(org_user_payload)).should look_like({:status => 201})
+        end
+        after(:each) do
+          delete("#{platform.server}/users/#{org_user_name}", superuser).should look_like({:status => 200})
+        end
+        context "when all fields are present and valid" do
+          it "should create a key and with proper response and Location header" do
+            expected_location = "#{platform.server}/users/#{org_user_name}/keys/#{key_payload['name']}"
+            response = post("#{platform.server}/users/#{org_user_name}/keys", superuser, :payload => key_payload)
+            response.should look_like(
+              {
+                :status => 201,
+                :body_exact => { "uri" => expected_location },
+                :headers => [ "Location" => expected_location ]
+              })
+          end
+        end
+        # TODO these are identical for clients and users, and test the same code paths...
+        # Generate validation tests
+        { "when name is empty" => {:replace => {"name" => ""}, :response_code => 400 },
+          "when name is invalid" => {:replace => {"name" => "key the first"}, :response_code => 400 },
+          "when name is missing" => {:delete => ["name"], :response_code => 400},
+          "when date is invalid" => {:replace => {"expiration_date" => "2010-09-32T10:00:00"}, :response_code => 400},
+          "when date is infinity" => {:replace => {"expiration_date" => "infinity" }, :response_code => 201},
+          "when date is empty" => {:replace => {"expiration_date" => ""}, :response_code => 400},
+          "when date is missing" => {:delete =>  ["expiration_date"], :response_code => 400},
+          "when public key is not a valid key" => {:replace => { "public_key" => "Nope."}, :response_code => 400},
+          "when public key is missing" => {:delete=> ["public_key"], :response_code => 400},
+          "when a key of the same name already exists" => {:replace => {"name" => "default"}, :response_code => 409}
+        }.each do |desc, setup|
+            it "#{desc} it responds with #{setup[:response_code]}" do
+              payload = key_payload.dup
+              payload = payload.merge(setup[:replace]) if setup[:replace]
+              setup[:delete] and setup[:delete].each { |field| payload.delete(field) }
+              post("#{platform.server}/users/#{org_user_name}/keys", superuser, :payload => payload).should look_like({:status => setup[:response_code]})
             end
           end
         end
