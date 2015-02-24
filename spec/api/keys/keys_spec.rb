@@ -672,26 +672,9 @@ describe "/keys endpoint", :keys do
     end
 
     context "posting keys" do
-      context "for a client" do
-        before(:each) do
-          post("#{org_base_url}/clients", superuser, :payload => org_client_payload).should look_like({:status => 201})
-        end
-        after(:each) do
-          delete("#{org_base_url}/clients/#{org_client_name}", superuser).should look_like({:status => 200})
-        end
-        context "when all fields are present and valid" do
-          it "should create a key and with proper response and Location header" do
-            expected_location = "#{org_base_url}/clients/#{org_client_name}/keys/#{key_payload['name']}"
-            response = post("#{org_base_url}/clients/#{org_client_name}/keys", superuser, :payload => key_payload)
-            response.should look_like(
-              {
-                :status => 201,
-                :body_exact => { "uri" => expected_location },
-                :headers => [ "Location" => expected_location ]
-              })
-          end
-        end
 
+      # These behaviors are identical for POSTing to create a client or user key
+      shared_context "basic keys POST validation" do
         # Generate validation tests
         { "when name is empty" => {:replace => {"name" => ""}, :response_code => 400 },
           "when name is invalid" => {:replace => {"name" => "key the first"}, :response_code => 400 },
@@ -708,12 +691,40 @@ describe "/keys endpoint", :keys do
             payload = key_payload.dup
             payload = payload.merge(setup[:replace]) if setup[:replace]
             setup[:delete] and setup[:delete].each { |field| payload.delete(field) }
-            post("#{org_base_url}/clients/#{org_client_name}/keys", superuser, :payload => payload).should look_like({:status => setup[:response_code]})
+            post(key_url, superuser, :payload => payload).should look_like({:status => setup[:response_code]})
           end
         end
+        context "when all fields are present and valid" do
+          it "should create a key and with proper response and Location header" do
+            expected_location = "#{key_url}/#{key_payload['name']}"
+            response = post("#{key_url}", superuser, :payload => key_payload)
+            response.should look_like(
+              {
+                :status => 201,
+                :body_exact => { "uri" => expected_location },
+                :headers => [ "Location" => expected_location ]
+              })
+          end
+        end
+
+      end
+
+      context "for a client" do
+        before(:each) do
+          post("#{org_base_url}/clients", superuser, :payload => org_client_payload).should look_like({:status => 201})
+        end
+        after(:each) do
+          delete("#{org_base_url}/clients/#{org_client_name}", superuser).should look_like({:status => 200})
+        end
+
+        let (:key_url) { "#{org_base_url}/clients/#{org_client_name}/keys" }
+        it_behaves_like "basic keys POST validation"
+
+
         it "that doesn't exist" do
             post("#{org_base_url}/clients/bob/keys", superuser, :payload => key_payload).should look_like({:status => 404})
         end
+
         context "as...", :authorization do
           it "an invalid user fails with 401", :authentication do
             post("#{org_base_url}/clients/#{org_client_name}/keys", requestor("bob", user['private_key']), :payload => key_payload).should look_like({:status => 401})
@@ -762,38 +773,10 @@ describe "/keys endpoint", :keys do
         after(:each) do
           delete("#{platform.server}/users/#{org_user_name}", superuser).should look_like({:status => 200})
         end
-        context "when all fields are present and valid" do
-          it "should create a key and with proper response and Location header" do
-            expected_location = "#{platform.server}/users/#{org_user_name}/keys/#{key_payload['name']}"
-            response = post("#{platform.server}/users/#{org_user_name}/keys", superuser, :payload => key_payload)
-            response.should look_like(
-              {
-                :status => 201,
-                :body_exact => { "uri" => expected_location },
-                :headers => [ "Location" => expected_location ]
-              })
-          end
-        end
-        # Generate validation tests
-        { "when name is empty" => {:replace => {"name" => ""}, :response_code => 400 },
-          "when name is invalid" => {:replace => {"name" => "key the first"}, :response_code => 400 },
-          "when name is missing" => {:delete => ["name"], :response_code => 400},
-          "when date is invalid" => {:replace => {"expiration_date" => "2010-09-32T10:00:00"}, :response_code => 400},
-          "when date is infinity" => {:replace => {"expiration_date" => "infinity" }, :response_code => 201},
-          "when date is empty" => {:replace => {"expiration_date" => ""}, :response_code => 400},
-          "when date is missing" => {:delete =>  ["expiration_date"], :response_code => 400},
-          "when public key is not a valid key" => {:replace => { "public_key" => "Nope."}, :response_code => 400},
-          "when public key is missing" => {:delete=> ["public_key"], :response_code => 400},
-          "when a key of the same name already exists" => {:replace => {"name" => "default"}, :response_code => 409}
-        }.each do |desc, setup|
-          it "#{desc} it responds with #{setup[:response_code]}" do
-            payload = key_payload.dup
-            payload = payload.merge(setup[:replace]) if setup[:replace]
-            setup[:delete] and setup[:delete].each { |field| payload.delete(field) }
-            post("#{platform.server}/users/#{org_user_name}/keys", superuser, :payload => payload).should look_like({:status => setup[:response_code]})
-          end
-        end
-        it "for a user that doesn't exist" do
+        let (:key_url) { "#{platform.server}/users/#{org_user_name}/keys" }
+        it_behaves_like "basic keys POST validation"
+
+        it "that doesn't exist" do
             post("#{platform.server}/users/bob/keys", superuser, :payload => key_payload).should look_like({:status => 404})
         end
         context "as...", :authorization do
