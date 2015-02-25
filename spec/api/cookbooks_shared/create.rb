@@ -186,7 +186,7 @@ RSpec.shared_examples "Cookbook Create" do
         payload = {}
         put(api_url("/#{cookbook_url_base}/first@second/1.2.3"), admin_user,
             :payload => payload) do |response|
-          error = "Invalid cookbook name 'first@second' using regex: 'Malformed cookbook name. Must only contain A-Z, a-z, 0-9, _ or -'."
+          error = "Invalid cookbook name 'first@second' using regex: 'Malformed cookbook name. Must only contain A-Z, a-z, 0-9, _, . or -'."
           response.should look_like({
                                       :status => 400,
                                       :body => {
