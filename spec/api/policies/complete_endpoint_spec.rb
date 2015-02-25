@@ -167,9 +167,7 @@ describe "Policies API endpoint", :policies, :focus do
           end
 
           it "PUT /policies/:group/:name returns 201" do
-              skip "Full spectrum valid name not implemented yet" do
-                expect(response.code).to eq(201)
-              end
+            expect(response.code).to eq(201)
           end
 
         end
