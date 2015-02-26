@@ -172,8 +172,11 @@ describe "Policies API endpoint", :policies do
             end
           end
 
-          context "when the name is the maximum size" do
-            let(:max_size_name) { 'a' * 255 }
+          context "when the name is close to the maximum size" do
+
+            # On Chef Zero, some backends will append `.json` to a file name,
+            # which can exceed the common limit of 255 characters.
+            let(:max_size_name) { 'a' * 250 }
 
             # Have to override the URL or else we will hit validation that name in
             # document matches the one in URL
