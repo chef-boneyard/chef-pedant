@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-describe "Policies API endpoint", :policies, :focus do
+describe "Policies API endpoint", :policies do
 
   def mutate_json(data)
     parsed = parse(data)
