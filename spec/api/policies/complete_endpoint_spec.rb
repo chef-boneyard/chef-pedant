@@ -156,20 +156,104 @@ describe "Policies API endpoint", :policies, :focus do
 
         context "with a payload demonstrating validation edge conditions for 'name'" do
 
-          let(:name_with_all_valid_chars) { 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqurstuvwxyz0123456789-_:.' }
+          context "when the name contains every valid character" do
+            let(:name_with_all_valid_chars) { 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqurstuvwxyz0123456789-_:.' }
 
-          # Have to override the URL or else we will hit validation that name in
-          # document matches the one in URL
-          let(:static_named_policy_url) { api_url("/policies/some_policy_group/#{name_with_all_valid_chars}") }
+            # Have to override the URL or else we will hit validation that name in
+            # document matches the one in URL
+            let(:static_named_policy_url) { api_url("/policies/some_policy_group/#{name_with_all_valid_chars}") }
 
-          let(:request_payload) do
-            mutate_json(minimum_valid_policy_payload) { |p| p["name"] = name_with_all_valid_chars }
+            let(:request_payload) do
+              mutate_json(minimum_valid_policy_payload) { |p| p["name"] = name_with_all_valid_chars }
+            end
+
+            it "PUT /policies/:group/:name returns 201" do
+              expect(response.code).to eq(201)
+            end
           end
 
-          it "PUT /policies/:group/:name returns 201" do
-            expect(response.code).to eq(201)
+          context "when the name is the maximum size" do
+            let(:max_size_name) { 'a' * 255 }
+
+            # Have to override the URL or else we will hit validation that name in
+            # document matches the one in URL
+            let(:static_named_policy_url) { api_url("/policies/some_policy_group/#{max_size_name}") }
+
+            let(:request_payload) do
+              mutate_json(minimum_valid_policy_payload) { |p| p["name"] = max_size_name }
+            end
+
+            it "PUT /policies/:group/:name returns 201" do
+              expect(response.code).to eq(201)
+            end
           end
 
+          context "when a revision_id is the maximum size" do
+
+            let(:max_size_revision_id) { 'a' * 255 }
+
+            let(:request_payload) do
+              mutate_json(minimum_valid_policy_payload) do |policy|
+                policy["revision_id"] = max_size_revision_id
+              end
+            end
+
+            it "PUT /policies/:group/:name returns 201" do
+              expect(response.code).to eq(201)
+            end
+          end
+
+          context "when a revision_id contains every valid character" do
+
+            let(:revision_id_with_all_valid_chars) { 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqurstuvwxyz0123456789-_:.' }
+
+            let(:request_payload) do
+              mutate_json(minimum_valid_policy_payload) do |policy|
+                policy["revision_id"] = revision_id_with_all_valid_chars
+              end
+            end
+
+
+            it "PUT /policies/:group/:name returns 201" do
+              expect(response.code).to eq(201)
+            end
+          end
+
+          context "when a cookbook identifier is the maximum size" do
+
+            let(:max_size_identifier) { 'a' * 255 }
+
+            let(:request_payload) do
+              mutate_json(minimum_valid_policy_payload) do |policy|
+                policy["cookbook_locks"]["edge_case"] = {
+                  "identifier" => max_size_identifier,
+                  "version" => "1.2.3"
+                }
+              end
+            end
+
+            it "PUT /policies/:group/:name returns 201" do
+              expect(response.code).to eq(201)
+            end
+          end
+
+          context "when a cookbook identifier contains every valid character" do
+
+            let(:identifier_with_all_valid_chars) { 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqurstuvwxyz0123456789-_:.' }
+
+            let(:request_payload) do
+              mutate_json(minimum_valid_policy_payload) do |policy|
+                policy["cookbook_locks"]["edge_case"] = {
+                  "identifier" => identifier_with_all_valid_chars,
+                  "version" => "1.2.3"
+                }
+              end
+            end
+
+            it "PUT /policies/:group/:name returns 201" do
+              expect(response.code).to eq(201)
+            end
+          end
         end
 
         context "when the request body is invalid" do
