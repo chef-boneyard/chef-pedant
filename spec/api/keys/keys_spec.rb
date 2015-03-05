@@ -856,10 +856,16 @@ describe "/keys endpoint", :keys do
                   { "name" => "key1", "uri" => "#{org_base_url}/clients/#{org_client_name}/keys/key1", "expired" => false },
                   { "name" => "key2", "uri" => "#{org_base_url}/clients/#{org_client_name}/keys/key2", "expired" => true}
                 ]})
+              context "when GET is called on the URIs that are returned" do
+                keys = list_client_keys($org['name'], org_client_name, superuser)
+                keys.each |key| do
+                  get(key[:uri], superuser).should look_like({:status => 200})
+                end
+              end
             end
           end
           context "when GET /organizations/org/clients/client/keys/key is called (get single key)" do
-            context "when it is called for every valid key" do
+            context "when it is called for each valid key" do
               it "should properly return the default key with valid expiration" do
                 get_client_key($org['name'], org_client_name, superuser, "default").should look_like({
                   :status => 200,
@@ -904,10 +910,16 @@ describe "/keys endpoint", :keys do
                   { "name" => "key2", "uri" => "#{platform.server}/users/#{org_user_name}/keys/key2", "expired" => true }
                 ]})
             end
+            context "when GET is called on the URIs that are returned" do
+              keys = list_user_keys(org_user_name, superuser)
+              keys.each |key| do
+                get(key[:uri], superuser).should look_like({:status => 200})
+              end
+            end
           end
 
           context "when GET /users/user/keys/key is called (get single key)" do
-            context "when it is called for every valid key" do
+            context "when it is called for each valid key" do
               it "should properly return the default key with valid expiration" do
                 get_user_key(org_user_name, superuser, "default").should look_like({
                   :status => 200,
