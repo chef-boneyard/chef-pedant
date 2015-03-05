@@ -1,7 +1,17 @@
+DEPRECATED
+==========
+
+The contents of this repo have been merged into oc-chef-pedant.
+
+All test development should be done there. This repository is maintained
+only for support of older versions, and tests modified here will not be
+pulled into oc-chef-pedant.
+
 Chef Pedant
 ===========
 
-This repo contains the full integration test suite for Chef Sever
+This repo contains the full integration test suite for Chef Server
+
 
 It is included with the omnibus build of Chef Server.
 
